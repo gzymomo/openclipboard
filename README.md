@@ -69,8 +69,6 @@ src/
     Clipboard.Desktop.ViewModels/ # MVVM
     Common.*                      # 剪贴板、热键、Hook、SQLite、Interop
     resources/                    # 语言、样式、图片
-tools/
-  BamlDecompiler/        # BAML -> XAML 反编译工具（可选）
 build.ps1                # 构建与打包脚本
 ```
 
