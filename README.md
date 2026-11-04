@@ -1,5 +1,7 @@
 # OpenClipboard
 
+[![Build](https://github.com/gzymomo/openclipboard/actions/workflows/build.yml/badge.svg)](https://github.com/gzymomo/openclipboard/actions/workflows/build.yml)
+
 一个轻量的 Windows 剪贴板历史管理器，使用 **WPF / .NET Framework 4.7.2** 编写。
 
 > 本项目由反编译产物整理、重建而来，仅用于学习、研究与互操作性目的。
@@ -44,6 +46,14 @@ dotnet build src\OpenClipboard.sln -c Release
 ```
 
 > 依赖通过 NuGet 还原，首次构建需要联网。
+
+### GitHub Actions
+
+仓库自带 CI（`.github/workflows/build.yml`）：
+
+- 每次 push / PR 自动在 `windows-latest` 上构建并打包
+- 产物 `OpenClipboard-<版本>.zip` 上传到该次 Actions 运行的 **Artifacts**
+- 推送 `v*` 标签（如 `v1.0.0`）会自动创建 GitHub Release 并附带 zip
 
 ## 运行
 
