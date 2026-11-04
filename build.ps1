@@ -72,12 +72,17 @@ Write-Host "==> 打包 zip" -ForegroundColor Cyan
 $version = (Get-Item (Join-Path $out 'Clipboard.Desktop.exe')).VersionInfo.FileVersion
 $zip = Join-Path $dist "OpenClipboard-$version.zip"
 if (Test-Path $zip) { Remove-Item $zip -Force }
-# 用 tar.exe 打包：比 Compress-Archive 快，且能容忍 Defender 的瞬时文件锁
-& tar.exe -a -cf $zip -C $out .
-if ($LASTEXITCODE -ne 0 -or -not (Test-Path $zip)) {
-    Write-Host "!! tar 打包失败，回退到 Compress-Archive" -ForegroundColor Yellow
-    Start-Sleep -Seconds 3
-    Compress-Archive -Path (Join-Path $out '*') -DestinationPath $zip -CompressionLevel Optimal
+# 使用 .NET 的 ZipFile 生成标准 zip（条目直接位于根目录，不带 ./ 前缀）
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.IO.Compression.ZipFile]::CreateFromDirectory(
+    $out,
+    $zip,
+    [System.IO.Compression.CompressionLevel]::Optimal,
+    $false
+)
+if (-not (Test-Path $zip)) {
+    Write-Host "!! 打包失败" -ForegroundColor Red
+    exit 1
 }
 
 Write-Host ""
