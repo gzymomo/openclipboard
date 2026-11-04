@@ -1,0 +1,50 @@
+<hc:Window x:Class="Clipboard.Desktop.Views.Windows.SettingWindow" xmlns:hc="https://handyorg.github.io/handycontrol" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local="clr-namespace:Clipboard.Desktop.Views.Windows" xmlns:control="clr-namespace:Clipboard.Desktop.Views.Controls" xmlns:props="clr-namespace:Clipboard.Desktop.Properties" xmlns:interop="clr-namespace:Common.Interop" WindowStartupLocation="CenterScreen" NonClientAreaHeight="56" ShowNonClientArea="False" Background="#00FFFFFF" interop:WindowBlur.IsEnabled="True" WindowStyle="None" ResizeMode="NoResize" Title="MainWindow" Height="569" Width="400">
+  <Grid Background="{DynamicResource GlassTintBrush}">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="52" />
+      <RowDefinition />
+    </Grid.RowDefinitions>
+    <Border Grid.Row="0" Padding="18,0" Background="#99F7F7FA" BorderThickness="0,0,0,1" BorderBrush="#FFEBEBEB" MouseMove="Border_MouseMove">
+      <Grid VerticalAlignment="Center" Height="24">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="20" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition />
+          <ColumnDefinition Width="24" />
+        </Grid.ColumnDefinitions>
+        <Image Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Width="20" Height="20" Source="Pack://Application:,,,/Clipboard.Desktop;Component/Logo.ico" />
+        <TextBlock Grid.Column="1" FontSize="14" Foreground="#FF666666" Margin="8,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="{DynamicResource WindowTitle}" />
+        <Button Grid.Column="3" Height="24" Width="24" Margin="0" Padding="0" BorderThickness="0" VerticalAlignment="Center" HorizontalAlignment="Center" hc:IconElement.Width="11" hc:IconElement.Height="11" hc:IconElement.Geometry="M7.6,12.35 C5.65,10.34 9.34,6.65 11.35,8.61 C17.7,14.64 23.74,20.99 30,27.12 C36.25,20.98 42.33,14.65 48.64,8.58 C50.97,6.52 54.64,11.04 51.93,12.88 C45.99,19 39.86,24.92 33.88,31 C39.87,37.08 46,43.03 51.95,49.14 C54.62,50.99 50.98,55.41 48.66,53.38 C42.28,47.39 36.27,40.99 30,34.88 C23.93,40.86 18,46.97 11.9,52.91 C10.05,55.64 5.48,51.96 7.6,49.61 C13.68,43.32 19.98,37.24 26.12,31 C19.99,24.74 13.64,18.7 7.6,12.35" Click="CloseButton_Click">
+          <FrameworkElement.Style>
+            <Style BasedOn="{StaticResource ButtonBaseStyle}" TargetType="{x:Type Button}">
+              <Setter Property="Foreground" Value="#999999" />
+              <Style.Triggers>
+                <Trigger Property="UIElement.IsMouseOver" Value="True">
+                  <Setter Property="Foreground" Value="#666666" />
+                </Trigger>
+                <Trigger Property="UIElement.IsMouseCaptured" Value="True">
+                  <Setter Property="Foreground" Value="#FF000000" />
+                </Trigger>
+              </Style.Triggers>
+            </Style>
+          </FrameworkElement.Style>
+        </Button>
+      </Grid>
+    </Border>
+    <DockPanel Grid.Row="1">
+      <Border DockPanel.Dock="Top" Margin="24,16,24,24" BorderThickness="0">
+        <control:GeneralControl />
+      </Border>
+    </DockPanel>
+    <TextBlock Grid.Row="1" Text="v1.0.0" FontSize="12" VerticalAlignment="Bottom" Margin="4" HorizontalAlignment="Center" Foreground="#66000000" />
+    <Border Grid.RowSpan="2" IsHitTestVisible="False" BorderThickness="1" BorderBrush="#5CFFFFFF" Opacity="{DynamicResource GlassHighlightOpacity}">
+      <Border.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Offset="0" Color="#3DFFFFFF" />
+          <GradientStop Offset="0.35" Color="#12FFFFFF" />
+          <GradientStop Offset="1" Color="#26FFFFFF" />
+        </LinearGradientBrush>
+      </Border.Background>
+    </Border>
+  </Grid>
+</hc:Window>

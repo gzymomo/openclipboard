@@ -1,0 +1,22 @@
+<Application StartupUri="MainWindow.xaml" x:Class="Clipboard.Desktop.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:Clipboard.Desktop" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/SkinDefault.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml" />
+        <ResourceDictionary Source="Pack://Application:,,,/Clipboard.Desktop;Component/Resources/Languages/Language.zh-CN.xaml" />
+        <ResourceDictionary Source="Pack://Application:,,,/Clipboard.Desktop;Component/Resources/Styles/CommonStyles.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <ViewModelLocator x:Key="Locator" xmlns="clr-namespace:Clipboard.Desktop.ViewModels" />
+      <ClipboardDataInfoConverter x:Key="ClipboardDataInfoConverter" xmlns="clr-namespace:Clipboard.Desktop.Converters" />
+      <HotkeyParameterConverter x:Key="HotkeyParameterConverter" xmlns="clr-namespace:Clipboard.Desktop.Converters" />
+      <OppositeConverter x:Key="OppositeConverter" xmlns="clr-namespace:Clipboard.Desktop.Converters" />
+      <Base642ImageSourceConverter x:Key="Base642ImageSourceConverter" xmlns="clr-namespace:Clipboard.Desktop.Converters" />
+      <FormatStringConverter x:Key="FormatStringConverter" xmlns="clr-namespace:Clipboard.Desktop.Converters" />
+      <GetCollectionLengthConverter x:Key="GetCollectionLengthConverter" xmlns="clr-namespace:Clipboard.Desktop.Converters" />
+      <StringArrayToStringConverter x:Key="StringArrayToStringConverter" xmlns="clr-namespace:Clipboard.Desktop.Converters" />
+      <SolidColorBrush x:Key="GlassTintBrush" Color="#99F7F7FA" />
+      <sys:Double x:Key="GlassHighlightOpacity">1</sys:Double>
+    </ResourceDictionary>
+  </Application.Resources>
+</Application>

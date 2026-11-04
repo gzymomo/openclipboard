@@ -1,0 +1,27 @@
+<Window x:Class="Clipboard.Desktop.Views.Windows.CopySuccessWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local="clr-namespace:Clipboard.Desktop.Views.Windows" Topmost="True" WindowStyle="None" WindowStartupLocation="Manual" ResizeMode="NoResize" AllowsTransparency="True" Background="#00FFFFFF" IsHitTestVisible="False" Title="CopySuccessWindow" Height="200" MinWidth="200" Opacity="0">
+  <FrameworkElement.Triggers>
+    <EventTrigger RoutedEvent="Loaded">
+      <BeginStoryboard>
+        <Storyboard>
+          <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetProperty="Opacity">
+            <SplineDoubleKeyFrame KeyTime="00:00:00" Value="0" />
+            <SplineDoubleKeyFrame KeyTime="00:00:00.200" Value="1" />
+            <SplineDoubleKeyFrame KeyTime="00:00:02.200" Value="1" />
+            <SplineDoubleKeyFrame KeyTime="00:00:03" Value="0" />
+          </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+      </BeginStoryboard>
+    </EventTrigger>
+  </FrameworkElement.Triggers>
+  <Border CornerRadius="20" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="50,26">
+    <Border.Background>
+      <SolidColorBrush Color="#000000" Opacity="0.6" />
+    </Border.Background>
+    <StackPanel Orientation="Vertical">
+      <Border Width="100" Height="100">
+        <Path Stroke="#FFFFFFFF" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeThickness="8" Stretch="Uniform" Data="M88,39.9767923 L88,44.0245249 C87.9888584,63.5094554 75.1621297,80.6662412 56.4756396,86.1909034 C37.7891495,91.7155655 17.6943301,84.2920379 7.08843079,67.9460364 C-3.5174685,51.6000348 -2.10794646,30.225448 10.5526251,15.4135325 C23.2131966,0.601616982 44.1088596,-4.11918325 61.9080737,3.81118157 M88,8.82685021 L44.0001242,52.8679406 L30.8001615,39.6688126" />
+      </Border>
+      <TextBlock x:Name="TipTextBlock" Foreground="#FFFFFFFF" FontSize="32" Margin="0,8,0,0" FontWeight="Medium" TextWrapping="NoWrap" Text="{DynamicResource CopySuccessWindow_CopySuccess}" />
+    </StackPanel>
+  </Border>
+</Window>

@@ -1,0 +1,39 @@
+<UserControl x:Class="Clipboard.Desktop.Views.Controls.Text_ContentDisplayControl" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:local="clr-namespace:Clipboard.Desktop.Views.Controls" xmlns:enums="clr-namespace:Clipboard.Data.Enums;assembly=Clipboard.Data" Foreground="#333333" Margin="16,16,16,0">
+  <ContentPresenter>
+    <FrameworkElement.Style>
+      <Style TargetType="{x:Type ContentPresenter}">
+        <Style.Triggers>
+          <DataTrigger Value="{x:Static enums:TextTypes.Text}" Binding="{Binding Path=TextType, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:Text_ContentDisplayControl}}">
+            <Setter Property="Content">
+              <Setter.Value>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                  <TextBlock FontSize="14" FontWeight="Regular" VerticalAlignment="Top" HorizontalAlignment="Left" TextAlignment="Left" TextWrapping="Wrap" Foreground="{Binding Path=Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:Text_ContentDisplayControl}}" Text="{Binding Path=DataContext, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:Text_ContentDisplayControl}}" />
+                </ScrollViewer>
+              </Setter.Value>
+            </Setter>
+          </DataTrigger>
+          <DataTrigger Value="{x:Static enums:TextTypes.HttpLink}" Binding="{Binding Path=TextType, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:Text_ContentDisplayControl}}">
+            <Setter Property="Content">
+              <Setter.Value>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                  <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Left" Foreground="{Binding Path=Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:Text_ContentDisplayControl}}" Text="{Binding Path=DataContext, Mode=OneWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:Text_ContentDisplayControl}}" />
+                </ScrollViewer>
+              </Setter.Value>
+            </Setter>
+          </DataTrigger>
+          <DataTrigger Value="{x:Static enums:TextTypes.Color}" Binding="{Binding Path=TextType, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:Text_ContentDisplayControl}}">
+            <Setter Property="Content">
+              <Setter.Value>
+                <Border Background="{StaticResource ColorPickerOpacityBrush}">
+                  <Border Background="{Binding Path=DataContext, Mode=OneWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:Text_ContentDisplayControl}}">
+                    <TextBlock FontSize="24" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Left" Foreground="{Binding Path=Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:Text_ContentDisplayControl}}" Text="{Binding Path=DataContext, Mode=OneWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:Text_ContentDisplayControl}}" />
+                  </Border>
+                </Border>
+              </Setter.Value>
+            </Setter>
+          </DataTrigger>
+        </Style.Triggers>
+      </Style>
+    </FrameworkElement.Style>
+  </ContentPresenter>
+</UserControl>

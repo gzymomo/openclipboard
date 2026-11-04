@@ -1,0 +1,200 @@
+<UserControl x:Class="Clipboard.Desktop.Views.Controls.GeneralControl" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:local="clr-namespace:Clipboard.Desktop.Views.Controls" xmlns:attach="clr-namespace:Clipboard.Desktop.Handlers" xmlns:hc="https://handyorg.github.io/handycontrol" DataContext="{Binding Source={StaticResource Locator}, Path=GeneralControlViewModel}">
+  <FrameworkElement.Resources>
+    <ResourceDictionary>
+      <Style x:Key="GeneralBaseTextBlockStyle" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource TextBlockBaseStyle}">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Foreground" Value="#FF666666" />
+        <Setter Property="FontWeight" Value="Regular" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="TextBlock.TextAlignment" Value="Left" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+      </Style>
+      <Style x:Key="{x:Type TextBlock}" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource GeneralBaseTextBlockStyle}" />
+      <Style x:Key="{x:Type CheckBox}" TargetType="{x:Type CheckBox}" BasedOn="{StaticResource CheckBoxBaseStyle}">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Foreground" Value="#FF666666" />
+        <Setter Property="FontWeight" Value="Regular" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+      </Style>
+      <Style x:Key="HotkeyLabel" TargetType="{x:Type Label}">
+        <Setter Property="Width" Value="240" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="hc:BorderElement.CornerRadius" Value="4" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate>
+              <Border Background="#00FFFFFF" CornerRadius="{TemplateBinding hc:BorderElement.CornerRadius}" BorderBrush="{TemplateBinding Control.BorderBrush}" BorderThickness="{TemplateBinding Control.BorderThickness}" Width="{TemplateBinding FrameworkElement.Width}" Height="{TemplateBinding FrameworkElement.Height}">
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Margin="8,1,0,0" Style="{StaticResource GeneralBaseTextBlockStyle}" FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource Mode=TemplatedParent}}" Text="{Binding Path=Content, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+              </Border>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+          <Trigger Property="UIElement.IsMouseOver" Value="True">
+            <Setter Property="BorderBrush" Value="#757575" />
+          </Trigger>
+        </Style.Triggers>
+      </Style>
+    </ResourceDictionary>
+  </FrameworkElement.Resources>
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="60" />
+      <RowDefinition Height="70" />
+      <RowDefinition Height="70" />
+      <RowDefinition Height="0" />
+      <RowDefinition Height="70" />
+      <RowDefinition Height="70" />
+      <RowDefinition />
+    </Grid.RowDefinitions>
+    <Border Grid.Row="0">
+      <Grid VerticalAlignment="Top">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition />
+          <ColumnDefinition Width="240" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="0" Text="{DynamicResource SettingWindow_General_AutoRun}" />
+        <StackPanel Orientation="Horizontal" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">
+          <CheckBox VerticalAlignment="Center" Content="{DynamicResource SettingWindow_General_AutoRun_Content}" IsChecked="{Binding Source={StaticResource Locator}, Path=AutoRunHandler.IsAutoRun, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+    <Border Grid.Row="1">
+      <Grid VerticalAlignment="Top">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition />
+          <ColumnDefinition Width="240" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="0" Text="{DynamicResource SettingWindow_General_Language}" />
+        <StackPanel Orientation="Horizontal" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">
+          <ComboBox Width="240" Height="32" Background="#00FFFFFF" SelectedItem="{Binding Source={StaticResource Locator}, Path=SettingHandler.CurrentItem}" ItemsSource="{Binding Source={StaticResource Locator}, Path=SettingHandler.LanguageList}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding DisplayName}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+      </Grid>
+    </Border>
+    <Border Grid.Row="2">
+      <Grid VerticalAlignment="Top">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition />
+          <ColumnDefinition Width="240" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="0" Text="{DynamicResource SettingWindow_General_ActiveHotKey}" />
+        <StackPanel Orientation="Vertical" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">
+          <Label x:Name="ActivedHotkeyLabel" Style="{StaticResource HotkeyLabel}" Content="{Binding ActivedHotkeyString, Mode=OneWay, Converter={StaticResource HotkeyParameterConverter}}" PreviewMouseDoubleClick="ActivedHotkeyLabel_PreviewMouseDoubleClick" />
+          <Popup x:Name="ActivedHotkeyPopup" Placement="Left" StaysOpen="False" AllowsTransparency="True" IsOpen="{Binding ActivedHotkeyIsChanging, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalOffset="{Binding ElementName=ActivedHotkeyLabel, Path=ActualWidth}" PlacementTarget="{Binding ElementName=ActivedHotkeyLabel}">
+            <Border Width="{Binding ElementName=ActivedHotkeyLabel, Path=ActualWidth}" Height="{Binding ElementName=ActivedHotkeyLabel, Path=ActualHeight}">
+              <FrameworkElement.Style>
+                <Style TargetType="{x:Type Border}">
+                  <Setter Property="Background" Value="#FFFFFFFF" />
+                  <Setter Property="BorderThickness" Value="1" />
+                  <Setter Property="Border.CornerRadius" Value="4" />
+                  <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                  <Style.Triggers>
+                    <DataTrigger Value="False" Binding="{Binding QuicklyCopyHotkeyVertifyResult}">
+                      <Setter Property="BorderBrush" Value="#FFEE0000" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </FrameworkElement.Style>
+              <TextBox x:Name="ActivedHotkeyTextBox" IsReadOnly="True" BorderThickness="0" FontSize="12" Background="#00FFFFFF" Text="{Binding ElementName=ActivedHotkeyLabel, Path=Content}" LostFocus="ActivedHotkeyTextBox_LostFocus" PreviewKeyDown="ActivedHotkeyPopup_PreviewKeyDown" />
+            </Border>
+          </Popup>
+          <TextBlock Text="{DynamicResource SettingWindow_General_HotkeyOccupi_Text}" FontSize="12" Foreground="#FFEE0000" Margin="8,0,0,-20" VerticalAlignment="Bottom" HorizontalAlignment="Left" Visibility="{Binding ActivedHotkeyVertifyResult, Converter={StaticResource Boolean2VisibilityReConverter}}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+    <Border Grid.Row="3" Visibility="Collapsed">
+      <Grid VerticalAlignment="Top">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition />
+          <ColumnDefinition Width="240" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="0" Text="{DynamicResource SettingWindow_General_PasteHotKey}" />
+        <StackPanel Orientation="Vertical" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">
+          <Label x:Name="QucklyCopyHotkeyLabel" Style="{StaticResource HotkeyLabel}" Content="{Binding QuicklyCopyHotkeyString, Mode=OneWay, Converter={StaticResource HotkeyParameterConverter}}" PreviewMouseDoubleClick="QucklyCopyHotkeyLabel_PreviewMouseDoubleClick" />
+          <Popup x:Name="QucklyCopyHotkeyPopup" Placement="Left" StaysOpen="False" AllowsTransparency="True" IsOpen="{Binding QuicklyCopyHotkeyIsChanging, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalOffset="{Binding ElementName=QucklyCopyHotkeyLabel, Path=ActualWidth}" PlacementTarget="{Binding ElementName=QucklyCopyHotkeyLabel}">
+            <Border Width="{Binding ElementName=QucklyCopyHotkeyLabel, Path=ActualWidth}" Height="{Binding ElementName=QucklyCopyHotkeyLabel, Path=ActualHeight}">
+              <FrameworkElement.Style>
+                <Style TargetType="{x:Type Border}">
+                  <Setter Property="Background" Value="#FFFFFFFF" />
+                  <Setter Property="BorderThickness" Value="1" />
+                  <Setter Property="Border.CornerRadius" Value="4" />
+                  <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                  <Style.Triggers>
+                    <DataTrigger Value="False" Binding="{Binding QuicklyCopyHotkeyVertifyResult}">
+                      <Setter Property="BorderBrush" Value="#FFEE0000" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </FrameworkElement.Style>
+              <TextBox x:Name="QucklyCopyHotkeyTextBox" IsReadOnly="True" BorderThickness="0" FontSize="12" Background="#00FFFFFF" Text="{Binding ElementName=QucklyCopyHotkeyLabel, Path=Content}" LostFocus="QucklyCopyHotkeyTextBox_LostFocus" PreviewKeyDown="QucklyCopyHotkeyPopup_PreviewKeyDown" />
+            </Border>
+          </Popup>
+          <TextBlock Text="{DynamicResource SettingWindow_General_HotkeyOccupi_Text}" FontSize="12" Foreground="#FFEE0000" Margin="8,0,0,-20" VerticalAlignment="Bottom" HorizontalAlignment="Left" Visibility="{Binding QuicklyCopyHotkeyVertifyResult, Converter={StaticResource Boolean2VisibilityReConverter}}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+    <Border Grid.Row="4">
+      <Grid VerticalAlignment="Top">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition />
+          <ColumnDefinition Width="240" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="0" VerticalAlignment="Top" Text="{DynamicResource SettingWindow_General_RecordCount}" />
+        <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Top" HorizontalAlignment="Left">
+          <Slider Width="240" Margin="0,-5,0,0" hc:TipElement.Visibility="Collapsed" IsSnapToTickEnabled="True" Maximum="3" TickFrequency="1" TickPlacement="BottomRight" FocusVisualStyle="{x:Null}" Value="{Binding HistoryRecord, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+        <Grid x:Name="SplidTipTextBlockContentGrid" Grid.Column="1" Margin="10,25,-10,0">
+          <FrameworkElement.Resources>
+            <ResourceDictionary>
+              <Style x:Key="{x:Type TextBlock}" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource TextBlockBaseStyle}">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="TextBlock.TextAlignment" Value="Center" />
+                <Setter Property="MaxWidth" Value="60" />
+                <Setter Property="attach:ElementDistance.Length" Value="{Binding Path=ActualWidth, RelativeSource={RelativeSource Mode=Self}}" />
+                <Setter Property="attach:ElementDistance.OffsetMode" Value="Left" />
+                <Setter Property="attach:ElementDistance.TotalLength" Value="220" />
+                <Setter Property="attach:ElementDistance.Segments" Value="3" />
+              </Style>
+            </ResourceDictionary>
+          </FrameworkElement.Resources>
+          <TextBlock attach:ElementDistance.ElementIndex="0" Text="{DynamicResource SettingWindow_General_RecordCount_Slider_None_Text}" />
+          <TextBlock attach:ElementDistance.ElementIndex="1" Text="{DynamicResource SettingWindow_General_RecordCount_Slider_7_Text}" />
+          <TextBlock attach:ElementDistance.ElementIndex="2" Text="{DynamicResource SettingWindow_General_RecordCount_Slider_30_Text}" />
+          <TextBlock attach:ElementDistance.ElementIndex="3" Text="{DynamicResource SettingWindow_General_RecordCount_Slider_Infinite_Text}" />
+        </Grid>
+      </Grid>
+    </Border>
+    <Border Grid.Row="5">
+      <Grid VerticalAlignment="Top">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition />
+          <ColumnDefinition Width="240" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="0" VerticalAlignment="Top" Text="{DynamicResource SettingWindow_General_GlassOpacity}" />
+        <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Top" HorizontalAlignment="Left">
+          <Slider Width="240" Margin="0,-5,0,0" hc:TipElement.Visibility="Collapsed" IsSnapToTickEnabled="True" Minimum="0" Maximum="100" TickFrequency="5" TickPlacement="None" FocusVisualStyle="{x:Null}" Value="{Binding GlassOpacity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+          <TextBlock Margin="0,2,0,0" FontSize="12" Foreground="#FF666666" HorizontalAlignment="Right" Text="{Binding GlassOpacity, StringFormat={}{0}%}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+    <Border Grid.Row="6">
+      <Grid VerticalAlignment="Top">
+        <Button Margin="0" Content="{DynamicResource SettingWindow_General_ClearHistory}" FontWeight="Regular" FontSize="14" Height="40" Width="158" VerticalAlignment="Center" HorizontalAlignment="Center" hc:BorderElement.CornerRadius="20" BorderBrush="{DynamicResource PrimaryBrush}" Foreground="{DynamicResource PrimaryBrush}" Click="Button_Click" />
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

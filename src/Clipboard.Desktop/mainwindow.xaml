@@ -1,0 +1,31 @@
+<Window x:Class="Clipboard.Desktop.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local="clr-namespace:Clipboard.Desktop" xmlns:hc="https://handyorg.github.io/handycontrol" xmlns:interop="clr-namespace:Common.Interop" WindowStyle="None" ResizeMode="NoResize" Title="{DynamicResource WindowTitle}" Height="400" BorderThickness="0" Background="#00FFFFFF" interop:WindowBlur.IsEnabled="True" DataContext="{Binding Source={StaticResource Locator}, Path=MainWindowViewModel}" MinWidth="{Binding PrimaryScreenWidth}" Width="{Binding PrimaryScreenWidth}" Deactivated="Window_Deactivated">
+  <WindowChrome.WindowChrome>
+    <WindowChrome GlassFrameThickness="0,0,0,1" ResizeBorderThickness="0,0,0,1" CaptionHeight="0" />
+  </WindowChrome.WindowChrome>
+  <hc:Interaction.Triggers>
+    <hc:EventTrigger EventName="Loaded">
+      <hc:InvokeCommandAction Command="{Binding LoadedEventCommand}" />
+    </hc:EventTrigger>
+  </hc:Interaction.Triggers>
+  <Grid Background="{DynamicResource GlassTintBrush}">
+    <Frame Source="pack://application:,,,/Clipboard.Desktop;component/Views/Pages/ContentPage.xaml" NavigationUIVisibility="Hidden" />
+    <Border IsHitTestVisible="False" BorderThickness="1" BorderBrush="#5CFFFFFF" Opacity="{DynamicResource GlassHighlightOpacity}">
+      <Border.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Offset="0" Color="#3DFFFFFF" />
+          <GradientStop Offset="0.35" Color="#12FFFFFF" />
+          <GradientStop Offset="1" Color="#26FFFFFF" />
+        </LinearGradientBrush>
+      </Border.Background>
+    </Border>
+    <hc:NotifyIcon x:Name="NotifyIconContextContent" Text="{DynamicResource WindowTitle}" Visibility="Visible" Icon="Pack://Application:,,,/Clipboard.Desktop;Component/Logo.ico" Click="NotifyIconContextContent_Click">
+      <FrameworkElement.ContextMenu>
+        <ContextMenu>
+          <MenuItem Command="hc:ControlCommands.PushMainWindow2Top" Header="{DynamicResource NotifyIcon_Show_Text}" />
+          <MenuItem Header="{DynamicResource NotifyIcon_Setting_Text}" Click="MenuItem_Click" />
+          <MenuItem Command="hc:ControlCommands.ShutdownApp" Header="{DynamicResource NotifyIcon_Exit_Text}" />
+        </ContextMenu>
+      </FrameworkElement.ContextMenu>
+    </hc:NotifyIcon>
+  </Grid>
+</Window>

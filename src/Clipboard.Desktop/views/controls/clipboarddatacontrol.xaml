@@ -1,0 +1,212 @@
+<UserControl x:Class="Clipboard.Desktop.Views.Controls.ClipboardDataControl" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:local="clr-namespace:Clipboard.Desktop.Views.Controls" xmlns:dm="clr-namespace:Clipboard.Desktop.Models" xmlns:enums="clr-namespace:Clipboard.Data.Enums;assembly=Clipboard.Data" xmlns:ap="clr-namespace:Clipboard.Desktop.Resources" xmlns:hc="https://handyorg.github.io/handycontrol" FocusVisualStyle="{x:Null}" PreviewMouseDoubleClick="UserControl_PreviewMouseDoubleClick">
+  <FrameworkElement.Resources>
+    <ResourceDictionary>
+      <Geometry x:Key="TextTypeTitleIconPath">M20,0 L4,0 C1.790861,0 0,1.790861 0,4 L0,36 C0,38.209139 1.790861,40 4,40 L28,40 C30.209139,40 32,38.209139 32,36 L32,12 L20,0 Z M20 0L20 12 32 12 M24 22L8 22 M24 30L8 30 M12 14L10 14 8 14</Geometry>
+      <Geometry x:Key="ImageTypeTitleIconPath">M-3.55271368e-15 3.9999999999999964a4 4 0 0 1 4 -4h28a4 4 0 0 1 4 4v28a4 4 0 0 1 -4 4h-28a4 4 0 0 1 -4 -4z M8 11a3 3 0 1 0 6 0a3 3 0 1 0 -6 0z M36 24L26 14 4 36</Geometry>
+      <Geometry x:Key="FileTypeTitleIconPath">M39,31.1111111 C39,33.2588851 37.2539105,35 35.1,35 L3.9,35 C1.74608948,35 0,33.2588851 0,31.1111111 L0,3.88888889 C0,1.74111486 1.74608948,0 3.9,0 L13.65,0 L17.55,5.83333333 L35.1,5.83333333 C37.2539105,5.83333333 39,7.5744482 39,9.72222222 L39,31.1111111 Z M13.65 21.3888889L25.35 21.3888889</Geometry>
+      <LinearGradientBrush x:Key="TextTypeTitleBackgroundColor" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#ff6d00" Offset="0" />
+        <GradientStop Color="#ff8500" Offset="1" />
+      </LinearGradientBrush>
+      <LinearGradientBrush x:Key="ImageTypeTitleBackgroundColor" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#2962ff" Offset="0" />
+        <GradientStop Color="#3a80ff" Offset="1" />
+      </LinearGradientBrush>
+      <LinearGradientBrush x:Key="FileTypeTitleBackgroundColor" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#ffab00" Offset="0" />
+        <GradientStop Color="#ffbc00" Offset="1" />
+      </LinearGradientBrush>
+    </ResourceDictionary>
+  </FrameworkElement.Resources>
+  <Control.Template>
+    <ControlTemplate>
+      <Border CornerRadius="8" BorderThickness="0" BorderBrush="{TemplateBinding Control.BorderBrush}" Background="#FFFFFFFF">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="64" />
+            <RowDefinition />
+          </Grid.RowDefinitions>
+          <Border Grid.Row="0">
+            <FrameworkElement.Style>
+              <Style TargetType="{x:Type Border}">
+                <Setter Property="Border.CornerRadius" Value="6,6,0,0" />
+                <Setter Property="Background">
+                  <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                      <GradientStop Color="#e0e0e0" Offset="0" />
+                      <GradientStop Color="#e4e4e4" Offset="1" />
+                    </LinearGradientBrush>
+                  </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                  <DataTrigger Value="{x:Static enums:ClipboardDataTypes.Text}" Binding="{Binding DataType}">
+                    <Setter Property="Background" Value="{StaticResource TextTypeTitleBackgroundColor}" />
+                  </DataTrigger>
+                  <DataTrigger Value="{x:Static enums:ClipboardDataTypes.Image}" Binding="{Binding DataType}">
+                    <Setter Property="Background" Value="{StaticResource ImageTypeTitleBackgroundColor}" />
+                  </DataTrigger>
+                  <DataTrigger Value="{x:Static enums:ClipboardDataTypes.File}" Binding="{Binding DataType}">
+                    <Setter Property="Background" Value="{StaticResource FileTypeTitleBackgroundColor}" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </FrameworkElement.Style>
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="64" />
+              </Grid.ColumnDefinitions>
+              <StackPanel Margin="16,0" Orientation="Vertical" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left">
+                <TextBlock TextWrapping="Wrap" FontSize="20" Foreground="#FFFFFFFF" FontWeight="Medium" TextAlignment="Left">
+                  <FrameworkElement.Style>
+                    <Style TargetType="{x:Type TextBlock}">
+                      <Style.Triggers>
+                        <DataTrigger Value="{x:Static enums:ClipboardDataTypes.Text}" Binding="{Binding Path=DataContext.DataType, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}">
+                          <Setter Property="ap:Localization.Resource" Value="ClipboardDataType_Text" />
+                          <Setter Property="Text" Value="{Binding Path=(ap:Localization.Resource), RelativeSource={RelativeSource Mode=Self}}" />
+                        </DataTrigger>
+                        <DataTrigger Value="{x:Static enums:ClipboardDataTypes.Image}" Binding="{Binding Path=DataContext.DataType, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}">
+                          <Setter Property="ap:Localization.Resource" Value="ClipboardDataType_Image" />
+                          <Setter Property="Text" Value="{Binding Path=(ap:Localization.Resource), RelativeSource={RelativeSource Mode=Self}}" />
+                        </DataTrigger>
+                        <DataTrigger Value="{x:Static enums:ClipboardDataTypes.File}" Binding="{Binding Path=DataContext.DataType, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}">
+                          <Setter Property="ap:Localization.Resource" Value="ClipboardDataType_File" />
+                          <Setter Property="Text">
+                            <Setter.Value>
+                              <MultiBinding Converter="{StaticResource FormatStringConverter}">
+                                <Binding Path="(ap:Localization.Resource)" RelativeSource="{RelativeSource Self}" />
+                                <Binding Path="DataContext.GetFormatData" Converter="{StaticResource GetCollectionLengthConverter}" Mode="OneWay" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}" />
+                              </MultiBinding>
+                            </Setter.Value>
+                          </Setter>
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </FrameworkElement.Style>
+                </TextBlock>
+                <local:TimeoutControl x:Name="CreateTimeoutControl" TextWrapping="Wrap" FontSize="12" Margin="0,4,0,0" FontWeight="Regular" Foreground="#FFFFFFFF" DataContext="{Binding Path=DataContext.CreateTime, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}" />
+              </StackPanel>
+              <Border Grid.Column="1" BorderThickness="0" Width="64" Height="64">
+                <Path Stroke="#FFFFFFFF" StrokeThickness="4" StrokeStartLineCap="Round" StrokeEndLineCap="Round" VerticalAlignment="Center" HorizontalAlignment="Center">
+                  <FrameworkElement.Style>
+                    <Style TargetType="{x:Type Path}">
+                      <Style.Triggers>
+                        <DataTrigger Value="{x:Static enums:ClipboardDataTypes.Text}" Binding="{Binding Path=DataContext.DataType, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}">
+                          <Setter Property="Data" Value="{StaticResource TextTypeTitleIconPath}" />
+                        </DataTrigger>
+                        <DataTrigger Value="{x:Static enums:ClipboardDataTypes.Image}" Binding="{Binding Path=DataContext.DataType, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}">
+                          <Setter Property="Data" Value="{StaticResource ImageTypeTitleIconPath}" />
+                        </DataTrigger>
+                        <DataTrigger Value="{x:Static enums:ClipboardDataTypes.File}" Binding="{Binding Path=DataContext.DataType, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}">
+                          <Setter Property="Data" Value="{StaticResource FileTypeTitleIconPath}" />
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </FrameworkElement.Style>
+                </Path>
+              </Border>
+            </Grid>
+          </Border>
+          <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+              <RowDefinition />
+              <RowDefinition Height="24" />
+            </Grid.RowDefinitions>
+            <ContentControl DataContext="{Binding}">
+              <FrameworkElement.Style>
+                <Style TargetType="{x:Type ContentControl}">
+                  <Style.Triggers>
+                    <DataTrigger Value="{x:Static enums:ClipboardDataTypes.Text}" Binding="{Binding DataType}">
+                      <Setter Property="ContentTemplate">
+                        <Setter.Value>
+                          <DataTemplate>
+                            <local:Text_ContentDisplayControl DataContext="{Binding Path=DataContext.GetFormatData, Mode=OneWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}" />
+                          </DataTemplate>
+                        </Setter.Value>
+                      </Setter>
+                    </DataTrigger>
+                    <DataTrigger Value="{x:Static enums:ClipboardDataTypes.Image}" Binding="{Binding DataType}">
+                      <Setter Property="ContentTemplate">
+                        <Setter.Value>
+                          <DataTemplate>
+                            <local:Image_ContentDisplayControl DataContext="{Binding Path=DataContext.GetFormatData, Mode=OneWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}" />
+                          </DataTemplate>
+                        </Setter.Value>
+                      </Setter>
+                    </DataTrigger>
+                    <DataTrigger Value="{x:Static enums:ClipboardDataTypes.File}" Binding="{Binding DataType}">
+                      <Setter Property="ContentTemplate">
+                        <Setter.Value>
+                          <DataTemplate>
+                            <local:File_ContentDisplayControl />
+                          </DataTemplate>
+                        </Setter.Value>
+                      </Setter>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </FrameworkElement.Style>
+            </ContentControl>
+            <Border Grid.Row="0" VerticalAlignment="Bottom" Height="16">
+              <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                  <GradientStop Color="Transparent" Offset="0" />
+                  <GradientStop Color="#66FFFFFF" Offset="1" />
+                </LinearGradientBrush>
+              </Border.Background>
+              <hc:RunningBlock VerticalAlignment="Center" AutoRun="True" Runaway="False" BorderThickness="0" Padding="0" Foreground="#999999" FontSize="12" FontWeight="Regular" HorizontalAlignment="Center" Margin="16,0" IsRunning="{Binding IsMouseOver, Converter={StaticResource Boolean2BooleanReConverter}, RelativeSource={RelativeSource Self}}" ToolTip="{Binding Path=DataContext.GetFormatData, Converter={StaticResource StringArrayToStringConverter}, Mode=OneWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}">
+                <FrameworkElement.Style>
+                  <Style BasedOn="{StaticResource RunningBlockBaseStyle}" TargetType="{x:Type hc:RunningBlock}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Setter Property="Content" Value="{DynamicResource ClipboardDataType_Item_File_Multipath}" />
+                    <Style.Triggers>
+                      <DataTrigger Value="1" Binding="{Binding Path=DataContext.GetFormatData, Converter={StaticResource GetCollectionLengthConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}">
+                        <Setter Property="Content" Value="{Binding Path=DataContext.GetFormatData, Converter={StaticResource StringArrayToStringConverter}, Mode=OneWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}" />
+                      </DataTrigger>
+                      <DataTrigger Value="{x:Static enums:ClipboardDataTypes.File}" Binding="{Binding Path=DataContext.DataType, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}">
+                        <Setter Property="Visibility" Value="Visible" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </FrameworkElement.Style>
+              </hc:RunningBlock>
+            </Border>
+            <TextBlock Grid.Row="1" Foreground="#FF999999" FontSize="12" FontWeight="Regular" VerticalAlignment="Center" HorizontalAlignment="Center">
+              <FrameworkElement.Style>
+                <Style TargetType="{x:Type TextBlock}">
+                  <Style.Triggers>
+                    <DataTrigger Value="{x:Static enums:ClipboardDataTypes.Text}" Binding="{Binding Path=DataContext.DataType, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}">
+                      <Setter Property="ap:Localization.Resource" Value="ClipboardDataType_Item_Info_Text" />
+                      <Setter Property="Text">
+                        <Setter.Value>
+                          <MultiBinding Converter="{StaticResource FormatStringConverter}">
+                            <Binding Path="(ap:Localization.Resource)" RelativeSource="{RelativeSource Self}" />
+                            <Binding Path="DataContext" Converter="{StaticResource ClipboardDataInfoConverter}" Mode="OneWay" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}" />
+                          </MultiBinding>
+                        </Setter.Value>
+                      </Setter>
+                    </DataTrigger>
+                    <DataTrigger Value="{x:Static enums:ClipboardDataTypes.Image}" Binding="{Binding Path=DataContext.DataType, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}">
+                      <Setter Property="ap:Localization.Resource" Value="ClipboardDataType_Item_Info_Image" />
+                      <Setter Property="Text">
+                        <Setter.Value>
+                          <MultiBinding Converter="{StaticResource FormatStringConverter}">
+                            <Binding Path="(ap:Localization.Resource)" RelativeSource="{RelativeSource Self}" />
+                            <Binding Path="DataContext" Converter="{StaticResource ClipboardDataInfoConverter}" Mode="OneWay" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}" />
+                          </MultiBinding>
+                        </Setter.Value>
+                      </Setter>
+                    </DataTrigger>
+                    <DataTrigger Value="{x:Static enums:ClipboardDataTypes.File}" Binding="{Binding Path=DataContext.DataType, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:ClipboardDataControl}}">
+                      <Setter Property="Text" Value="{Binding Converter={StaticResource ClipboardDataInfoConverter}}" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </FrameworkElement.Style>
+            </TextBlock>
+          </Grid>
+        </Grid>
+      </Border>
+    </ControlTemplate>
+  </Control.Template>
+</UserControl>
