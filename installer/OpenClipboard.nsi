@@ -1,19 +1,34 @@
 ﻿Unicode true
 !include "MUI2.nsh"
+!include "LogicLib.nsh"
 
 !ifndef VERSION
   !define VERSION "1.0.0.0"
 !endif
 
-!define APP_NAME "OpenClipboard"
+!ifndef ARCH
+  !define ARCH "x86"
+!endif
+
+!if "${ARCH}" == "x64"
+  !include "x64.nsh"
+  !define APP_NAME "OpenClipboard (x64)"
+  !define APP_DIR "OpenClipboard-x64"
+  !define APP_ID "OpenClipboard-x64"
+!else
+  !define APP_NAME "OpenClipboard"
+  !define APP_DIR "OpenClipboard"
+  !define APP_ID "OpenClipboard"
+!endif
+
 !define APP_EXE "Clipboard.Desktop.exe"
 !define APP_PUBLISHER "OpenClipboard contributors"
-!define APP_ID "OpenClipboard"
+!define SOURCE_DIR "..\dist\OpenClipboard-${ARCH}"
 
 Name "${APP_NAME}"
-OutFile "..\dist\OpenClipboard-Setup-${VERSION}.exe"
-InstallDir "$LOCALAPPDATA\Programs\${APP_NAME}"
-InstallDirRegKey HKCU "Software\${APP_NAME}" "InstallDir"
+OutFile "..\dist\OpenClipboard-Setup-${ARCH}-${VERSION}.exe"
+InstallDir "$LOCALAPPDATA\Programs\${APP_DIR}"
+InstallDirRegKey HKCU "Software\${APP_ID}" "InstallDir"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
 SetCompressorDictSize 64
@@ -47,6 +62,13 @@ VIAddVersionKey "LegalCopyright" "MIT License"
 
 Function .onInit
   !insertmacro MUI_LANGDLL_DISPLAY
+
+  !if "${ARCH}" == "x64"
+    ${IfNot} ${RunningX64}
+      MessageBox MB_ICONSTOP "此安装包需要 64 位 Windows。"
+      Abort
+    ${EndIf}
+  !endif
 FunctionEnd
 
 Section "${APP_NAME}" SecMain
@@ -57,23 +79,23 @@ Section "${APP_NAME}" SecMain
   Pop $0
 
   SetOutPath "$INSTDIR"
-  File /r /x *.pdb "..\dist\OpenClipboard\*.*"
+  File /r /x *.pdb "${SOURCE_DIR}\*.*"
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
   CreateDirectory "$SMPROGRAMS\${APP_NAME}"
   CreateShortCut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}"
   CreateShortCut "$SMPROGRAMS\${APP_NAME}\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
 
-  WriteRegStr HKCU "Software\${APP_NAME}" "InstallDir" "$INSTDIR"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "DisplayName" "${APP_NAME}"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "DisplayVersion" "${VERSION}"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "Publisher" "${APP_PUBLISHER}"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "DisplayIcon" "$INSTDIR\${APP_EXE}"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "InstallLocation" "$INSTDIR"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "QuietUninstallString" "$\"$INSTDIR\Uninstall.exe$\" /S"
-  WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "NoModify" 1
-  WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "NoRepair" 1
+  WriteRegStr HKCU "Software\${APP_ID}" "InstallDir" "$INSTDIR"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "DisplayName" "${APP_NAME}"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "DisplayVersion" "${VERSION}"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "Publisher" "${APP_PUBLISHER}"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "DisplayIcon" "$INSTDIR\${APP_EXE}"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "InstallLocation" "$INSTDIR"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "QuietUninstallString" "$\"$INSTDIR\Uninstall.exe$\" /S"
+  WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "NoModify" 1
+  WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "NoRepair" 1
 SectionEnd
 
 Section "桌面快捷方式" SecDesktop
@@ -98,6 +120,6 @@ Section "Uninstall"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir /r "$INSTDIR"
 
-  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
-  DeleteRegKey HKCU "Software\${APP_NAME}"
+  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}"
+  DeleteRegKey HKCU "Software\${APP_ID}"
 SectionEnd

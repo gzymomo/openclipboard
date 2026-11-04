@@ -35,8 +35,19 @@
 输出：
 
 ```
-dist\OpenClipboard\              # 可直接运行的目录
-dist\OpenClipboard-<版本>.zip    # 分发包
+默认同时构建 x86 和 x64：
+
+```
+dist\OpenClipboard-x86\              # 32 位，可直接运行
+dist\OpenClipboard-x64\              # 64 位，可直接运行
+dist\OpenClipboard-x86-<版本>.zip    # 32 位免安装包
+dist\OpenClipboard-x64-<版本>.zip    # 64 位免安装包
+```
+
+只构建其中一个架构：
+
+```powershell
+.\build.ps1 -Architecture x64
 ```
 
 ### 生成 EXE 安装包
@@ -45,7 +56,12 @@ dist\OpenClipboard-<版本>.zip    # 分发包
 .\build-installer.ps1
 ```
 
-输出 `dist\OpenClipboard-Setup-<版本>.exe`。
+输出：
+
+```
+dist\OpenClipboard-Setup-x86-<版本>.exe
+dist\OpenClipboard-Setup-x64-<版本>.exe
+```
 
 - 当前用户安装（`%LOCALAPPDATA%\Programs\OpenClipboard`），无需管理员权限
 - 首次运行会自动下载 NSIS 3.10 到 `%LOCALAPPDATA%\OpenClipboardBuild`
@@ -64,12 +80,12 @@ dotnet build src\OpenClipboard.sln -c Release
 仓库自带 CI（`.github/workflows/build.yml`）：
 
 - 每次 push / PR 自动在 `windows-latest` 上构建并打包
-- 产物 `OpenClipboard-<版本>.zip` 和 `OpenClipboard-Setup-<版本>.exe` 上传到该次 Actions 运行的 **Artifacts**
-- 推送 `v*` 标签（如 `v1.0.0`）会自动创建 GitHub Release 并附带 zip 与安装包
+- 产物（x86/x64 的 zip 与安装包，共 4 个）上传到该次 Actions 运行的 **Artifacts**
+- 推送 `v*` 标签（如 `v1.0.0`）会自动创建 GitHub Release 并附带全部 4 个包
 
 ## 运行
 
-1. 运行 `dist\OpenClipboard\Clipboard.Desktop.exe`
+1. 运行 `dist\OpenClipboard-x64\Clipboard.Desktop.exe`（或 x86 目录）
 2. 程序启动后驻留托盘，主窗口默认隐藏
 3. 按热键（默认 `F2`）或点击托盘图标呼出
 4. 设置页可修改热键、语言、记录天数、毛玻璃不透明度
