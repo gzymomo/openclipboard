@@ -39,6 +39,18 @@ dist\OpenClipboard\              # 可直接运行的目录
 dist\OpenClipboard-<版本>.zip    # 分发包
 ```
 
+### 生成 EXE 安装包
+
+```powershell
+.\build-installer.ps1
+```
+
+输出 `dist\OpenClipboard-Setup-<版本>.exe`。
+
+- 当前用户安装（`%LOCALAPPDATA%\Programs\OpenClipboard`），无需管理员权限
+- 首次运行会自动下载 NSIS 3.10 到 `%LOCALAPPDATA%\OpenClipboardBuild`
+- 安装包未签名，首次运行可能触发 SmartScreen 提示
+
 也可以直接构建解决方案：
 
 ```powershell
@@ -52,8 +64,8 @@ dotnet build src\OpenClipboard.sln -c Release
 仓库自带 CI（`.github/workflows/build.yml`）：
 
 - 每次 push / PR 自动在 `windows-latest` 上构建并打包
-- 产物 `OpenClipboard-<版本>.zip` 上传到该次 Actions 运行的 **Artifacts**
-- 推送 `v*` 标签（如 `v1.0.0`）会自动创建 GitHub Release 并附带 zip
+- 产物 `OpenClipboard-<版本>.zip` 和 `OpenClipboard-Setup-<版本>.exe` 上传到该次 Actions 运行的 **Artifacts**
+- 推送 `v*` 标签（如 `v1.0.0`）会自动创建 GitHub Release 并附带 zip 与安装包
 
 ## 运行
 
@@ -80,6 +92,8 @@ src/
     Common.*                      # 剪贴板、热键、Hook、SQLite、Interop
     resources/                    # 语言、样式、图片
 build.ps1                # 构建与打包脚本
+build-installer.ps1      # 生成 EXE 安装包
+installer/               # NSIS 安装包脚本
 ```
 
 ## 已知限制

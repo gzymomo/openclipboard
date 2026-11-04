@@ -29,16 +29,24 @@ jobs:
         shell: powershell
         run: .\build.ps1
 
+      - name: Build installer
+        shell: powershell
+        run: .\build-installer.ps1
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: OpenClipboard-${{ github.run_number }}
-          path: dist/OpenClipboard-*.zip
+          path: |
+            dist/OpenClipboard-*.zip
+            dist/OpenClipboard-Setup-*.exe
           if-no-files-found: error
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/OpenClipboard-*.zip
+          files: |
+            dist/OpenClipboard-*.zip
+            dist/OpenClipboard-Setup-*.exe
           generate_release_notes: true

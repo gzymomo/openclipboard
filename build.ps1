@@ -39,6 +39,12 @@ if (Test-Path $out) { Remove-Item $out -Recurse -Force }
 dotnet publish (Join-Path $src 'Clipboard.Desktop\Clipboard.Desktop.csproj') `
     -c $Configuration -o $out --no-restore
 
+# 应用为 32 位，仅保留 x86 原生库，减小分发包体积
+foreach ($rid in @('win-arm', 'win-x64')) {
+    $native = Join-Path $out "runtimes\$rid"
+    if (Test-Path $native) { Remove-Item $native -Recurse -Force }
+}
+
 # 关键运行期文件自检
 $required = @(
     'Clipboard.Desktop.exe',
