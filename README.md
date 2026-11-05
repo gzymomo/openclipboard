@@ -26,7 +26,7 @@
 
 ## 跨平台版本
 
-跨平台入口位于 `src/OpenClipboard.App`，使用 .NET 10 和 Avalonia，可面向 Windows、Linux、macOS 构建，并支持 x64/ARM64 运行时标识。支持文本/图片/文件剪贴板历史、搜索、收藏、删除/清理、托盘、登录启动，以及从旧版 SQLite 数据库导入。原 Windows/WPF 版本保持不变。
+跨平台入口位于 `src/OpenClipboard.App`，使用 .NET 10 和 Avalonia，可面向 Windows、Linux、macOS 构建，并支持 x64/ARM64 运行时标识。支持文本/图片/文件剪贴板历史、搜索、收藏、删除/清理、托盘、登录启动，以及从旧版 SQLite 数据库导入。推送 `v*` 发布标签时，GitHub Release 会附带 Windows、Linux、macOS 的 x64/ARM64 六种跨平台 ZIP 包。原 Windows/WPF 版本保持不变。
 
 跨平台版设置中可更改 11 种界面语言、激活热键、快速复制热键、历史保留期限和透明度。快速复制默认禁用，启用后会把最近一条历史记录复制到系统剪贴板；激活热键默认为 `F2`。历史期限支持不保存、7 天、30 天和永久；收藏记录不会因期限清理而删除，过期记录会在启动、修改期限时及运行期间定期清理。
 
