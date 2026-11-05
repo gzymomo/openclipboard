@@ -9,6 +9,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Clipboard.Data.Enums;
@@ -22,10 +23,13 @@ public partial class MainWindow : Window
     private readonly ClipboardStore _store = new();
     private readonly StartupManager _startupManager = new();
     private readonly GlobalHotkeyService _globalHotkey = new();
+    private readonly ClipboardPreferences _preferences;
+    private readonly LocalizationService _localization;
     private readonly DispatcherTimer _clipboardTimer;
     private Bitmap? _clipboardBitmap;
     private string? _lastClipboardData;
     private ClipboardDataTypes _lastClipboardType;
+    private DateOnly _lastHistoryCleanupDate;
     private bool _isReadingClipboard;
     private bool _allowClose;
 
@@ -33,10 +37,18 @@ public partial class MainWindow : Window
 
     public ObservableCollection<ClipboardHistoryItem> VisibleHistory { get; } = new();
 
-    public MainWindow()
+    public MainWindow() : this(new ClipboardPreferences(), new LocalizationService("en-US"))
     {
+    }
+
+    public MainWindow(ClipboardPreferences preferences, LocalizationService localization)
+    {
+        _preferences = preferences;
+        _localization = localization;
         InitializeComponent();
         DataContext = this;
+        ApplyLocalization();
+        ApplyGlassOpacity();
         _clipboardTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(750) };
         _clipboardTimer.Tick += ClipboardTimer_Tick;
         Opened += MainWindow_Opened;
@@ -48,7 +60,7 @@ public partial class MainWindow : Window
         };
         Closing += MainWindow_Closing;
         _globalHotkey.ErrorOccurred += message => Dispatcher.UIThread.Post(() =>
-            StatusText.Text = $"Global F2 hotkey unavailable: {message}");
+            StatusText.Text = $"Global hotkey unavailable: {message}");
         UpdateStartupButton();
     }
 
@@ -62,7 +74,9 @@ public partial class MainWindow : Window
         try
         {
             await _store.InitializeAsync();
-            foreach (var item in await _store.GetRecentAsync())
+            await _store.PruneExpiredAsync(_preferences.HistoryMode);
+            _lastHistoryCleanupDate = DateOnly.FromDateTime(DateTime.UtcNow);
+            foreach (var item in await _store.GetRecentAsync(_preferences.HistoryMode))
             {
                 History.Add(item);
             }
@@ -75,8 +89,8 @@ public partial class MainWindow : Window
 
             RefreshVisibleHistory();
             _clipboardTimer.Start();
-            _globalHotkey.Start(() => Dispatcher.UIThread.Post(ToggleFromHotkey));
-            StatusText.Text = "Monitoring clipboard. Select an entry and choose Copy to restore it.";
+            StartHotkeys();
+            StatusText.Text = _localization.Get("CrossPlatform_Monitoring");
         }
         catch (Exception exception)
         {
@@ -94,6 +108,14 @@ public partial class MainWindow : Window
         _isReadingClipboard = true;
         try
         {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            if (today != _lastHistoryCleanupDate)
+            {
+                await _store.PruneExpiredAsync(_preferences.HistoryMode);
+                _lastHistoryCleanupDate = today;
+                await ReloadHistoryAsync();
+            }
+
             var clipboard = Clipboard ?? throw new InvalidOperationException("The platform clipboard is unavailable.");
             using var data = await clipboard.TryGetDataAsync();
             if (data is null)
@@ -104,6 +126,11 @@ public partial class MainWindow : Window
             var item = await CaptureClipboardItemAsync(data);
             if (item is null || item.Data.Length == 0
                 || (item.DataType == _lastClipboardType && string.Equals(item.Data, _lastClipboardData, StringComparison.Ordinal)))
+            {
+                return;
+            }
+
+            if (_preferences.HistoryMode == HistoryMode.None)
             {
                 return;
             }
@@ -165,9 +192,9 @@ public partial class MainWindow : Window
         CopyButton.IsEnabled = hasSelection;
         FavoriteButton.IsEnabled = hasSelection;
         DeleteButton.IsEnabled = hasSelection;
-        FavoriteButton.Content = HistoryList.SelectedItem is ClipboardHistoryItem { IsFavorite: true }
-            ? "Unfavorite"
-            : "Favorite";
+        FavoriteButton.Content = _localization.Get(HistoryList.SelectedItem is ClipboardHistoryItem { IsFavorite: true }
+            ? "CrossPlatform_Unfavorite"
+            : "CrossPlatform_Favorite");
     }
 
     private async void Copy_OnClick(object? sender, RoutedEventArgs e)
@@ -323,7 +350,7 @@ public partial class MainWindow : Window
 
             var imported = await _store.ImportLegacyDatabaseAsync(selected[0].Path.LocalPath);
             History.Clear();
-            foreach (var item in await _store.GetRecentAsync())
+            foreach (var item in await _store.GetRecentAsync(_preferences.HistoryMode))
             {
                 History.Add(item);
             }
@@ -338,6 +365,86 @@ public partial class MainWindow : Window
     }
 
     private void SearchBox_OnTextChanged(object? sender, TextChangedEventArgs e) => RefreshVisibleHistory();
+
+    private async void Settings_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var dialog = new SettingsWindow(_preferences, _localization);
+        await dialog.ShowDialog(this);
+        if (!dialog.Saved)
+        {
+            _localization.SetLanguage(_preferences.Language);
+            ApplyLocalization();
+            return;
+        }
+
+        try
+        {
+            _localization.SetLanguage(_preferences.Language);
+            ApplyLocalization();
+            ApplyGlassOpacity();
+            await _store.PruneExpiredAsync(_preferences.HistoryMode);
+            _lastHistoryCleanupDate = DateOnly.FromDateTime(DateTime.UtcNow);
+            await ReloadHistoryAsync();
+            StartHotkeys();
+            StatusText.Text = _localization.Get("CrossPlatform_Monitoring");
+        }
+        catch (Exception exception)
+        {
+            StatusText.Text = $"Could not apply preferences: {exception.Message}";
+        }
+    }
+
+    private void StartHotkeys()
+    {
+        _globalHotkey.Start(
+            _preferences.ActivationHotkey,
+            _preferences.QuickCopyHotkey,
+            () => Dispatcher.UIThread.Post(ToggleFromHotkey),
+            () => Dispatcher.UIThread.Post(CopyLatest));
+    }
+
+    private async Task ReloadHistoryAsync()
+    {
+        History.Clear();
+        foreach (var item in await _store.GetRecentAsync(_preferences.HistoryMode))
+        {
+            History.Add(item);
+        }
+
+        RefreshVisibleHistory();
+    }
+
+    private void CopyLatest()
+    {
+        if (History.Count == 0)
+        {
+            return;
+        }
+
+        HistoryList.SelectedItem = History[0];
+        Copy_OnClick(CopyButton, new RoutedEventArgs());
+    }
+
+    private void ApplyLocalization()
+    {
+        SubtitleText.Text = _localization.Get("ClipboardDataTag_History");
+        SearchBox.PlaceholderText = _localization.Get("ClipboardDataSearchText_PlaceHolder");
+        ImportButton.Content = _localization.Get("CrossPlatform_ImportLegacy");
+        SettingsButton.Content = _localization.Get("ClipboardData_MainWindowMenu_Setting");
+        CopyButton.Content = _localization.Get("History_Listbox_Copy");
+        FavoriteButton.Content = _localization.Get("History_Listbox_Favorite");
+        DeleteButton.Content = _localization.Get("History_Listbox_Delete");
+        ClearButton.Content = _localization.Get("History_RadioButton_ClearHistory");
+        QuitButton.Content = _localization.Get("ClipboardData_MainWindowMenu_Exit");
+        UpdateStartupButton();
+        (Avalonia.Application.Current as App)?.ApplyLocalization();
+    }
+
+    private void ApplyGlassOpacity()
+    {
+        var alpha = (byte)Math.Round(_preferences.GlassOpacity * 255 / 100d);
+        MainBackground.Background = new SolidColorBrush(Color.FromArgb(alpha, 32, 36, 44));
+    }
 
     private void RefreshVisibleHistory()
     {
@@ -381,7 +488,9 @@ public partial class MainWindow : Window
     {
         try
         {
-            StartupButton.Content = _startupManager.IsEnabled() ? "Disable launch at login" : "Enable launch at login";
+            StartupButton.Content = _localization.Get(_startupManager.IsEnabled()
+                ? "CrossPlatform_StartupDisable"
+                : "CrossPlatform_StartupEnable");
         }
         catch (Exception exception)
         {

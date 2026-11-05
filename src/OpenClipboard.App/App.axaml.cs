@@ -10,6 +10,13 @@ namespace OpenClipboard.App;
 
 public partial class App : Application
 {
+    public ClipboardPreferences Preferences { get; private set; } = null!;
+
+    public LocalizationService Localization { get; private set; } = null!;
+
+    private NativeMenuItem? _openItem;
+    private NativeMenuItem? _quitItem;
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -19,22 +26,25 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var window = new MainWindow();
+            Preferences = new ClipboardPreferences();
+            Localization = new LocalizationService(Preferences.Language);
+            var window = new MainWindow(Preferences, Localization);
             desktop.MainWindow = window;
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             desktop.ShutdownRequested += (_, _) => window.AllowClose();
 
-            var openItem = new NativeMenuItem("Open OpenClipboard");
-            openItem.Click += (_, _) => window.ShowFromTray();
-            var quitItem = new NativeMenuItem("Quit");
-            quitItem.Click += (_, _) =>
+            _openItem = new NativeMenuItem();
+            _openItem.Click += (_, _) => window.ShowFromTray();
+            _quitItem = new NativeMenuItem();
+            _quitItem.Click += (_, _) =>
             {
                 window.AllowClose();
                 desktop.Shutdown();
             };
             var menu = new NativeMenu();
-            menu.Items.Add(openItem);
-            menu.Items.Add(quitItem);
+            menu.Items.Add(_openItem);
+            menu.Items.Add(_quitItem);
+            ApplyLocalization();
 
             using var iconStream = AssetLoader.Open(new Uri("avares://OpenClipboard.App/Assets/logo.png"));
             var icon = new TrayIcon
@@ -48,5 +58,23 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    public void ApplyLocalization()
+    {
+        if (Localization is null)
+        {
+            return;
+        }
+
+        if (_openItem is not null)
+        {
+            _openItem.Header = Localization.Get("CrossPlatform_OpenApp");
+        }
+
+        if (_quitItem is not null)
+        {
+            _quitItem.Header = Localization.Get("CrossPlatform_Quit");
+        }
     }
 }

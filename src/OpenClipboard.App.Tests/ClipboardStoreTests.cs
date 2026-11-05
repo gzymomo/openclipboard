@@ -28,19 +28,19 @@ public sealed class ClipboardStoreTests : IDisposable
         await _store.AddAsync(textItem);
         await _store.AddAsync(imageItem);
 
-        var entries = await _store.GetRecentAsync();
+        var entries = await _store.GetRecentAsync(HistoryMode._30);
         Assert.Equal(2, entries.Count);
         Assert.Contains(entries, entry => entry.Id == textItem.Id);
         Assert.Contains(entries, entry => entry.Id == imageItem.Id);
 
         await _store.SetFavoriteAsync(entries[0].Id, true);
-        Assert.True((await _store.GetRecentAsync())[0].IsFavorite);
+        Assert.True((await _store.GetRecentAsync(HistoryMode._30))[0].IsFavorite);
 
         await _store.DeleteAsync(entries[1].Id);
-        Assert.Single(await _store.GetRecentAsync());
+        Assert.Single(await _store.GetRecentAsync(HistoryMode._30));
 
         await _store.ClearAsync();
-        Assert.Empty(await _store.GetRecentAsync());
+        Assert.Empty(await _store.GetRecentAsync(HistoryMode._30));
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public sealed class ClipboardStoreTests : IDisposable
         Assert.Equal(1, await _store.ImportLegacyDatabaseAsync(legacyPath));
         Assert.Equal(0, await _store.ImportLegacyDatabaseAsync(legacyPath));
 
-        var imported = await _store.GetRecentAsync();
+        var imported = await _store.GetRecentAsync(HistoryMode._30);
         var entry = Assert.Single(imported);
         Assert.Equal("saved", entry.Id);
         Assert.Equal("legacy text", entry.Data);
@@ -101,8 +101,44 @@ public sealed class ClipboardStoreTests : IDisposable
         var oldStore = new ClipboardStore(path);
         await oldStore.InitializeAsync();
         await oldStore.AddAsync(new ClipboardHistoryItem { DataType = ClipboardDataTypes.Text, Data = "after upgrade" });
-        var entry = Assert.Single(await oldStore.GetRecentAsync());
+        var entry = Assert.Single(await oldStore.GetRecentAsync(HistoryMode._30));
         Assert.False(entry.IsFavorite);
+    }
+
+    [Fact]
+    public async Task HistoryRetentionFiltersAndPrunesExpiredEntriesButKeepsFavorites()
+    {
+        await _store.InitializeAsync();
+        var oldEntry = new ClipboardHistoryItem
+        {
+            Id = "old",
+            Data = "old",
+            CreateTime = DateTime.UtcNow.AddDays(-31)
+        };
+        var recentEntry = new ClipboardHistoryItem
+        {
+            Id = "recent",
+            Data = "recent",
+            CreateTime = DateTime.UtcNow.AddDays(-2)
+        };
+        var favoriteEntry = oldEntry with { Id = "favorite", IsFavorite = true };
+        await _store.AddAsync(oldEntry);
+        await _store.AddAsync(recentEntry);
+        await _store.AddAsync(favoriteEntry);
+        await _store.SetFavoriteAsync(favoriteEntry.Id, true);
+
+        Assert.Equal(2, (await _store.GetRecentAsync(HistoryMode._30)).Count);
+        Assert.Single(await _store.GetRecentAsync(HistoryMode.None));
+
+        await _store.PruneExpiredAsync(HistoryMode.Forever);
+        Assert.Equal(3, (await _store.GetRecentAsync(HistoryMode.Forever)).Count);
+
+        await _store.PruneExpiredAsync(HistoryMode._30);
+        var remaining = await _store.GetRecentAsync(HistoryMode.Forever);
+        Assert.Equal(2, remaining.Count);
+        Assert.Contains(remaining, item => item.Id == recentEntry.Id);
+        Assert.Contains(remaining, item => item.Id == favoriteEntry.Id && item.IsFavorite);
+        Assert.DoesNotContain(remaining, item => item.Id == oldEntry.Id);
     }
 
     public void Dispose()

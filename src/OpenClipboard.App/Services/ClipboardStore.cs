@@ -58,7 +58,7 @@ public sealed class ClipboardStore
         }
     }
 
-    public async Task<IReadOnlyList<ClipboardHistoryItem>> GetRecentAsync(int limit = 500)
+    public async Task<IReadOnlyList<ClipboardHistoryItem>> GetRecentAsync(HistoryMode historyMode, int limit = 500)
     {
         await using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync();
@@ -66,10 +66,15 @@ public sealed class ClipboardStore
         command.CommandText = """
             SELECT Id, DataType, Data, CreateTime, IsFavorite
             FROM ClipboardEntries
+            WHERE IsFavorite = 1 OR ($mode <> 0 AND ($cutoff IS NULL OR CreateTime >= $cutoff))
             ORDER BY CreateTime DESC
             LIMIT $limit;
             """;
         command.Parameters.AddWithValue("$limit", limit);
+        command.Parameters.AddWithValue("$mode", (int)historyMode);
+        command.Parameters.AddWithValue("$cutoff", GetCutoff(historyMode) is { } cutoff
+            ? cutoff.ToString("O", CultureInfo.InvariantCulture)
+            : DBNull.Value);
 
         var entries = new List<ClipboardHistoryItem>();
         await using var reader = await command.ExecuteReaderAsync();
@@ -86,6 +91,28 @@ public sealed class ClipboardStore
         }
 
         return entries;
+    }
+
+    public async Task PruneExpiredAsync(HistoryMode historyMode)
+    {
+        if (historyMode == HistoryMode.Forever)
+        {
+            return;
+        }
+
+        await using var connection = new SqliteConnection(_connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        var cutoff = GetCutoff(historyMode);
+        command.CommandText = cutoff is null
+            ? "DELETE FROM ClipboardEntries WHERE IsFavorite = 0;"
+            : "DELETE FROM ClipboardEntries WHERE IsFavorite = 0 AND CreateTime < $cutoff;";
+        if (cutoff is not null)
+        {
+            command.Parameters.AddWithValue("$cutoff", cutoff.Value.ToString("O", CultureInfo.InvariantCulture));
+        }
+
+        await command.ExecuteNonQueryAsync();
     }
 
     public async Task AddAsync(ClipboardHistoryItem item)
@@ -191,4 +218,13 @@ public sealed class ClipboardStore
 
         return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
     }
+
+    private static DateTime? GetCutoff(HistoryMode historyMode) => historyMode switch
+    {
+        HistoryMode.None => null,
+        HistoryMode._7 => DateTime.UtcNow.AddDays(-7),
+        HistoryMode._30 => DateTime.UtcNow.AddDays(-30),
+        HistoryMode.Forever => DateTime.MinValue,
+        _ => throw new ArgumentOutOfRangeException(nameof(historyMode), historyMode, "Unknown history retention mode.")
+    };
 }

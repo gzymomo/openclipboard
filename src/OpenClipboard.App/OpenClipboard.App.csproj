@@ -8,6 +8,10 @@
 
   <ItemGroup>
     <AvaloniaResource Include="..\Clipboard.Desktop\resources\images\logo.png" Link="Assets\logo.png" />
+    <Content Include="..\Clipboard.Desktop\resources\languages\language.*.xaml"
+             Link="Languages\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
     <ProjectReference Include="..\Clipboard.Data\Clipboard.Data.csproj" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.14" />
