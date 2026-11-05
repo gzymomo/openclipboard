@@ -3,6 +3,7 @@ name: Cross-platform build
 on:
   push:
     branches: [ master, main, feature/cross-platform ]
+    tags: [ 'v*' ]
   pull_request:
   workflow_dispatch:
 
@@ -41,8 +42,27 @@ jobs:
           cache: true
           cache-dependency-path: src/OpenClipboard.App/OpenClipboard.App.csproj
 
+      - name: Resolve application version
+        id: app-version
+        shell: pwsh
+        run: |
+          $version = '1.0.0'
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            if ($env:GITHUB_REF_NAME -notmatch '^v(\d+\.\d+\.\d+)$') {
+              throw "Release tag must use the vMAJOR.MINOR.PATCH format, got '$env:GITHUB_REF_NAME'."
+            }
+            $version = $Matches[1]
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
       - name: Test
-        run: dotnet test src/OpenClipboard.CrossPlatform.slnx --configuration Release
+        shell: pwsh
+        env:
+          APP_VERSION: ${{ steps.app-version.outputs.version }}
+        run: dotnet test src/OpenClipboard.CrossPlatform.slnx --configuration Release "-p:Version=$env:APP_VERSION"
 
       - name: Publish
-        run: dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained false
+        shell: pwsh
+        env:
+          APP_VERSION: ${{ steps.app-version.outputs.version }}
+        run: dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained false "-p:Version=$env:APP_VERSION"

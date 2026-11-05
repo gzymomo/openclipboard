@@ -5,11 +5,15 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
 using OpenClipboard.App.Services;
 using System;
+using System.Reflection;
 
 namespace OpenClipboard.App;
 
 public partial class App : Application
 {
+    public static string DisplayVersion { get; } =
+        $"v{typeof(App).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "1.0.0"}";
+
     public ClipboardPreferences Preferences { get; private set; } = null!;
 
     public LocalizationService Localization { get; private set; } = null!;
@@ -50,7 +54,7 @@ public partial class App : Application
             var icon = new TrayIcon
             {
                 Icon = new WindowIcon(iconStream),
-                ToolTipText = "OpenClipboard",
+                ToolTipText = $"OpenClipboard {DisplayVersion}",
                 Menu = menu,
                 IsVisible = true
             };

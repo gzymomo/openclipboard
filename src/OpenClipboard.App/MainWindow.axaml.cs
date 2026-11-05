@@ -46,6 +46,7 @@ public partial class MainWindow : Window
         _preferences = preferences;
         _localization = localization;
         InitializeComponent();
+        Title = $"OpenClipboard {App.DisplayVersion}";
         DataContext = this;
         ApplyLocalization();
         ApplyGlassOpacity();

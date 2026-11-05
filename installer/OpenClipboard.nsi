@@ -3,7 +3,11 @@
 !include "LogicLib.nsh"
 
 !ifndef VERSION
-  !define VERSION "1.0.0.0"
+  !define VERSION "1.0.0"
+!endif
+
+!ifndef FILEVERSION
+  !define FILEVERSION "1.0.0.0"
 !endif
 
 !ifndef ARCH
@@ -34,11 +38,12 @@ SetCompressor /SOLID lzma
 SetCompressorDictSize 64
 BrandingText "${APP_NAME}"
 
-VIProductVersion "${VERSION}"
+VIProductVersion "${FILEVERSION}"
 VIAddVersionKey "ProductName" "${APP_NAME}"
 VIAddVersionKey "CompanyName" "${APP_PUBLISHER}"
 VIAddVersionKey "FileDescription" "${APP_NAME} Installer"
-VIAddVersionKey "FileVersion" "${VERSION}"
+VIAddVersionKey "FileVersion" "${FILEVERSION}"
+VIAddVersionKey "ProductVersion" "${VERSION}"
 VIAddVersionKey "LegalCopyright" "MIT License"
 
 !define MUI_ABORTWARNING
