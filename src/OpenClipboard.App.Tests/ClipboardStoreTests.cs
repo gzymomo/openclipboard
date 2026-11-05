@@ -49,7 +49,11 @@ public sealed class ClipboardStoreTests : IDisposable
         await _store.InitializeAsync();
         var legacyPath = Path.Combine(_directory, "legacy.db");
         Directory.CreateDirectory(_directory);
-        await using (var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = legacyPath }.ToString()))
+        await using (var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = legacyPath,
+            Pooling = false
+        }.ToString()))
         {
             await connection.OpenAsync();
             await using var command = connection.CreateCommand();
@@ -83,7 +87,11 @@ public sealed class ClipboardStoreTests : IDisposable
     {
         Directory.CreateDirectory(_directory);
         var path = Path.Combine(_directory, "old-history.db");
-        await using (var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = path }.ToString()))
+        await using (var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = path,
+            Pooling = false
+        }.ToString()))
         {
             await connection.OpenAsync();
             await using var command = connection.CreateCommand();
@@ -98,7 +106,7 @@ public sealed class ClipboardStoreTests : IDisposable
             await command.ExecuteNonQueryAsync();
         }
 
-        var oldStore = new ClipboardStore(path);
+        using var oldStore = new ClipboardStore(path);
         await oldStore.InitializeAsync();
         await oldStore.AddAsync(new ClipboardHistoryItem { DataType = ClipboardDataTypes.Text, Data = "after upgrade" });
         var entry = Assert.Single(await oldStore.GetRecentAsync(HistoryMode._30));
@@ -143,6 +151,7 @@ public sealed class ClipboardStoreTests : IDisposable
 
     public void Dispose()
     {
+        _store.Dispose();
         if (Directory.Exists(_directory))
         {
             Directory.Delete(_directory, recursive: true);

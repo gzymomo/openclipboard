@@ -9,9 +9,10 @@ using OpenClipboard.App.Models;
 
 namespace OpenClipboard.App.Services;
 
-public sealed class ClipboardStore
+public sealed class ClipboardStore : IDisposable
 {
     private readonly string _connectionString;
+    private bool _disposed;
 
     public ClipboardStore(string? databasePath = null)
     {
@@ -166,7 +167,8 @@ public sealed class ClipboardStore
         var sourceConnectionString = new SqliteConnectionStringBuilder
         {
             DataSource = databasePath,
-            Mode = SqliteOpenMode.ReadOnly
+            Mode = SqliteOpenMode.ReadOnly,
+            Pooling = false
         }.ToString();
         await using var source = new SqliteConnection(sourceConnectionString);
         await source.OpenAsync();
@@ -199,6 +201,18 @@ public sealed class ClipboardStore
 
         transaction.Commit();
         return imported;
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        using var connection = new SqliteConnection(_connectionString);
+        SqliteConnection.ClearPool(connection);
+        _disposed = true;
     }
 
     private static string GetDataDirectory()

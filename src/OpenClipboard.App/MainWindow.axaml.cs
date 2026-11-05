@@ -57,6 +57,7 @@ public partial class MainWindow : Window
             _clipboardTimer.Stop();
             _globalHotkey.Dispose();
             _clipboardBitmap?.Dispose();
+            _store.Dispose();
         };
         Closing += MainWindow_Closing;
         _globalHotkey.ErrorOccurred += message => Dispatcher.UIThread.Post(() =>
