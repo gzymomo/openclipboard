@@ -1,0 +1,49 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:OpenClipboard.App"
+        xmlns:services="using:OpenClipboard.App.Services"
+        x:Class="OpenClipboard.App.SettingsWindow"
+        x:DataType="local:SettingsWindow"
+        Title="Settings"
+        Width="480"
+        Height="510"
+        MinWidth="420"
+        MinHeight="460"
+        WindowStartupLocation="CenterOwner">
+  <Grid RowDefinitions="*,Auto" Margin="24" RowSpacing="16">
+    <StackPanel Spacing="16">
+      <TextBlock x:Name="LanguageLabel" />
+      <ComboBox x:Name="LanguageBox" ItemsSource="{Binding Languages}" SelectionChanged="LanguageBox_OnSelectionChanged">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="services:LanguageOption">
+            <TextBlock Text="{Binding DisplayName}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+
+      <TextBlock x:Name="ActivationHotkeyLabel" />
+      <TextBox x:Name="ActivationHotkeyBox" IsReadOnly="True" KeyDown="ActivationHotkeyBox_OnKeyDown" />
+      <TextBlock x:Name="QuickCopyHotkeyLabel" />
+      <TextBox x:Name="QuickCopyHotkeyBox" IsReadOnly="True" KeyDown="QuickCopyHotkeyBox_OnKeyDown" />
+      <TextBlock x:Name="HotkeyHelpText" FontSize="12" Opacity="0.7" />
+
+      <TextBlock x:Name="HistoryModeLabel" />
+      <ComboBox x:Name="HistoryModeBox" ItemsSource="{Binding HistoryModes}" SelectedIndex="2">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="local:HistoryModeOption">
+            <TextBlock Text="{Binding DisplayName}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+
+      <TextBlock x:Name="GlassOpacityLabel" />
+      <Slider x:Name="GlassOpacitySlider" Minimum="0" Maximum="100" TickFrequency="10" IsSnapToTickEnabled="True" />
+      <TextBlock x:Name="StatusText" Foreground="Tomato" TextWrapping="Wrap" />
+    </StackPanel>
+
+    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button x:Name="CancelButton" Click="Cancel_OnClick" />
+      <Button x:Name="SaveButton" Click="Save_OnClick" />
+    </StackPanel>
+  </Grid>
+</Window>

@@ -25,13 +25,26 @@ jobs:
           cache: true
           cache-dependency-path: src/Clipboard.Desktop/Clipboard.Desktop.csproj
 
+      - name: Resolve application version
+        id: app-version
+        shell: pwsh
+        run: |
+          $version = '1.0.0'
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            if ($env:GITHUB_REF_NAME -notmatch '^v(\d+\.\d+\.\d+)$') {
+              throw "Release tag must use the vMAJOR.MINOR.PATCH format, got '$env:GITHUB_REF_NAME'."
+            }
+            $version = $Matches[1]
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
       - name: Build and package
         shell: powershell
-        run: .\build.ps1
+        run: .\build.ps1 -Version '${{ steps.app-version.outputs.version }}'
 
       - name: Build installer
         shell: powershell
-        run: .\build-installer.ps1
+        run: .\build-installer.ps1 -Version '${{ steps.app-version.outputs.version }}'
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

@@ -1,9 +1,15 @@
 ﻿param(
     [ValidateSet('x86', 'x64', 'all')]
-    [string]$Architecture = 'all'
+    [string]$Architecture = 'all',
+
+    [string]$Version
 )
 
 $ErrorActionPreference = 'Stop'
+if ($Version -and $Version -notmatch '^\d+\.\d+\.\d+$') {
+    throw "版本号必须使用 MAJOR.MINOR.PATCH 格式：$Version"
+}
+
 $root = $PSScriptRoot
 $dist = Join-Path $root 'dist'
 $nsisVersion = '3.10'
@@ -59,16 +65,26 @@ $results = @()
 
 foreach ($arch in $architectures) {
     $appExe = Join-Path $dist "OpenClipboard-$arch\Clipboard.Desktop.exe"
-    $version = (Get-Item $appExe).VersionInfo.FileVersion
+    $appVersion = if ($Version) {
+        $Version
+    }
+    else {
+        (Get-Item $appExe).VersionInfo.ProductVersion
+    }
+    if ($appVersion -notmatch '^\d+\.\d+\.\d+$') {
+        throw "应用版本号无效：$appVersion"
+    }
+
+    $fileVersion = "$appVersion.0"
 
     Write-Host ""
-    Write-Host "==> 生成 $arch 安装包 (v$version)" -ForegroundColor Cyan
-    & $makensis "/DARCH=$arch" "/DVERSION=$version" (Join-Path $root 'installer\OpenClipboard.nsi')
+    Write-Host "==> 生成 $arch 安装包 (v$appVersion)" -ForegroundColor Cyan
+    & $makensis "/DARCH=$arch" "/DVERSION=$appVersion" "/DFILEVERSION=$fileVersion" (Join-Path $root 'installer\OpenClipboard.nsi')
     if ($LASTEXITCODE -ne 0) {
         throw "makensis 执行失败，退出码 $LASTEXITCODE"
     }
 
-    $setup = Join-Path $dist "OpenClipboard-Setup-$arch-$version.exe"
+    $setup = Join-Path $dist "OpenClipboard-Setup-$arch-$appVersion.exe"
     if (-not (Test-Path $setup)) {
         throw "安装包未生成：$setup"
     }
@@ -77,7 +93,7 @@ foreach ($arch in $architectures) {
         Architecture = $arch
         Setup        = $setup
         SizeMB       = [math]::Round((Get-Item $setup).Length / 1MB, 1)
-        Version      = $version
+        Version      = $appVersion
     }
 }
 

@@ -24,7 +24,10 @@ param(
     [string]$Configuration = 'Release',
 
     [ValidateSet('x86', 'x64', 'all')]
-    [string]$Architecture = 'all'
+    [string]$Architecture = 'all',
+
+    [ValidatePattern('^\d+\.\d+\.\d+$')]
+    [string]$Version = '1.0.0'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -55,7 +58,7 @@ foreach ($arch in $architectures) {
                 (Join-Path $src 'Clipboard.Desktop\bin\Release') `
         -Recurse -Force -ErrorAction SilentlyContinue
 
-    dotnet publish $project -c $Configuration -r $rid -o $out --no-restore
+    dotnet publish $project -c $Configuration -r $rid -o $out --no-restore "-p:Version=$Version"
     if ($LASTEXITCODE -ne 0) { exit 1 }
 
     # 只保留当前架构的原生库
@@ -97,8 +100,7 @@ foreach ($arch in $architectures) {
     }
 
     Write-Host "==> 打包 $arch zip" -ForegroundColor Cyan
-    $version = (Get-Item (Join-Path $out 'Clipboard.Desktop.exe')).VersionInfo.FileVersion
-    $zip = Join-Path $dist "OpenClipboard-$arch-$version.zip"
+    $zip = Join-Path $dist "OpenClipboard-$arch-$Version.zip"
     if (Test-Path $zip) { Remove-Item $zip -Force }
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -118,7 +120,7 @@ foreach ($arch in $architectures) {
         Output       = $out
         Zip          = $zip
         SizeMB       = [math]::Round((Get-Item $zip).Length / 1MB, 1)
-        Version      = $version
+        Version      = $Version
     }
 }
 

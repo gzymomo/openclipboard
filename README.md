@@ -24,6 +24,28 @@
 - .NET Framework 4.7.2+（Windows 10/11 已自带）
 - 毛玻璃效果需要 Windows 10 1803+；圆角需要 Windows 11
 
+## 跨平台版本
+
+跨平台入口位于 `src/OpenClipboard.App`，使用 .NET 10 和 Avalonia，可面向 Windows、Linux、macOS 构建，并支持 x64/ARM64 运行时标识。支持文本/图片/文件剪贴板历史、搜索、收藏、删除/清理、托盘、登录启动，以及从旧版 SQLite 数据库导入。原 Windows/WPF 版本保持不变。
+
+跨平台版设置中可更改 11 种界面语言、激活热键、快速复制热键、历史保留期限和透明度。快速复制默认禁用，启用后会把最近一条历史记录复制到系统剪贴板；激活热键默认为 `F2`。历史期限支持不保存、7 天、30 天和永久；收藏记录不会因期限清理而删除，过期记录会在启动、修改期限时及运行期间定期清理。
+
+版本号以发布标签为准：推送 `vMAJOR.MINOR.PATCH`（例如 `v1.2.3`）会将 `1.2.3` 写入程序集版本信息、WPF 设置窗口及跨平台窗口标题，并用于 Windows 发布包文件名；不符合该格式的 `v*` 标签会在发布构建中失败。
+
+窗口使用 Avalonia 的 Acrylic 透明级别提示和可调透明度；实际模糊、圆角样式取决于操作系统和桌面合成器，不支持 Acrylic 的环境会退化为普通透明背景。
+
+需要 [.NET SDK 10.0+](https://dotnet.microsoft.com/download)：
+
+```sh
+dotnet test src/OpenClipboard.CrossPlatform.slnx -c Release
+dotnet build src/OpenClipboard.CrossPlatform.slnx -c Release
+dotnet run --project src/OpenClipboard.App/OpenClipboard.App.csproj
+```
+
+跨平台版本将数据保存在当前平台的应用数据目录下 `OpenClipboard/cross-platform.db`，与现有 Windows 版本的数据库分开；可通过“Import old database...”手动导入旧版数据库。
+
+> 全局热键受系统权限和桌面环境限制：macOS 需要授予辅助功能权限，Linux Wayland 环境可能需要额外权限。热键不可用时可通过托盘图标打开程序。
+
 ## 构建
 
 需要 [.NET SDK 8.0+](https://dotnet.microsoft.com/download)：
@@ -100,13 +122,12 @@ dotnet build src\OpenClipboard.sln -c Release
 
 ```
 src/
-  Clipboard.Data/        # 数据模型与枚举（netstandard2.0）
+  Clipboard.Data/        # 数据模型与枚举（netstandard2.0 / net10.0）
   Clipboard.Desktop/     # WPF 主程序（net472）
-    Clipboard.Desktop/            # App、MainWindow
-    Clipboard.Desktop.Views.*     # 控件 / 页面 / 窗口
-    Clipboard.Desktop.ViewModels/ # MVVM
-    Common.*                      # 剪贴板、热键、Hook、SQLite、Interop
-    resources/                    # 语言、样式、图片
+  OpenClipboard.App/     # 跨平台 Avalonia 主程序（net10.0）
+  OpenClipboard.App.Tests/ # 跨平台数据存储测试
+  OpenClipboard.CrossPlatform.slnx # 跨平台解决方案
+  OpenClipboard.sln               # Windows/WPF 解决方案
 build.ps1                # 构建与打包脚本
 build-installer.ps1      # 生成 EXE 安装包
 installer/               # NSIS 安装包脚本
@@ -114,9 +135,8 @@ installer/               # NSIS 安装包脚本
 
 ## 已知限制
 
-- 仅支持 Windows（WPF）
-- “记录天数”目前只在启动时按时间过滤显示，不会自动删除数据库中的旧记录
-- 毛玻璃不透明度为 0% 时仅去掉着色，DWM 模糊仍然保留
+- 各平台的全局热键可用性和 Acrylic/圆角视觉效果由系统权限及桌面合成器决定，无法保证与 Windows DWM 完全一致
+- 跨平台版数据库与 WPF 版分开保存，需手动导入旧版历史记录
 
 ## 第三方组件
 
@@ -127,8 +147,10 @@ installer/               # NSIS 安装包脚本
 | Microsoft.EntityFrameworkCore | 3.1 | Apache-2.0 |
 | Newtonsoft.Json | 13.0.3 | MIT |
 | SQLitePCLRaw | 2.x | Apache-2.0 |
-| Microsoft.Data.Sqlite | 5.x | MIT |
+| Microsoft.Data.Sqlite | 5.x（WPF）/ 10.0（跨平台） | MIT |
 | Microsoft.Extensions.* | 3.1 | MIT |
+| Avalonia | 12.1.5 | MIT |
+| SharpHook | 8.0.1 | MIT |
 
 各组件版权归其原作者所有，使用时请遵守对应许可证。
 

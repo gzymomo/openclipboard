@@ -1,8 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>Clipboard.Data</AssemblyName>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+    <Version>1.0.0</Version>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <Product>Clipboard.Data</Product>
+    <Company>Clipboard.Data</Company>
+    <AssemblyTitle>Clipboard.Data</AssemblyTitle>
   </PropertyGroup>
   <PropertyGroup>
     <LangVersion>11.0</LangVersion>
