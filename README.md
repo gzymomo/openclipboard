@@ -24,6 +24,19 @@
 - .NET Framework 4.7.2+（Windows 10/11 已自带）
 - 毛玻璃效果需要 Windows 10 1803+；圆角需要 Windows 11
 
+## 跨平台版本（开发中）
+
+跨平台入口位于 `src/OpenClipboard.App`，使用 .NET 10 和 Avalonia，可面向 Windows、Linux、macOS 构建，并支持 x64/ARM64 运行时标识。当前阶段实现了文本剪贴板监控、SQLite 历史记录和选中后复制回剪贴板；图片/文件、托盘、全局热键、开机自启等功能尚未迁移。原 Windows/WPF 版本保持不变。
+
+需要 [.NET SDK 10.0+](https://dotnet.microsoft.com/download)：
+
+```sh
+dotnet build src/OpenClipboard.CrossPlatform.slnx -c Release
+dotnet run --project src/OpenClipboard.App/OpenClipboard.App.csproj
+```
+
+跨平台版本将数据保存在当前平台的应用数据目录下 `OpenClipboard/cross-platform.db`，与现有 Windows 版本的数据库分开，避免改动旧版数据库结构。
+
 ## 构建
 
 需要 [.NET SDK 8.0+](https://dotnet.microsoft.com/download)：
@@ -102,11 +115,9 @@ dotnet build src\OpenClipboard.sln -c Release
 src/
   Clipboard.Data/        # 数据模型与枚举（netstandard2.0）
   Clipboard.Desktop/     # WPF 主程序（net472）
-    Clipboard.Desktop/            # App、MainWindow
-    Clipboard.Desktop.Views.*     # 控件 / 页面 / 窗口
-    Clipboard.Desktop.ViewModels/ # MVVM
-    Common.*                      # 剪贴板、热键、Hook、SQLite、Interop
-    resources/                    # 语言、样式、图片
+  OpenClipboard.App/     # 跨平台 Avalonia 主程序（net10.0）
+  OpenClipboard.CrossPlatform.slnx # 跨平台解决方案
+  OpenClipboard.sln               # Windows/WPF 解决方案
 build.ps1                # 构建与打包脚本
 build-installer.ps1      # 生成 EXE 安装包
 installer/               # NSIS 安装包脚本
@@ -114,7 +125,8 @@ installer/               # NSIS 安装包脚本
 
 ## 已知限制
 
-- 仅支持 Windows（WPF）
+- 跨平台版本仍在开发中，目前只支持文本剪贴板；图片/文件、托盘、全局热键、开机自启等功能尚未迁移
+- 跨平台版数据库与 WPF 版分开保存，暂不导入旧版历史记录
 - “记录天数”目前只在启动时按时间过滤显示，不会自动删除数据库中的旧记录
 - 毛玻璃不透明度为 0% 时仅去掉着色，DWM 模糊仍然保留
 
@@ -127,8 +139,9 @@ installer/               # NSIS 安装包脚本
 | Microsoft.EntityFrameworkCore | 3.1 | Apache-2.0 |
 | Newtonsoft.Json | 13.0.3 | MIT |
 | SQLitePCLRaw | 2.x | Apache-2.0 |
-| Microsoft.Data.Sqlite | 5.x | MIT |
+| Microsoft.Data.Sqlite | 5.x（WPF）/ 10.0（跨平台） | MIT |
 | Microsoft.Extensions.* | 3.1 | MIT |
+| Avalonia | 12.1.5 | MIT |
 
 各组件版权归其原作者所有，使用时请遵守对应许可证。
 

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Clipboard.Data/Clipboard.Data.csproj" />
+  <Project Path="OpenClipboard.App/OpenClipboard.App.csproj" />
+</Solution>

@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:OpenClipboard.App"
+        xmlns:models="using:OpenClipboard.App.Models"
+        x:Class="OpenClipboard.App.MainWindow"
+        x:DataType="local:MainWindow"
+        Title="OpenClipboard"
+        Width="720"
+        Height="560"
+        MinWidth="480"
+        MinHeight="360">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="20" RowSpacing="12">
+    <StackPanel Spacing="4">
+      <TextBlock FontSize="24" FontWeight="SemiBold" Text="OpenClipboard" />
+      <TextBlock Opacity="0.7" Text="Cross-platform clipboard history" />
+    </StackPanel>
+
+    <ListBox x:Name="HistoryList"
+             Grid.Row="1"
+             ItemsSource="{Binding History}"
+             SelectionChanged="HistoryList_OnSelectionChanged">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="models:ClipboardHistoryItem">
+          <Border Padding="12" Margin="0,0,0,8" CornerRadius="8">
+            <StackPanel Spacing="6">
+              <TextBlock Text="{Binding Preview}" TextWrapping="Wrap" MaxHeight="72" />
+              <TextBlock FontSize="11" Opacity="0.6" Text="{Binding CreateTime, StringFormat='{}{0:g}'}" />
+            </StackPanel>
+          </Border>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <TextBlock x:Name="StatusText" Grid.Row="2" FontSize="11" Opacity="0.65" />
+  </Grid>
+</Window>
