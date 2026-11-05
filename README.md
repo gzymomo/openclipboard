@@ -122,7 +122,7 @@ dotnet build src\OpenClipboard.sln -c Release
 
 ```
 src/
-  Clipboard.Data/        # 数据模型与枚举（netstandard2.0）
+  Clipboard.Data/        # 数据模型与枚举（netstandard2.0 / net10.0）
   Clipboard.Desktop/     # WPF 主程序（net472）
   OpenClipboard.App/     # 跨平台 Avalonia 主程序（net10.0）
   OpenClipboard.App.Tests/ # 跨平台数据存储测试
