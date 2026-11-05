@@ -41,5 +41,8 @@ jobs:
           cache: true
           cache-dependency-path: src/OpenClipboard.App/OpenClipboard.App.csproj
 
+      - name: Test
+        run: dotnet test src/OpenClipboard.CrossPlatform.slnx --configuration Release
+
       - name: Publish
         run: dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained false

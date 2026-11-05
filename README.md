@@ -26,16 +26,19 @@
 
 ## 跨平台版本（开发中）
 
-跨平台入口位于 `src/OpenClipboard.App`，使用 .NET 10 和 Avalonia，可面向 Windows、Linux、macOS 构建，并支持 x64/ARM64 运行时标识。当前阶段实现了文本剪贴板监控、SQLite 历史记录和选中后复制回剪贴板；图片/文件、托盘、全局热键、开机自启等功能尚未迁移。原 Windows/WPF 版本保持不变。
+跨平台入口位于 `src/OpenClipboard.App`，使用 .NET 10 和 Avalonia，可面向 Windows、Linux、macOS 构建，并支持 x64/ARM64 运行时标识。已迁移文本/图片/文件剪贴板历史、搜索、收藏、删除/清理、托盘、F2 全局呼出、登录启动，以及从旧版 SQLite 数据库导入。原 Windows/WPF 版本保持不变。
 
 需要 [.NET SDK 10.0+](https://dotnet.microsoft.com/download)：
 
 ```sh
+dotnet test src/OpenClipboard.CrossPlatform.slnx -c Release
 dotnet build src/OpenClipboard.CrossPlatform.slnx -c Release
 dotnet run --project src/OpenClipboard.App/OpenClipboard.App.csproj
 ```
 
-跨平台版本将数据保存在当前平台的应用数据目录下 `OpenClipboard/cross-platform.db`，与现有 Windows 版本的数据库分开，避免改动旧版数据库结构。
+跨平台版本将数据保存在当前平台的应用数据目录下 `OpenClipboard/cross-platform.db`，与现有 Windows 版本的数据库分开；可通过“Import old database...”手动导入旧版数据库。
+
+> 全局 F2 热键受系统权限和桌面环境限制：macOS 需要授予辅助功能权限，Linux Wayland 环境可能需要额外权限。热键不可用时可通过托盘图标打开程序。
 
 ## 构建
 
@@ -116,6 +119,7 @@ src/
   Clipboard.Data/        # 数据模型与枚举（netstandard2.0）
   Clipboard.Desktop/     # WPF 主程序（net472）
   OpenClipboard.App/     # 跨平台 Avalonia 主程序（net10.0）
+  OpenClipboard.App.Tests/ # 跨平台数据存储测试
   OpenClipboard.CrossPlatform.slnx # 跨平台解决方案
   OpenClipboard.sln               # Windows/WPF 解决方案
 build.ps1                # 构建与打包脚本
@@ -125,8 +129,8 @@ installer/               # NSIS 安装包脚本
 
 ## 已知限制
 
-- 跨平台版本仍在开发中，目前只支持文本剪贴板；图片/文件、托盘、全局热键、开机自启等功能尚未迁移
-- 跨平台版数据库与 WPF 版分开保存，暂不导入旧版历史记录
+- 跨平台版本尚未迁移原版的多语言设置、快速复制热键、毛玻璃/圆角效果，以及自动清理旧记录等细节
+- 跨平台版数据库与 WPF 版分开保存，需手动导入旧版历史记录
 - “记录天数”目前只在启动时按时间过滤显示，不会自动删除数据库中的旧记录
 - 毛玻璃不透明度为 0% 时仅去掉着色，DWM 模糊仍然保留
 
@@ -142,6 +146,7 @@ installer/               # NSIS 安装包脚本
 | Microsoft.Data.Sqlite | 5.x（WPF）/ 10.0（跨平台） | MIT |
 | Microsoft.Extensions.* | 3.1 | MIT |
 | Avalonia | 12.1.5 | MIT |
+| SharpHook | 8.0.1 | MIT |
 
 各组件版权归其原作者所有，使用时请遵守对应许可证。
 
