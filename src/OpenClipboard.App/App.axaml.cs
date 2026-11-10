@@ -60,6 +60,7 @@ public partial class App : Application
                 Menu = menu,
                 IsVisible = true
             };
+            icon.Clicked += (_, _) => window.ShowFromTray();
             TrayIcon.SetIcons(this, new TrayIcons { icon });
         }
 

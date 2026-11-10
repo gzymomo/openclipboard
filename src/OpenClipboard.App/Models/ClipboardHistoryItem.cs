@@ -30,6 +30,38 @@ public sealed record ClipboardHistoryItem
 
     public bool HasImagePreview => ImageBitmap is not null;
 
+    public bool IsText => DataType == ClipboardDataTypes.Text;
+
+    public bool IsImage => DataType == ClipboardDataTypes.Image;
+
+    public bool IsFile => DataType == ClipboardDataTypes.File;
+
+    public bool IsTextPreview => DataType != ClipboardDataTypes.Image && DataType != ClipboardDataTypes.File;
+
+    public string FileDisplayName
+    {
+        get
+        {
+            var paths = GetFilePaths();
+            if (paths.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            var names = paths.Select(Path.GetFileName).Where(name => !string.IsNullOrWhiteSpace(name)).ToArray();
+            return names.Length == 0 ? string.Empty : string.Join(Environment.NewLine, names);
+        }
+    }
+
+    public string FileDisplayPath
+    {
+        get
+        {
+            var paths = GetFilePaths();
+            return paths.Length == 0 ? string.Empty : string.Join(Environment.NewLine, paths);
+        }
+    }
+
     public IBrush TypeBrush => DataType switch
     {
         ClipboardDataTypes.Text => Brushes.DarkOrange,
@@ -51,13 +83,30 @@ public sealed record ClipboardHistoryItem
     {
         try
         {
-            var paths = JsonSerializer.Deserialize<string[]>(Data) ?? Array.Empty<string>();
+            var paths = GetFilePaths();
             var names = paths.Select(Path.GetFileName).Where(name => !string.IsNullOrEmpty(name));
             return string.Join(", ", names);
         }
-        catch (JsonException)
+        catch
         {
             return "Files";
+        }
+    }
+
+    private string[] GetFilePaths()
+    {
+        if (DataType != ClipboardDataTypes.File)
+        {
+            return Array.Empty<string>();
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<string[]>(Data) ?? Array.Empty<string>();
+        }
+        catch (JsonException)
+        {
+            return Array.Empty<string>();
         }
     }
 }

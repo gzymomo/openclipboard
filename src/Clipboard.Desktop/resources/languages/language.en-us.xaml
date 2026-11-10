@@ -4,7 +4,7 @@
   <sys:String x:Key="ClipboardDataTag_History_Empty">No data</sys:String>
   <sys:String x:Key="ClipboardDataTag_Favorite">Favorites</sys:String>
   <sys:String x:Key="ClipboardDataSearchText_PlaceHolder">Search for</sys:String>
-  <sys:String x:Key="ClipboardData_MainWindowMenu_Setting">Set up</sys:String>
+  <sys:String x:Key="ClipboardData_MainWindowMenu_Setting">Setting</sys:String>
   <sys:String x:Key="ClipboardData_MainWindowMenu_Exit">Drop out</sys:String>
   <sys:String x:Key="History_RadioButton_ClearHistory">Clear history</sys:String>
   <sys:String x:Key="History_Listbox_Copy">Copy</sys:String>

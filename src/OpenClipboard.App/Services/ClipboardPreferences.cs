@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using Clipboard.Data.Enums;
@@ -18,7 +19,7 @@ public sealed class ClipboardPreferences
 
     public HistoryMode HistoryMode { get; set; } = HistoryMode._30;
 
-    public int GlassOpacity { get; set; } = 88;
+    public int GlassOpacity { get; set; } = 50;
 
     public ClipboardPreferences()
     {
@@ -41,6 +42,10 @@ public sealed class ClipboardPreferences
                 GlassOpacity = Math.Clamp(stored.GlassOpacity, 0, 100);
             }
         }
+        else
+        {
+            Language = GetDefaultLanguage();
+        }
     }
 
     public void Save()
@@ -49,6 +54,37 @@ public sealed class ClipboardPreferences
         var data = new ClipboardPreferencesData(Language, ActivationHotkey, QuickCopyHotkey, HistoryMode, GlassOpacity);
         File.WriteAllText(temporaryPath, JsonSerializer.Serialize(data, JsonOptions));
         File.Move(temporaryPath, _path, overwrite: true);
+    }
+
+    private static string GetDefaultLanguage()
+    {
+        var cultureName = CultureInfo.CurrentUICulture.Name;
+        string[] supported = ["zh-CN", "en-US", "de-DE", "fr-FR", "ja-JP", "ko-KR", "ru-RU", "es-ES", "pt-PT", "th-TH", "vi-VN"];
+
+        foreach (var code in supported)
+        {
+            if (string.Equals(code, cultureName, StringComparison.OrdinalIgnoreCase))
+            {
+                return code;
+            }
+        }
+
+        var language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        return language.ToLowerInvariant() switch
+        {
+            "zh" => "zh-CN",
+            "en" => "en-US",
+            "de" => "de-DE",
+            "fr" => "fr-FR",
+            "ja" => "ja-JP",
+            "ko" => "ko-KR",
+            "ru" => "ru-RU",
+            "es" => "es-ES",
+            "pt" => "pt-PT",
+            "th" => "th-TH",
+            "vi" => "vi-VN",
+            _ => "en-US"
+        };
     }
 
     private static string GetApplicationDataDirectory()
@@ -74,5 +110,5 @@ public sealed class ClipboardPreferences
         string ActivationHotkey,
         string QuickCopyHotkey,
         HistoryMode HistoryMode,
-        int GlassOpacity = 88);
+        int GlassOpacity = 50);
 }

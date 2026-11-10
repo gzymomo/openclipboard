@@ -73,6 +73,23 @@ public partial class MainWindow : Window
         _clipboardTimer.Tick += ClipboardTimer_Tick;
         Opened += MainWindow_OnOpened;
         Opened += MainWindow_Opened;
+        Deactivated += (_, _) => Dispatcher.UIThread.Post(() =>
+        {
+            if (!IsVisible || _allowClose)
+            {
+                return;
+            }
+
+            if (OwnedWindows.Count > 0)
+            {
+                return;
+            }
+
+            if (!IsActive)
+            {
+                Hide();
+            }
+        });
         KeyDown += (_, e) =>
         {
             if (e.Key == Key.Escape)
@@ -628,7 +645,12 @@ public partial class MainWindow : Window
     private void ApplyGlassOpacity()
     {
         var alpha = (byte)Math.Round(_preferences.GlassOpacity * 255 / 100d);
-        MainBackground.Background = new SolidColorBrush(Color.FromArgb(alpha, 32, 36, 44));
+        var tint = new SolidColorBrush(Color.FromArgb(alpha, 32, 36, 44));
+        MainBackground.Background = tint;
+        if (MenuPopupBorder is not null)
+        {
+            MenuPopupBorder.Background = tint;
+        }
     }
 
     private void RefreshVisibleHistory()

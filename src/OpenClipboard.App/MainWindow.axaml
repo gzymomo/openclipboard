@@ -37,7 +37,7 @@
                  PlacementTarget="{Binding ElementName=MenuButton}"
                  Placement="Bottom"
                  IsLightDismissEnabled="True">
-            <Border Padding="6" CornerRadius="6" Background="#F4DDDCDC">
+            <Border x:Name="MenuPopupBorder" Padding="6" CornerRadius="8" Background="#F420242C">
               <StackPanel Spacing="2">
                 <Button x:Name="SettingsButton" Click="Settings_OnClick" />
                 <Button x:Name="StartupButton" Click="Startup_OnClick" />
@@ -52,12 +52,15 @@
       <Grid Grid.Row="1">
         <ScrollViewer x:Name="HistoryScroller"
                       HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollBarVisibility="Disabled">
+                      VerticalScrollBarVisibility="Disabled"
+                      ClipToBounds="False">
           <ListBox x:Name="HistoryList"
                    ItemsSource="{Binding VisibleHistory}"
                    SelectionMode="Multiple"
                    Background="Transparent"
                    BorderThickness="0"
+                   Padding="0,12,0,4"
+                   ClipToBounds="False"
                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                    ScrollViewer.VerticalScrollBarVisibility="Disabled"
                    SelectionChanged="HistoryList_OnSelectionChanged"
@@ -65,8 +68,9 @@
             <ListBox.Styles>
               <Style Selector="ListBoxItem">
                 <Setter Property="Padding" Value="0" />
-                <Setter Property="Margin" Value="0,8,0,0" />
+                <Setter Property="Margin" Value="0,4,0,0" />
                 <Setter Property="Background" Value="Transparent" />
+                <Setter Property="ClipToBounds" Value="False" />
               </Style>
               <Style Selector="ListBoxItem:selected">
                 <Setter Property="Background" Value="Transparent" />
@@ -77,15 +81,25 @@
                   <Transitions>
                     <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" />
                     <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.15" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
                   </Transitions>
                 </Setter>
               </Style>
               <Style Selector="ListBoxItem:pointerover Border.history-card">
                 <Setter Property="RenderTransform" Value="scale(1.03) translateY(-8px)" />
-                <Setter Property="BoxShadow" Value="0 10 20 0 #66000000" />
+                <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
               </Style>
               <Style Selector="ListBoxItem:selected Border.history-card">
                 <Setter Property="BorderBrush" Value="#007AFF" />
+                <Setter Property="BorderThickness" Value="2" />
+                <Setter Property="RenderTransform" Value="scale(1.03) translateY(-8px)" />
+                <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
+              </Style>
+              <Style Selector="ListBoxItem:selected:pointerover Border.history-card">
+                <Setter Property="BorderBrush" Value="#007AFF" />
+                <Setter Property="BorderThickness" Value="2" />
+                <Setter Property="RenderTransform" Value="scale(1.03) translateY(-8px)" />
+                <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
               </Style>
             </ListBox.Styles>
             <ListBox.ItemsPanel>
@@ -105,12 +119,12 @@
                 <Border Width="292"
                         Height="300"
                         Classes="history-card"
-                        Margin="8,4"
-                        BorderThickness="0"
+                        Margin="8,8"
+                        BorderThickness="2"
                         BorderBrush="Transparent"
                         CornerRadius="12"
                         Background="#F9FFFFFF"
-                        BoxShadow="0 2 8 0 #44000000"
+                        BoxShadow="0 4 12 0 #33000000"
                         DoubleTapped="HistoryItem_OnDoubleTapped">
                   <Grid RowDefinitions="64,*,24">
                     <Border CornerRadius="8,8,0,0" Background="{Binding TypeBrush}">
@@ -130,16 +144,39 @@
                     <Border Grid.Row="1" Padding="16,12">
                       <Grid>
                         <Image Source="{Binding ImageBitmap}"
-                               IsVisible="{Binding HasImagePreview}"
+                               IsVisible="{Binding IsImage}"
                                Stretch="Uniform"
                                MaxHeight="190"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center" />
                         <TextBlock Text="{Binding DisplayPreview}"
-                                   IsVisible="{Binding !HasImagePreview}"
+                                   IsVisible="{Binding IsTextPreview}"
+                                   Foreground="Black"
                                    TextWrapping="Wrap"
                                    TextTrimming="CharacterEllipsis"
                                    MaxHeight="190" />
+                        <StackPanel IsVisible="{Binding IsFile}"
+                                    Spacing="8"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Top">
+                          <TextBlock Text="{Binding FileDisplayName}"
+                                     Foreground="Black"
+                                     FontWeight="Medium"
+                                     TextWrapping="Wrap"
+                                     TextTrimming="CharacterEllipsis"
+                                     TextAlignment="Center"
+                                     MaxHeight="80" />
+                          <TextBlock Text="📁"
+                                     FontSize="36"
+                                     HorizontalAlignment="Center" />
+                          <TextBlock Text="{Binding FileDisplayPath}"
+                                     Foreground="#FF555555"
+                                     FontSize="12"
+                                     TextWrapping="Wrap"
+                                     TextTrimming="CharacterEllipsis"
+                                     TextAlignment="Center"
+                                     MaxHeight="70" />
+                        </StackPanel>
                       </Grid>
                     </Border>
                     <TextBlock Grid.Row="2"
