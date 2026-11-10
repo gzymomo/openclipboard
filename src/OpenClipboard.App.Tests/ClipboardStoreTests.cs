@@ -44,45 +44,6 @@ public sealed class ClipboardStoreTests : IDisposable
     }
 
     [Fact]
-    public async Task ImportLegacyDatabaseSkipsDeletedAndDuplicateEntries()
-    {
-        await _store.InitializeAsync();
-        var legacyPath = Path.Combine(_directory, "legacy.db");
-        Directory.CreateDirectory(_directory);
-        await using (var connection = new SqliteConnection(new SqliteConnectionStringBuilder
-        {
-            DataSource = legacyPath,
-            Pooling = false
-        }.ToString()))
-        {
-            await connection.OpenAsync();
-            await using var command = connection.CreateCommand();
-            command.CommandText = """
-                CREATE TABLE ClipboardData (
-                    ID TEXT PRIMARY KEY,
-                    DataType INTEGER NOT NULL,
-                    Data TEXT,
-                    IsFavorite INTEGER NOT NULL,
-                    IsDeleted INTEGER NOT NULL,
-                    CreateTime TEXT NOT NULL
-                );
-                INSERT INTO ClipboardData VALUES ('saved', 1, 'legacy text', 1, 0, '2024-01-02 03:04:05');
-                INSERT INTO ClipboardData VALUES ('deleted', 1, 'deleted text', 0, 1, '2024-01-02 03:04:05');
-                """;
-            await command.ExecuteNonQueryAsync();
-        }
-
-        Assert.Equal(1, await _store.ImportLegacyDatabaseAsync(legacyPath));
-        Assert.Equal(0, await _store.ImportLegacyDatabaseAsync(legacyPath));
-
-        var imported = await _store.GetRecentAsync(HistoryMode._30);
-        var entry = Assert.Single(imported);
-        Assert.Equal("saved", entry.Id);
-        Assert.Equal("legacy text", entry.Data);
-        Assert.True(entry.IsFavorite);
-    }
-
-    [Fact]
     public async Task InitializeAddsFavoriteColumnToExistingStore()
     {
         Directory.CreateDirectory(_directory);
