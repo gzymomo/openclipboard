@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -12,6 +14,9 @@ public partial class SettingsWindow : Window
 {
     private readonly ClipboardPreferences _preferences;
     private readonly LocalizationService _localization;
+    private readonly StartupManager _startupManager;
+    private readonly Func<Window, Task> _clearHistory;
+    private bool _autoRunEnabled;
 
     public bool Saved { get; private set; }
 
@@ -19,52 +24,52 @@ public partial class SettingsWindow : Window
 
     public string QuickCopyHotkey { get; private set; }
 
-    public HistoryMode HistoryMode { get; private set; }
+    public IReadOnlyList<LanguageOption> Languages => _localization.Languages;
 
-    public double GlassOpacity { get; private set; }
-
-    public System.Collections.Generic.IReadOnlyList<LanguageOption> Languages => _localization.Languages;
-
-    public HistoryModeOption[] HistoryModes { get; }
-
-    public SettingsWindow() : this(new ClipboardPreferences(), new LocalizationService("en-US"))
+    public SettingsWindow() : this(
+        new ClipboardPreferences(),
+        new LocalizationService("en-US"),
+        new StartupManager(),
+        _ => Task.CompletedTask)
     {
     }
 
-    public SettingsWindow(ClipboardPreferences preferences, LocalizationService localization)
+    public SettingsWindow(
+        ClipboardPreferences preferences,
+        LocalizationService localization,
+        StartupManager? startupManager = null,
+        Func<Window, Task>? clearHistory = null)
     {
         _preferences = preferences;
         _localization = localization;
+        _startupManager = startupManager ?? new StartupManager();
+        _clearHistory = clearHistory ?? (_ => Task.CompletedTask);
         ActivationHotkey = preferences.ActivationHotkey;
         QuickCopyHotkey = preferences.QuickCopyHotkey;
-        HistoryMode = preferences.HistoryMode;
-        GlassOpacity = preferences.GlassOpacity;
-        HistoryModes =
-        [
-            new HistoryModeOption(global::Clipboard.Data.Enums.HistoryMode.None, localization.Get("SettingWindow_General_RecordCount_Slider_None_Text")),
-            new HistoryModeOption(global::Clipboard.Data.Enums.HistoryMode._7, localization.Get("SettingWindow_General_RecordCount_Slider_7_Text")),
-            new HistoryModeOption(global::Clipboard.Data.Enums.HistoryMode._30, localization.Get("SettingWindow_General_RecordCount_Slider_30_Text")),
-            new HistoryModeOption(global::Clipboard.Data.Enums.HistoryMode.Forever, localization.Get("SettingWindow_General_RecordCount_Slider_Infinite_Text"))
-        ];
 
         InitializeComponent();
         DataContext = this;
-        Title = localization.Get("ClipboardData_MainWindowMenu_Setting");
-        LanguageLabel.Text = localization.Get("SettingWindow_General_Language");
-        ActivationHotkeyLabel.Text = localization.Get("SettingWindow_General_ActiveHotKey");
-        QuickCopyHotkeyLabel.Text = localization.Get("SettingWindow_General_PasteHotKey");
-        HistoryModeLabel.Text = localization.Get("SettingWindow_General_RecordCount");
-        GlassOpacityLabel.Text = localization.Get("SettingWindow_General_GlassOpacity");
-        HotkeyHelpText.Text = localization.Get("CrossPlatform_Hotkey_Help");
-        CancelButton.Content = localization.Get("ConfirmWindow_Cancel");
-        SaveButton.Content = localization.Get("CrossPlatform_Save");
+        RefreshLabels();
+        try
+        {
+            _autoRunEnabled = _startupManager.IsEnabled();
+            AutoRunCheckBox.IsChecked = _autoRunEnabled;
+        }
+        catch (Exception exception)
+        {
+            _autoRunEnabled = false;
+            AutoRunCheckBox.IsChecked = false;
+            HotkeyStatusText.Text = $"Launch-at-login status unavailable: {exception.Message}";
+        }
         LanguageBox.SelectedItem = Languages.FirstOrDefault(language => language.Code == preferences.Language);
         ActivationHotkeyBox.Text = ActivationHotkey;
         QuickCopyHotkeyBox.Text = string.IsNullOrWhiteSpace(QuickCopyHotkey)
-            ? localization.Get("CrossPlatform_Disabled")
+            ? _localization.Get("CrossPlatform_Disabled")
             : QuickCopyHotkey;
-        HistoryModeBox.SelectedItem = HistoryModes.First(option => option.Mode == HistoryMode);
-        GlassOpacitySlider.Value = GlassOpacity;
+        HistoryModeSlider.Value = (int)preferences.HistoryMode;
+        GlassOpacitySlider.Value = preferences.GlassOpacity;
+        UpdateHistoryModeText();
+        UpdateGlassOpacityText();
     }
 
     private void LanguageBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -78,27 +83,43 @@ public partial class SettingsWindow : Window
 
     private void RefreshLabels()
     {
-        var selectedMode = HistoryModeBox.SelectedItem is HistoryModeOption selected
-            ? selected.Mode
-            : HistoryMode;
         Title = _localization.Get("ClipboardData_MainWindowMenu_Setting");
+        AutoRunLabel.Text = _localization.Get("SettingWindow_General_AutoRun");
+        AutoRunCheckBox.Content = _localization.Get("SettingWindow_General_AutoRun_Content");
         LanguageLabel.Text = _localization.Get("SettingWindow_General_Language");
         ActivationHotkeyLabel.Text = _localization.Get("SettingWindow_General_ActiveHotKey");
         QuickCopyHotkeyLabel.Text = _localization.Get("SettingWindow_General_PasteHotKey");
         HistoryModeLabel.Text = _localization.Get("SettingWindow_General_RecordCount");
         GlassOpacityLabel.Text = _localization.Get("SettingWindow_General_GlassOpacity");
         HotkeyHelpText.Text = _localization.Get("CrossPlatform_Hotkey_Help");
+        NoHistoryText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_None_Text");
+        SevenDaysText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_7_Text");
+        ThirtyDaysText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_30_Text");
+        ForeverText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_Infinite_Text");
+        ClearHistoryButton.Content = _localization.Get("SettingWindow_General_ClearHistory");
         CancelButton.Content = _localization.Get("ConfirmWindow_Cancel");
         SaveButton.Content = _localization.Get("CrossPlatform_Save");
-        HistoryModes[0] = new HistoryModeOption(global::Clipboard.Data.Enums.HistoryMode.None, _localization.Get("SettingWindow_General_RecordCount_Slider_None_Text"));
-        HistoryModes[1] = new HistoryModeOption(global::Clipboard.Data.Enums.HistoryMode._7, _localization.Get("SettingWindow_General_RecordCount_Slider_7_Text"));
-        HistoryModes[2] = new HistoryModeOption(global::Clipboard.Data.Enums.HistoryMode._30, _localization.Get("SettingWindow_General_RecordCount_Slider_30_Text"));
-        HistoryModes[3] = new HistoryModeOption(global::Clipboard.Data.Enums.HistoryMode.Forever, _localization.Get("SettingWindow_General_RecordCount_Slider_Infinite_Text"));
-        HistoryModeBox.ItemsSource = HistoryModes;
-        HistoryModeBox.SelectedItem = HistoryModes.First(option => option.Mode == selectedMode);
+        UpdateHistoryModeText();
+        UpdateGlassOpacityText();
         if (string.IsNullOrWhiteSpace(QuickCopyHotkey))
         {
             QuickCopyHotkeyBox.Text = _localization.Get("CrossPlatform_Disabled");
+        }
+    }
+
+    private void AutoRunCheckBox_OnClick(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var enabled = AutoRunCheckBox.IsChecked == true;
+            _startupManager.SetEnabled(enabled);
+            _autoRunEnabled = enabled;
+            HotkeyStatusText.Text = string.Empty;
+        }
+        catch (Exception exception)
+        {
+            HotkeyStatusText.Text = $"Could not update launch-at-login setting: {exception.Message}";
+            AutoRunCheckBox.IsChecked = _autoRunEnabled;
         }
     }
 
@@ -109,7 +130,7 @@ public partial class SettingsWindow : Window
         {
             ActivationHotkey = shortcut;
             ActivationHotkeyBox.Text = shortcut;
-            StatusText.Text = string.Empty;
+            HotkeyStatusText.Text = string.Empty;
         }
     }
 
@@ -127,7 +148,7 @@ public partial class SettingsWindow : Window
         {
             QuickCopyHotkey = shortcut;
             QuickCopyHotkeyBox.Text = shortcut;
-            StatusText.Text = string.Empty;
+            HotkeyStatusText.Text = string.Empty;
         }
     }
 
@@ -150,7 +171,7 @@ public partial class SettingsWindow : Window
                 : string.Empty;
         if (keyName.Length == 0)
         {
-            StatusText.Text = _localization.Get("CrossPlatform_Hotkey_Unsupported");
+            HotkeyStatusText.Text = _localization.Get("CrossPlatform_Hotkey_Unsupported");
             return false;
         }
 
@@ -165,18 +186,56 @@ public partial class SettingsWindow : Window
         return true;
     }
 
-    private void Save_OnClick(object? sender, RoutedEventArgs e)
+    private void HistoryModeSlider_OnValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e) =>
+        UpdateHistoryModeText();
+
+    private void GlassOpacitySlider_OnValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e) =>
+        UpdateGlassOpacityText();
+
+    private void UpdateHistoryModeText()
     {
-        if (HistoryModeBox.SelectedItem is not HistoryModeOption selectedMode)
+        if (HistoryModeValueText is null || HistoryModeSlider is null)
         {
-            StatusText.Text = _localization.Get("CrossPlatform_SelectHistoryMode");
             return;
         }
 
+        HistoryModeValueText.Text = _localization.Get((int)Math.Round(HistoryModeSlider.Value) switch
+        {
+            0 => "SettingWindow_General_RecordCount_Slider_None_Text",
+            1 => "SettingWindow_General_RecordCount_Slider_7_Text",
+            2 => "SettingWindow_General_RecordCount_Slider_30_Text",
+            _ => "SettingWindow_General_RecordCount_Slider_Infinite_Text"
+        });
+    }
+
+    private void UpdateGlassOpacityText()
+    {
+        if (GlassOpacityValueText is not null && GlassOpacitySlider is not null)
+        {
+            GlassOpacityValueText.Text = $"{(int)Math.Round(GlassOpacitySlider.Value)}%";
+        }
+    }
+
+    private async void ClearHistory_OnClick(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await _clearHistory(this);
+            HotkeyStatusText.Text = string.Empty;
+        }
+        catch (Exception exception)
+        {
+            HotkeyStatusText.Text = $"Could not clear history: {exception.Message}";
+        }
+    }
+
+    private void Save_OnClick(object? sender, RoutedEventArgs e)
+    {
+        var historyMode = (HistoryMode)Math.Clamp((int)Math.Round(HistoryModeSlider.Value), 0, 3);
         if (!string.IsNullOrWhiteSpace(QuickCopyHotkey)
             && string.Equals(QuickCopyHotkey, ActivationHotkey, StringComparison.OrdinalIgnoreCase))
         {
-            StatusText.Text = _localization.Get("CrossPlatform_Hotkey_Duplicate");
+            HotkeyStatusText.Text = _localization.Get("CrossPlatform_Hotkey_Duplicate");
             return;
         }
 
@@ -185,7 +244,7 @@ public partial class SettingsWindow : Window
             _preferences.Language = (LanguageBox.SelectedItem as LanguageOption)?.Code ?? "en-US";
             _preferences.ActivationHotkey = ActivationHotkey;
             _preferences.QuickCopyHotkey = QuickCopyHotkey;
-            _preferences.HistoryMode = selectedMode.Mode;
+            _preferences.HistoryMode = historyMode;
             _preferences.GlassOpacity = (int)GlassOpacitySlider.Value;
             _preferences.Save();
             Saved = true;
@@ -193,11 +252,9 @@ public partial class SettingsWindow : Window
         }
         catch (Exception exception)
         {
-            StatusText.Text = $"{_localization.Get("CrossPlatform_Save_Failed")}: {exception.Message}";
+            HotkeyStatusText.Text = $"{_localization.Get("CrossPlatform_Save_Failed")}: {exception.Message}";
         }
     }
 
     private void Cancel_OnClick(object? sender, RoutedEventArgs e) => Close();
 }
-
-public sealed record HistoryModeOption(HistoryMode Mode, string DisplayName);

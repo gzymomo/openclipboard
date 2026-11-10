@@ -7,54 +7,141 @@
         Title="OpenClipboard"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
-        Width="720"
-        Height="560"
-        MinWidth="480"
-        MinHeight="360">
+        WindowDecorations="None"
+        CanResize="False"
+        Width="1000"
+        Height="400"
+        MinWidth="640"
+        MinHeight="360"
+        WindowStartupLocation="Manual"
+        ShowInTaskbar="False">
   <Border x:Name="MainBackground" CornerRadius="12" ClipToBounds="True">
-  <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="20" RowSpacing="10">
-    <StackPanel Spacing="4">
-      <TextBlock FontSize="24" FontWeight="SemiBold" Text="OpenClipboard" />
-      <TextBlock x:Name="SubtitleText" Opacity="0.7" Text="Clipboard history" />
-    </StackPanel>
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16,12" RowSpacing="8">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Button x:Name="SearchToggleButton" Content="⌕" Click="SearchToggle_OnClick" />
+          <Grid x:Name="SearchPanel" Width="320" ColumnDefinitions="*,Auto" IsVisible="False">
+            <TextBox x:Name="SearchBox"
+                     PlaceholderText="Search history"
+                     TextChanged="SearchBox_OnTextChanged"
+                     LostFocus="SearchBox_OnLostFocus" />
+            <Button Grid.Column="1" Content="×" Click="SearchClear_OnClick" />
+          </Grid>
+          <Button x:Name="HistoryFilterButton" Click="HistoryFilter_OnClick" />
+          <Button x:Name="FavoritesFilterButton" Click="FavoritesFilter_OnClick" />
+        </StackPanel>
 
-    <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-      <TextBox x:Name="SearchBox" PlaceholderText="Search history" TextChanged="SearchBox_OnTextChanged" />
-      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-        <Button x:Name="ImportButton" Content="Import old database..." Click="ImportLegacy_OnClick" />
-        <Button x:Name="SettingsButton" Content="Settings" Click="Settings_OnClick" />
-      </StackPanel>
-    </Grid>
-
-    <ListBox x:Name="HistoryList"
-             Grid.Row="2"
-             ItemsSource="{Binding VisibleHistory}"
-             SelectionChanged="HistoryList_OnSelectionChanged">
-      <ListBox.ItemTemplate>
-        <DataTemplate x:DataType="models:ClipboardHistoryItem">
-          <Border Padding="12" Margin="0,0,0,8" CornerRadius="8">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-              <StackPanel Spacing="6">
-                <TextBlock Text="{Binding Preview}" TextWrapping="Wrap" MaxHeight="72" />
-                <TextBlock FontSize="11" Opacity="0.6" Text="{Binding CreateTime, StringFormat='{}{0:g}'}" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+          <Button x:Name="ImportButton" Content="Import old database..." Click="ImportLegacy_OnClick" />
+          <Button x:Name="MenuButton" Content="⋮" Click="Menu_OnClick" />
+          <Popup x:Name="MenuPopup"
+                 PlacementTarget="{Binding ElementName=MenuButton}"
+                 Placement="Bottom"
+                 IsLightDismissEnabled="True">
+            <Border Padding="6" CornerRadius="6" Background="#F4DDDCDC">
+              <StackPanel Spacing="2">
+                <Button x:Name="SettingsButton" Click="Settings_OnClick" />
+                <Button x:Name="StartupButton" Click="Startup_OnClick" />
+                <Button x:Name="ClearButton" Click="Clear_OnClick" />
+                <Button x:Name="QuitButton" Click="Quit_OnClick" />
               </StackPanel>
-              <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding FavoriteMarker}" />
-            </Grid>
-          </Border>
-        </DataTemplate>
-      </ListBox.ItemTemplate>
-    </ListBox>
+            </Border>
+          </Popup>
+        </StackPanel>
+      </Grid>
 
-    <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8">
-      <Button x:Name="CopyButton" Content="Copy" Click="Copy_OnClick" IsEnabled="False" />
-      <Button x:Name="FavoriteButton" Content="Favorite" Click="Favorite_OnClick" IsEnabled="False" />
-      <Button x:Name="DeleteButton" Content="Delete" Click="Delete_OnClick" IsEnabled="False" />
-      <Button x:Name="ClearButton" Content="Clear all history" Click="Clear_OnClick" />
-      <Button x:Name="StartupButton" Content="Enable launch at login" Click="Startup_OnClick" />
-      <Button x:Name="QuitButton" Content="Quit" Click="Quit_OnClick" />
-    </StackPanel>
+      <Grid Grid.Row="1">
+        <ScrollViewer x:Name="HistoryScroller"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Disabled">
+          <ListBox x:Name="HistoryList"
+                   ItemsSource="{Binding VisibleHistory}"
+                   SelectionMode="Multiple"
+                   Background="Transparent"
+                   BorderThickness="0"
+                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                   ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                   SelectionChanged="HistoryList_OnSelectionChanged"
+                   PointerWheelChanged="HistoryList_OnPointerWheelChanged">
+            <ListBox.Styles>
+              <Style Selector="ListBoxItem">
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Background" Value="Transparent" />
+              </Style>
+              <Style Selector="ListBoxItem:selected">
+                <Setter Property="Background" Value="Transparent" />
+              </Style>
+              <Style Selector="ListBoxItem:selected Border.history-card">
+                <Setter Property="BorderBrush" Value="#007AFF" />
+              </Style>
+            </ListBox.Styles>
+            <ListBox.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ContextMenu>
+              <ContextMenu>
+                <MenuItem x:Name="CopyMenuItem" Click="Copy_OnClick" />
+                <MenuItem x:Name="FavoriteMenuItem" Click="Favorite_OnClick" />
+                <MenuItem x:Name="DeleteMenuItem" Click="Delete_OnClick" />
+              </ContextMenu>
+            </ListBox.ContextMenu>
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="models:ClipboardHistoryItem">
+                <Border Width="292"
+                        Height="300"
+                        Classes="history-card"
+                        Margin="8,4"
+                        BorderThickness="4"
+                        BorderBrush="Transparent"
+                        CornerRadius="8"
+                        Background="#F9FFFFFF"
+                        BoxShadow="0 2 8 0 #44000000"
+                        DoubleTapped="HistoryItem_OnDoubleTapped">
+                  <Grid RowDefinitions="64,*,24">
+                    <Border CornerRadius="8,8,0,0" Background="{Binding TypeBrush}">
+                      <Grid ColumnDefinitions="*,64">
+                        <StackPanel Grid.Column="0" Margin="16,0" VerticalAlignment="Center" Spacing="2">
+                          <TextBlock FontSize="20" FontWeight="Medium" Foreground="White" Text="{Binding TypeLabel}" />
+                          <TextBlock FontSize="12" Foreground="#DDFFFFFF" Text="{Binding CreateTime, StringFormat='{}{0:g}'}" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontSize="24"
+                                   Foreground="White"
+                                   Text="{Binding FavoriteMarker}" />
+                      </Grid>
+                    </Border>
+                    <Border Grid.Row="1" Padding="16,12">
+                      <TextBlock Text="{Binding DisplayPreview}"
+                                 TextWrapping="Wrap"
+                                 TextTrimming="CharacterEllipsis"
+                                 MaxHeight="190" />
+                    </Border>
+                    <TextBlock Grid.Row="2"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               Foreground="#FF777777"
+                               Text="{Binding ItemInfo}" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </ScrollViewer>
+        <TextBlock x:Name="EmptyHistoryText"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   FontSize="28"
+                   FontWeight="Medium"
+                   Foreground="#66000000"
+                   IsHitTestVisible="False" />
+      </Grid>
 
-    <TextBlock x:Name="StatusText" Grid.Row="4" FontSize="11" Opacity="0.65" />
-  </Grid>
+      <TextBlock x:Name="StatusText" Grid.Row="2" FontSize="11" Opacity="0.65" />
+    </Grid>
   </Border>
 </Window>

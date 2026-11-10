@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Avalonia.Media;
 using Clipboard.Data.Enums;
 
 namespace OpenClipboard.App.Models;
@@ -17,6 +18,20 @@ public sealed record ClipboardHistoryItem
     public DateTime CreateTime { get; init; } = DateTime.Now;
 
     public bool IsFavorite { get; init; }
+
+    public string TypeLabel { get; init; } = string.Empty;
+
+    public string ItemInfo { get; init; } = string.Empty;
+
+    public string DisplayPreview { get; init; } = string.Empty;
+
+    public IBrush TypeBrush => DataType switch
+    {
+        ClipboardDataTypes.Text => Brushes.DarkOrange,
+        ClipboardDataTypes.Image => Brushes.RoyalBlue,
+        ClipboardDataTypes.File => Brushes.Goldenrod,
+        _ => Brushes.Gray
+    };
 
     public string FavoriteMarker => IsFavorite ? "★" : string.Empty;
 
@@ -39,5 +54,6 @@ public sealed record ClipboardHistoryItem
         {
             return "Files";
         }
+
     }
 }

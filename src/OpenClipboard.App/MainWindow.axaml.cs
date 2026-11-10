@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -31,6 +32,7 @@ public partial class MainWindow : Window
     private ClipboardDataTypes _lastClipboardType;
     private DateOnly _lastHistoryCleanupDate;
     private bool _isReadingClipboard;
+    private bool _showFavorites;
     private bool _allowClose;
 
     public ObservableCollection<ClipboardHistoryItem> History { get; } = new();
@@ -39,6 +41,23 @@ public partial class MainWindow : Window
 
     public MainWindow() : this(new ClipboardPreferences(), new LocalizationService("en-US"))
     {
+    }
+
+    private void MainWindow_OnOpened(object? sender, EventArgs e)
+    {
+        var screen = Screens.Primary;
+        if (screen is null)
+        {
+            return;
+        }
+
+        var bounds = screen.Bounds;
+        Width = Math.Max(MinWidth, bounds.Width / screen.Scaling);
+        Height = 400;
+        Position = new Avalonia.PixelPoint(
+            bounds.X,
+            bounds.Y + bounds.Height - (int)Math.Round(Height * screen.Scaling));
+        Topmost = true;
     }
 
     public MainWindow(ClipboardPreferences preferences, LocalizationService localization)
@@ -52,6 +71,7 @@ public partial class MainWindow : Window
         ApplyGlassOpacity();
         _clipboardTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(750) };
         _clipboardTimer.Tick += ClipboardTimer_Tick;
+        Opened += MainWindow_OnOpened;
         Opened += MainWindow_Opened;
         Closed += (_, _) =>
         {
@@ -80,7 +100,7 @@ public partial class MainWindow : Window
             _lastHistoryCleanupDate = DateOnly.FromDateTime(DateTime.UtcNow);
             foreach (var item in await _store.GetRecentAsync(_preferences.HistoryMode))
             {
-                History.Add(item);
+                History.Add(LocalizeItem(item));
             }
 
             if (History.Count > 0)
@@ -140,7 +160,7 @@ public partial class MainWindow : Window
             await _store.AddAsync(item);
             _lastClipboardType = item.DataType;
             _lastClipboardData = item.Data;
-            History.Insert(0, item);
+            History.Insert(0, LocalizeItem(item));
             RefreshVisibleHistory();
             StatusText.Text = $"Saved {item.DataType.ToString().ToLowerInvariant()} clipboard content.";
         }
@@ -190,22 +210,65 @@ public partial class MainWindow : Window
 
     private void HistoryList_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        var hasSelection = HistoryList.SelectedItem is ClipboardHistoryItem;
-        CopyButton.IsEnabled = hasSelection;
-        FavoriteButton.IsEnabled = hasSelection;
-        DeleteButton.IsEnabled = hasSelection;
-        FavoriteButton.Content = _localization.Get(HistoryList.SelectedItem is ClipboardHistoryItem { IsFavorite: true }
+        var selected = HistoryList.SelectedItems?.Cast<ClipboardHistoryItem>().ToArray() ?? Array.Empty<ClipboardHistoryItem>();
+        CopyMenuItem.IsEnabled = selected.Length > 0;
+        FavoriteMenuItem.IsEnabled = selected.Length > 0;
+        DeleteMenuItem.IsEnabled = selected.Length > 0;
+        FavoriteMenuItem.Header = _localization.Get(selected.Length > 0 && selected.All(item => item.IsFavorite)
             ? "CrossPlatform_Unfavorite"
             : "CrossPlatform_Favorite");
     }
 
     private async void Copy_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (HistoryList.SelectedItem is not ClipboardHistoryItem item)
+        var selected = HistoryList.SelectedItems?.Cast<ClipboardHistoryItem>().ToArray() ?? Array.Empty<ClipboardHistoryItem>();
+        if (selected.Length == 0 && HistoryList.SelectedItem is ClipboardHistoryItem single)
+        {
+            selected = new[] { single };
+        }
+
+        if (selected.Length == 0)
         {
             return;
         }
 
+        try
+        {
+            var textItems = selected.Where(item => item.DataType == ClipboardDataTypes.Text).ToArray();
+            if (textItems.Length > 0)
+            {
+                await CopyItemAsync(new ClipboardHistoryItem
+                {
+                    DataType = ClipboardDataTypes.Text,
+                    Data = string.Join(Environment.NewLine, textItems.Select(item => item.Data))
+                });
+            }
+            else if (selected[0].DataType == ClipboardDataTypes.Image)
+            {
+                await CopyItemAsync(selected[0]);
+            }
+            else
+            {
+                var paths = selected
+                    .Where(item => item.DataType == ClipboardDataTypes.File)
+                    .SelectMany(item => JsonSerializer.Deserialize<string[]>(item.Data) ?? Array.Empty<string>())
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray();
+                await CopyItemAsync(new ClipboardHistoryItem
+                {
+                    DataType = ClipboardDataTypes.File,
+                    Data = JsonSerializer.Serialize(paths)
+                });
+            }
+        }
+        catch (Exception exception)
+        {
+            StatusText.Text = $"Could not copy clipboard content: {exception.Message}";
+        }
+    }
+
+    private async Task<bool> CopyItemAsync(ClipboardHistoryItem item)
+    {
         try
         {
             var clipboard = Clipboard ?? throw new InvalidOperationException("The platform clipboard is unavailable.");
@@ -269,67 +332,99 @@ public partial class MainWindow : Window
             _lastClipboardType = item.DataType;
             _lastClipboardData = item.Data;
             StatusText.Text = $"Copied {item.DataType.ToString().ToLowerInvariant()} content.";
+            return true;
         }
         catch (Exception exception)
         {
             StatusText.Text = $"Could not copy clipboard content: {exception.Message}";
+            return false;
         }
     }
 
     private async void Favorite_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (HistoryList.SelectedItem is not ClipboardHistoryItem item)
+        var selected = HistoryList.SelectedItems?.Cast<ClipboardHistoryItem>().ToArray() ?? Array.Empty<ClipboardHistoryItem>();
+        if (selected.Length == 0 && HistoryList.SelectedItem is ClipboardHistoryItem single)
         {
-            return;
+            selected = new[] { single };
         }
 
-        try
+        var makeFavorite = !selected.All(item => item.IsFavorite);
+        foreach (var item in selected)
         {
-            var updated = item with { IsFavorite = !item.IsFavorite };
-            await _store.SetFavoriteAsync(item.Id, updated.IsFavorite);
-            ReplaceItem(item, updated);
-            HistoryList.SelectedItem = updated;
-            StatusText.Text = updated.IsFavorite ? "Added to favorites." : "Removed from favorites.";
+            try
+            {
+                await _store.SetFavoriteAsync(item.Id, makeFavorite);
+                ReplaceItem(item, LocalizeItem(item with { IsFavorite = makeFavorite }));
+            }
+            catch (Exception exception)
+            {
+                StatusText.Text = $"Could not update favorite: {exception.Message}";
+                return;
+            }
         }
-        catch (Exception exception)
-        {
-            StatusText.Text = $"Could not update favorite: {exception.Message}";
-        }
+
+        StatusText.Text = makeFavorite ? "Added to favorites." : "Removed from favorites.";
     }
 
     private async void Delete_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (HistoryList.SelectedItem is not ClipboardHistoryItem item)
+        var selected = HistoryList.SelectedItems?.Cast<ClipboardHistoryItem>().ToArray() ?? Array.Empty<ClipboardHistoryItem>();
+        if (selected.Length == 0 && HistoryList.SelectedItem is ClipboardHistoryItem single)
+        {
+            selected = new[] { single };
+        }
+
+        foreach (var item in selected)
+        {
+            try
+            {
+                await _store.DeleteAsync(item.Id);
+                History.Remove(item);
+            }
+            catch (Exception exception)
+            {
+                StatusText.Text = $"Could not delete history entry: {exception.Message}";
+                return;
+            }
+        }
+
+        RefreshVisibleHistory();
+        StatusText.Text = "History entry deleted.";
+    }
+
+    private async void Clear_OnClick(object? sender, RoutedEventArgs e)
+    {
+        MenuPopup.IsOpen = false;
+        if (!await ConfirmClearAsync())
         {
             return;
         }
 
         try
         {
-            await _store.DeleteAsync(item.Id);
-            History.Remove(item);
-            RefreshVisibleHistory();
-            StatusText.Text = "History entry deleted.";
-        }
-        catch (Exception exception)
-        {
-            StatusText.Text = $"Could not delete history entry: {exception.Message}";
-        }
-    }
-
-    private async void Clear_OnClick(object? sender, RoutedEventArgs e)
-    {
-        try
-        {
-            await _store.ClearAsync();
-            History.Clear();
-            RefreshVisibleHistory();
-            StatusText.Text = "Clipboard history cleared.";
+            await ClearHistoryAsync();
         }
         catch (Exception exception)
         {
             StatusText.Text = $"Could not clear history: {exception.Message}";
         }
+    }
+
+    private async Task ClearHistoryFromSettingsAsync(Window owner)
+    {
+        if (await ConfirmClearAsync(owner))
+        {
+            await ClearHistoryAsync();
+        }
+    }
+
+    private async Task ClearHistoryAsync()
+    {
+        await _store.ClearAsync();
+        History.Clear();
+        RefreshVisibleHistory();
+        StatusText.Text = "Clipboard history cleared.";
     }
 
     private async void ImportLegacy_OnClick(object? sender, RoutedEventArgs e)
@@ -354,7 +449,7 @@ public partial class MainWindow : Window
             History.Clear();
             foreach (var item in await _store.GetRecentAsync(_preferences.HistoryMode))
             {
-                History.Add(item);
+                History.Add(LocalizeItem(item));
             }
 
             RefreshVisibleHistory();
@@ -368,9 +463,116 @@ public partial class MainWindow : Window
 
     private void SearchBox_OnTextChanged(object? sender, TextChangedEventArgs e) => RefreshVisibleHistory();
 
+    private void SearchToggle_OnClick(object? sender, RoutedEventArgs e)
+    {
+        SearchPanel.IsVisible = !SearchPanel.IsVisible;
+        if (SearchPanel.IsVisible)
+        {
+            SearchBox.Focus();
+        }
+        else
+        {
+            SearchBox.Text = string.Empty;
+        }
+    }
+
+    private void SearchBox_OnLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(SearchBox.Text))
+        {
+            SearchPanel.IsVisible = false;
+        }
+    }
+
+    private void SearchClear_OnClick(object? sender, RoutedEventArgs e)
+    {
+        SearchBox.Text = string.Empty;
+        SearchBox.Focus();
+    }
+
+    private void HistoryFilter_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _showFavorites = false;
+        RefreshFilterButtons();
+        RefreshVisibleHistory();
+    }
+
+    private void FavoritesFilter_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _showFavorites = true;
+        RefreshFilterButtons();
+        RefreshVisibleHistory();
+    }
+
+    private void RefreshFilterButtons()
+    {
+        HistoryFilterButton.Opacity = _showFavorites ? 0.65 : 1;
+        FavoritesFilterButton.Opacity = _showFavorites ? 1 : 0.65;
+    }
+
+    private void Menu_OnClick(object? sender, RoutedEventArgs e) => MenuPopup.IsOpen = !MenuPopup.IsOpen;
+
+    private async void HistoryItem_OnDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is Control { DataContext: ClipboardHistoryItem item })
+        {
+            HistoryList.SelectedItem = item;
+            if (await CopyItemAsync(item))
+            {
+                Hide();
+            }
+        }
+    }
+
+    private void HistoryList_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    {
+        HistoryScroller.Offset = new Avalonia.Vector(
+            Math.Max(0, HistoryScroller.Offset.X - e.Delta.Y * 40),
+            HistoryScroller.Offset.Y);
+        e.Handled = true;
+    }
+
+    private async Task<bool> ConfirmClearAsync(Window? owner = null)
+    {
+        var dialog = new Window
+        {
+            Title = _localization.Get("ConfirmWindow_Title_Text"),
+            Width = 360,
+            Height = 150,
+            MinWidth = 360,
+            MinHeight = 150,
+            MaxWidth = 360,
+            MaxHeight = 150,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false
+        };
+        var confirmButton = new Button { Content = _localization.Get("ConfirmWindow_OK") };
+        var cancelButton = new Button { Content = _localization.Get("ConfirmWindow_Cancel") };
+        confirmButton.Click += (_, _) => dialog.Close(true);
+        cancelButton.Click += (_, _) => dialog.Close(false);
+        dialog.Content = new StackPanel
+        {
+            Margin = new Avalonia.Thickness(20),
+            Spacing = 18,
+            Children =
+            {
+                new TextBlock { Text = _localization.Get("ConfirmWindow_Content_Text"), TextWrapping = Avalonia.Media.TextWrapping.Wrap },
+                new StackPanel
+                {
+                    Orientation = Avalonia.Layout.Orientation.Horizontal,
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                    Spacing = 8,
+                    Children = { cancelButton, confirmButton }
+                }
+            }
+        };
+        return await dialog.ShowDialog<bool>(owner ?? this);
+    }
+
     private async void Settings_OnClick(object? sender, RoutedEventArgs e)
     {
-        var dialog = new SettingsWindow(_preferences, _localization);
+        MenuPopup.IsOpen = false;
+        var dialog = new SettingsWindow(_preferences, _localization, _startupManager, ClearHistoryFromSettingsAsync);
         await dialog.ShowDialog(this);
         if (!dialog.Saved)
         {
@@ -410,7 +612,7 @@ public partial class MainWindow : Window
         History.Clear();
         foreach (var item in await _store.GetRecentAsync(_preferences.HistoryMode))
         {
-            History.Add(item);
+            History.Add(LocalizeItem(item));
         }
 
         RefreshVisibleHistory();
@@ -424,21 +626,29 @@ public partial class MainWindow : Window
         }
 
         HistoryList.SelectedItem = History[0];
-        Copy_OnClick(CopyButton, new RoutedEventArgs());
+        Copy_OnClick(null, new RoutedEventArgs());
     }
 
     private void ApplyLocalization()
     {
-        SubtitleText.Text = _localization.Get("ClipboardDataTag_History");
         SearchBox.PlaceholderText = _localization.Get("ClipboardDataSearchText_PlaceHolder");
         ImportButton.Content = _localization.Get("CrossPlatform_ImportLegacy");
+        HistoryFilterButton.Content = _localization.Get("ClipboardDataTag_History");
+        FavoritesFilterButton.Content = _localization.Get("ClipboardDataTag_Favorite");
         SettingsButton.Content = _localization.Get("ClipboardData_MainWindowMenu_Setting");
-        CopyButton.Content = _localization.Get("History_Listbox_Copy");
-        FavoriteButton.Content = _localization.Get("History_Listbox_Favorite");
-        DeleteButton.Content = _localization.Get("History_Listbox_Delete");
+        CopyMenuItem.Header = _localization.Get("History_Listbox_Copy");
+        FavoriteMenuItem.Header = _localization.Get("CrossPlatform_Favorite");
+        DeleteMenuItem.Header = _localization.Get("History_Listbox_Delete");
         ClearButton.Content = _localization.Get("History_RadioButton_ClearHistory");
         QuitButton.Content = _localization.Get("ClipboardData_MainWindowMenu_Exit");
         UpdateStartupButton();
+        RefreshFilterButtons();
+        for (var index = 0; index < History.Count; index++)
+        {
+            History[index] = LocalizeItem(History[index]);
+        }
+
+        RefreshVisibleHistory();
         (Avalonia.Application.Current as App)?.ApplyLocalization();
     }
 
@@ -454,11 +664,47 @@ public partial class MainWindow : Window
         var matches = string.IsNullOrEmpty(query)
             ? History
             : new ObservableCollection<ClipboardHistoryItem>(History.Where(item =>
-                item.Preview.Contains(query, StringComparison.CurrentCultureIgnoreCase)));
+                item.Data.Contains(query, StringComparison.CurrentCultureIgnoreCase)));
         VisibleHistory.Clear();
-        foreach (var item in matches)
+        foreach (var item in matches.Where(item => !_showFavorites || item.IsFavorite))
         {
             VisibleHistory.Add(item);
+        }
+
+        EmptyHistoryText.Text = _localization.Get("ClipboardDataTag_History_Empty");
+        EmptyHistoryText.IsVisible = VisibleHistory.Count == 0;
+    }
+
+    private ClipboardHistoryItem LocalizeItem(ClipboardHistoryItem item)
+    {
+        var typeLabel = item.DataType == ClipboardDataTypes.File
+            ? string.Format(CultureInfo.CurrentCulture, _localization.Get("ClipboardDataType_File"), GetFileCount(item.Data))
+            : _localization.Get($"ClipboardDataType_{item.DataType}");
+        var itemInfo = item.DataType switch
+        {
+            ClipboardDataTypes.Text => string.Format(
+                CultureInfo.CurrentCulture,
+                _localization.Get("ClipboardDataType_Item_Info_Text"),
+                item.Data.Length),
+            ClipboardDataTypes.Image => _localization.Get("ClipboardDataType_Image"),
+            ClipboardDataTypes.File => typeLabel,
+            _ => string.Empty
+        };
+        var preview = item.DataType == ClipboardDataTypes.Image
+            ? _localization.Get("ClipboardDataType_Image")
+            : item.Preview;
+        return item with { TypeLabel = typeLabel, ItemInfo = itemInfo, DisplayPreview = preview };
+    }
+
+    private static int GetFileCount(string data)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<string[]>(data)?.Length ?? 0;
+        }
+        catch (JsonException)
+        {
+            return 0;
         }
     }
 
