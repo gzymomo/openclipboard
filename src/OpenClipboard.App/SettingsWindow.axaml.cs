@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Clipboard.Data.Enums;
 using OpenClipboard.App.Services;
 
@@ -68,6 +69,7 @@ public partial class SettingsWindow : Window
             : QuickCopyHotkey;
         HistoryModeSlider.Value = (int)preferences.HistoryMode;
         GlassOpacitySlider.Value = preferences.GlassOpacity;
+        ApplyGlassOpacity();
         UpdateHistoryModeText();
         UpdateGlassOpacityText();
     }
@@ -189,8 +191,11 @@ public partial class SettingsWindow : Window
     private void HistoryModeSlider_OnValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e) =>
         UpdateHistoryModeText();
 
-    private void GlassOpacitySlider_OnValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e) =>
+    private void GlassOpacitySlider_OnValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+    {
         UpdateGlassOpacityText();
+        ApplyGlassOpacity();
+    }
 
     private void UpdateHistoryModeText()
     {
@@ -214,6 +219,18 @@ public partial class SettingsWindow : Window
         {
             GlassOpacityValueText.Text = $"{(int)Math.Round(GlassOpacitySlider.Value)}%";
         }
+    }
+
+    private void ApplyGlassOpacity()
+    {
+        if (MainBackground is null)
+        {
+            return;
+        }
+
+        var opacity = GlassOpacitySlider?.Value ?? _preferences.GlassOpacity;
+        var alpha = (byte)Math.Round(opacity * 255 / 100d);
+        MainBackground.Background = new SolidColorBrush(Color.FromArgb(alpha, 32, 36, 44));
     }
 
     private async void ClearHistory_OnClick(object? sender, RoutedEventArgs e)

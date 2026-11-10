@@ -82,7 +82,6 @@ public sealed class LocalizationService
         ["CrossPlatform_SelectHistoryMode"] = "Select a history retention period.",
         ["CrossPlatform_Save_Failed"] = "Could not save preferences",
         ["CrossPlatform_SearchHistory"] = "Search history",
-        ["CrossPlatform_ImportLegacy"] = "Import old database...",
         ["CrossPlatform_Copy"] = "Copy",
         ["CrossPlatform_Favorite"] = "Favorite",
         ["CrossPlatform_Unfavorite"] = "Unfavorite",
@@ -108,7 +107,6 @@ public sealed class LocalizationService
         ["CrossPlatform_SelectHistoryMode"] = "请选择历史记录保留期限。",
         ["CrossPlatform_Save_Failed"] = "无法保存设置",
         ["CrossPlatform_SearchHistory"] = "搜索历史记录",
-        ["CrossPlatform_ImportLegacy"] = "导入旧数据库...",
         ["CrossPlatform_Copy"] = "复制",
         ["CrossPlatform_Favorite"] = "收藏",
         ["CrossPlatform_Unfavorite"] = "取消收藏",
@@ -136,7 +134,6 @@ public sealed class LocalizationService
                 ["CrossPlatform_Hotkey_Duplicate"] = "Die Tastenkombinationen müssen unterschiedlich sein.",
                 ["CrossPlatform_SelectHistoryMode"] = "Aufbewahrungszeitraum auswählen.",
                 ["CrossPlatform_Save_Failed"] = "Einstellungen konnten nicht gespeichert werden",
-                ["CrossPlatform_ImportLegacy"] = "Alte Datenbank importieren...",
                 ["CrossPlatform_StartupEnable"] = "Beim Anmelden starten",
                 ["CrossPlatform_StartupDisable"] = "Autostart deaktivieren",
                 ["CrossPlatform_Monitoring"] = "Zwischenablage wird überwacht. Eintrag auswählen und auf Kopieren klicken."
@@ -152,7 +149,6 @@ public sealed class LocalizationService
                 ["CrossPlatform_Hotkey_Duplicate"] = "Les deux raccourcis doivent être différents.",
                 ["CrossPlatform_SelectHistoryMode"] = "Choisissez la durée de conservation.",
                 ["CrossPlatform_Save_Failed"] = "Impossible d'enregistrer les préférences",
-                ["CrossPlatform_ImportLegacy"] = "Importer l'ancienne base de données...",
                 ["CrossPlatform_StartupEnable"] = "Lancer à la connexion",
                 ["CrossPlatform_StartupDisable"] = "Désactiver le lancement à la connexion",
                 ["CrossPlatform_Monitoring"] = "Surveillance du presse-papiers. Sélectionnez une entrée et cliquez sur Copier."
@@ -168,7 +164,6 @@ public sealed class LocalizationService
                 ["CrossPlatform_Hotkey_Duplicate"] = "2 つのショートカットは別々にしてください。",
                 ["CrossPlatform_SelectHistoryMode"] = "履歴の保存期間を選択してください。",
                 ["CrossPlatform_Save_Failed"] = "設定を保存できませんでした",
-                ["CrossPlatform_ImportLegacy"] = "旧データベースをインポート...",
                 ["CrossPlatform_StartupEnable"] = "ログイン時に起動",
                 ["CrossPlatform_StartupDisable"] = "ログイン時の起動を無効化",
                 ["CrossPlatform_Monitoring"] = "クリップボードを監視中です。履歴を選択してコピーしてください。"
@@ -184,7 +179,6 @@ public sealed class LocalizationService
                 ["CrossPlatform_Hotkey_Duplicate"] = "두 바로 가기는 서로 달라야 합니다.",
                 ["CrossPlatform_SelectHistoryMode"] = "기록 보관 기간을 선택하세요.",
                 ["CrossPlatform_Save_Failed"] = "설정을 저장할 수 없습니다",
-                ["CrossPlatform_ImportLegacy"] = "이전 데이터베이스 가져오기...",
                 ["CrossPlatform_StartupEnable"] = "로그인 시 시작",
                 ["CrossPlatform_StartupDisable"] = "로그인 시 시작 끄기",
                 ["CrossPlatform_Monitoring"] = "클립보드를 모니터링 중입니다. 항목을 선택하고 복사를 누르세요."
@@ -200,7 +194,6 @@ public sealed class LocalizationService
                 ["CrossPlatform_Hotkey_Duplicate"] = "Сочетания клавиш должны различаться.",
                 ["CrossPlatform_SelectHistoryMode"] = "Выберите срок хранения истории.",
                 ["CrossPlatform_Save_Failed"] = "Не удалось сохранить настройки",
-                ["CrossPlatform_ImportLegacy"] = "Импортировать старую базу данных...",
                 ["CrossPlatform_StartupEnable"] = "Запускать при входе в систему",
                 ["CrossPlatform_StartupDisable"] = "Отключить запуск при входе",
                 ["CrossPlatform_Monitoring"] = "Буфер обмена отслеживается. Выберите запись и нажмите «Копировать»."
@@ -216,7 +209,6 @@ public sealed class LocalizationService
                 ["CrossPlatform_Hotkey_Duplicate"] = "Los dos atajos deben ser diferentes.",
                 ["CrossPlatform_SelectHistoryMode"] = "Selecciona el periodo de conservación.",
                 ["CrossPlatform_Save_Failed"] = "No se pudieron guardar las preferencias",
-                ["CrossPlatform_ImportLegacy"] = "Importar base de datos antigua...",
                 ["CrossPlatform_StartupEnable"] = "Iniciar al iniciar sesión",
                 ["CrossPlatform_StartupDisable"] = "Desactivar inicio de sesión",
                 ["CrossPlatform_Monitoring"] = "Supervisando el portapapeles. Selecciona una entrada y pulsa Copiar."
@@ -232,7 +224,6 @@ public sealed class LocalizationService
                 ["CrossPlatform_Hotkey_Duplicate"] = "Os dois atalhos têm de ser diferentes.",
                 ["CrossPlatform_SelectHistoryMode"] = "Selecione o período de retenção.",
                 ["CrossPlatform_Save_Failed"] = "Não foi possível guardar as preferências",
-                ["CrossPlatform_ImportLegacy"] = "Importar base de dados antiga...",
                 ["CrossPlatform_StartupEnable"] = "Iniciar ao iniciar sessão",
                 ["CrossPlatform_StartupDisable"] = "Desativar início de sessão",
                 ["CrossPlatform_Monitoring"] = "A monitorizar a área de transferência. Selecione uma entrada e prima Copiar."
@@ -248,7 +239,6 @@ public sealed class LocalizationService
                 ["CrossPlatform_Hotkey_Duplicate"] = "ปุ่มลัดทั้งสองต้องไม่ซ้ำกัน",
                 ["CrossPlatform_SelectHistoryMode"] = "เลือกระยะเวลาการเก็บประวัติ",
                 ["CrossPlatform_Save_Failed"] = "บันทึกการตั้งค่าไม่สำเร็จ",
-                ["CrossPlatform_ImportLegacy"] = "นำเข้าฐานข้อมูลเก่า...",
                 ["CrossPlatform_StartupEnable"] = "เริ่มทำงานเมื่อเข้าสู่ระบบ",
                 ["CrossPlatform_StartupDisable"] = "ปิดการเริ่มทำงานเมื่อเข้าสู่ระบบ",
                 ["CrossPlatform_Monitoring"] = "กำลังตรวจสอบคลิปบอร์ด เลือกรายการแล้วคลิกคัดลอก"
@@ -264,7 +254,6 @@ public sealed class LocalizationService
                 ["CrossPlatform_Hotkey_Duplicate"] = "Hai phím tắt phải khác nhau.",
                 ["CrossPlatform_SelectHistoryMode"] = "Chọn thời hạn lưu lịch sử.",
                 ["CrossPlatform_Save_Failed"] = "Không thể lưu tùy chọn",
-                ["CrossPlatform_ImportLegacy"] = "Nhập cơ sở dữ liệu cũ...",
                 ["CrossPlatform_StartupEnable"] = "Khởi chạy khi đăng nhập",
                 ["CrossPlatform_StartupDisable"] = "Tắt khởi chạy khi đăng nhập",
                 ["CrossPlatform_Monitoring"] = "Đang theo dõi bảng tạm. Chọn mục rồi nhấn Sao chép."

@@ -73,6 +73,14 @@ public partial class MainWindow : Window
         _clipboardTimer.Tick += ClipboardTimer_Tick;
         Opened += MainWindow_OnOpened;
         Opened += MainWindow_Opened;
+        KeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Escape)
+            {
+                Hide();
+                e.Handled = true;
+            }
+        };
         Closed += (_, _) =>
         {
             _clipboardTimer.Stop();
@@ -112,7 +120,7 @@ public partial class MainWindow : Window
             RefreshVisibleHistory();
             _clipboardTimer.Start();
             StartHotkeys();
-            StatusText.Text = _localization.Get("CrossPlatform_Monitoring");
+            StatusText.Text = string.Empty;
         }
         catch (Exception exception)
         {
@@ -427,40 +435,6 @@ public partial class MainWindow : Window
         StatusText.Text = "Clipboard history cleared.";
     }
 
-    private async void ImportLegacy_OnClick(object? sender, RoutedEventArgs e)
-    {
-        try
-        {
-            var selected = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-            {
-                Title = "Import an OpenClipboard database",
-                AllowMultiple = false,
-                FileTypeFilter = new[]
-                {
-                    new FilePickerFileType("SQLite database") { Patterns = new[] { "*.db", "*.sqlite", "*.sqlite3" } }
-                }
-            });
-            if (selected.Count == 0)
-            {
-                return;
-            }
-
-            var imported = await _store.ImportLegacyDatabaseAsync(selected[0].Path.LocalPath);
-            History.Clear();
-            foreach (var item in await _store.GetRecentAsync(_preferences.HistoryMode))
-            {
-                History.Add(LocalizeItem(item));
-            }
-
-            RefreshVisibleHistory();
-            StatusText.Text = $"Imported {imported} history entr{(imported == 1 ? "y" : "ies")}.";
-        }
-        catch (Exception exception)
-        {
-            StatusText.Text = $"Could not import database: {exception.Message}";
-        }
-    }
-
     private void SearchBox_OnTextChanged(object? sender, TextChangedEventArgs e) => RefreshVisibleHistory();
 
     private void SearchToggle_OnClick(object? sender, RoutedEventArgs e)
@@ -590,7 +564,7 @@ public partial class MainWindow : Window
             _lastHistoryCleanupDate = DateOnly.FromDateTime(DateTime.UtcNow);
             await ReloadHistoryAsync();
             StartHotkeys();
-            StatusText.Text = _localization.Get("CrossPlatform_Monitoring");
+            StatusText.Text = string.Empty;
         }
         catch (Exception exception)
         {
@@ -632,7 +606,6 @@ public partial class MainWindow : Window
     private void ApplyLocalization()
     {
         SearchBox.PlaceholderText = _localization.Get("ClipboardDataSearchText_PlaceHolder");
-        ImportButton.Content = _localization.Get("CrossPlatform_ImportLegacy");
         HistoryFilterButton.Content = _localization.Get("ClipboardDataTag_History");
         FavoritesFilterButton.Content = _localization.Get("ClipboardDataTag_Favorite");
         SettingsButton.Content = _localization.Get("ClipboardData_MainWindowMenu_Setting");
@@ -693,7 +666,22 @@ public partial class MainWindow : Window
         var preview = item.DataType == ClipboardDataTypes.Image
             ? _localization.Get("ClipboardDataType_Image")
             : item.Preview;
-        return item with { TypeLabel = typeLabel, ItemInfo = itemInfo, DisplayPreview = preview };
+        var image = item.DataType == ClipboardDataTypes.Image ? TryCreateBitmap(item.Data) : item.ImageBitmap;
+        return item with { TypeLabel = typeLabel, ItemInfo = itemInfo, DisplayPreview = preview, ImageBitmap = image };
+    }
+
+    private static Bitmap? TryCreateBitmap(string data)
+    {
+        try
+        {
+            var bytes = Convert.FromBase64String(data);
+            using var stream = new MemoryStream(bytes);
+            return new Bitmap(stream);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static int GetFileCount(string data)

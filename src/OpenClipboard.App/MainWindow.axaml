@@ -17,8 +17,8 @@
         ShowInTaskbar="False">
   <Border x:Name="MainBackground" CornerRadius="12" ClipToBounds="True">
     <Grid RowDefinitions="Auto,*,Auto" Margin="16,12" RowSpacing="8">
-      <Grid ColumnDefinitions="*,Auto">
-        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+      <Grid>
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
           <Button x:Name="SearchToggleButton" Content="⌕" Click="SearchToggle_OnClick" />
           <Grid x:Name="SearchPanel" Width="320" ColumnDefinitions="*,Auto" IsVisible="False">
             <TextBox x:Name="SearchBox"
@@ -31,8 +31,7 @@
           <Button x:Name="FavoritesFilterButton" Click="FavoritesFilter_OnClick" />
         </StackPanel>
 
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-          <Button x:Name="ImportButton" Content="Import old database..." Click="ImportLegacy_OnClick" />
+        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="6">
           <Button x:Name="MenuButton" Content="⋮" Click="Menu_OnClick" />
           <Popup x:Name="MenuPopup"
                  PlacementTarget="{Binding ElementName=MenuButton}"
@@ -66,10 +65,24 @@
             <ListBox.Styles>
               <Style Selector="ListBoxItem">
                 <Setter Property="Padding" Value="0" />
+                <Setter Property="Margin" Value="0,8,0,0" />
                 <Setter Property="Background" Value="Transparent" />
               </Style>
               <Style Selector="ListBoxItem:selected">
                 <Setter Property="Background" Value="Transparent" />
+              </Style>
+              <Style Selector="Border.history-card">
+                <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+                <Setter Property="Transitions">
+                  <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" />
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.15" />
+                  </Transitions>
+                </Setter>
+              </Style>
+              <Style Selector="ListBoxItem:pointerover Border.history-card">
+                <Setter Property="RenderTransform" Value="scale(1.03) translateY(-8px)" />
+                <Setter Property="BoxShadow" Value="0 10 20 0 #66000000" />
               </Style>
               <Style Selector="ListBoxItem:selected Border.history-card">
                 <Setter Property="BorderBrush" Value="#007AFF" />
@@ -93,9 +106,9 @@
                         Height="300"
                         Classes="history-card"
                         Margin="8,4"
-                        BorderThickness="4"
+                        BorderThickness="0"
                         BorderBrush="Transparent"
-                        CornerRadius="8"
+                        CornerRadius="12"
                         Background="#F9FFFFFF"
                         BoxShadow="0 2 8 0 #44000000"
                         DoubleTapped="HistoryItem_OnDoubleTapped">
@@ -115,10 +128,19 @@
                       </Grid>
                     </Border>
                     <Border Grid.Row="1" Padding="16,12">
-                      <TextBlock Text="{Binding DisplayPreview}"
-                                 TextWrapping="Wrap"
-                                 TextTrimming="CharacterEllipsis"
-                                 MaxHeight="190" />
+                      <Grid>
+                        <Image Source="{Binding ImageBitmap}"
+                               IsVisible="{Binding HasImagePreview}"
+                               Stretch="Uniform"
+                               MaxHeight="190"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding DisplayPreview}"
+                                   IsVisible="{Binding !HasImagePreview}"
+                                   TextWrapping="Wrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxHeight="190" />
+                      </Grid>
                     </Border>
                     <TextBlock Grid.Row="2"
                                HorizontalAlignment="Center"

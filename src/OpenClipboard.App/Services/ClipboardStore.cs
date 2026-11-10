@@ -162,47 +162,6 @@ public sealed class ClipboardStore : IDisposable
         await command.ExecuteNonQueryAsync();
     }
 
-    public async Task<int> ImportLegacyDatabaseAsync(string databasePath)
-    {
-        var sourceConnectionString = new SqliteConnectionStringBuilder
-        {
-            DataSource = databasePath,
-            Mode = SqliteOpenMode.ReadOnly,
-            Pooling = false
-        }.ToString();
-        await using var source = new SqliteConnection(sourceConnectionString);
-        await source.OpenAsync();
-        await using var destination = new SqliteConnection(_connectionString);
-        await destination.OpenAsync();
-        using var transaction = destination.BeginTransaction();
-        await using var read = source.CreateCommand();
-        read.CommandText = """
-            SELECT ID, DataType, Data, CreateTime, IsFavorite
-            FROM ClipboardData
-            WHERE IsDeleted = 0;
-            """;
-        await using var reader = await read.ExecuteReaderAsync();
-        var imported = 0;
-        while (await reader.ReadAsync())
-        {
-            await using var insert = destination.CreateCommand();
-            insert.Transaction = transaction;
-            insert.CommandText = """
-                INSERT OR IGNORE INTO ClipboardEntries (Id, DataType, Data, CreateTime, IsFavorite)
-                VALUES ($id, $dataType, $data, $createTime, $favorite);
-                """;
-            insert.Parameters.AddWithValue("$id", reader.GetString(0));
-            insert.Parameters.AddWithValue("$dataType", reader.GetInt32(1));
-            insert.Parameters.AddWithValue("$data", reader.IsDBNull(2) ? string.Empty : reader.GetString(2));
-            insert.Parameters.AddWithValue("$createTime", DateTime.Parse(reader.GetString(3), CultureInfo.InvariantCulture).ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
-            insert.Parameters.AddWithValue("$favorite", reader.GetBoolean(4));
-            imported += await insert.ExecuteNonQueryAsync();
-        }
-
-        transaction.Commit();
-        return imported;
-    }
-
     public void Dispose()
     {
         if (_disposed)

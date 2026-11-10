@@ -50,6 +50,8 @@ public partial class App : Application
             menu.Items.Add(_quitItem);
             ApplyLocalization();
 
+            Program.StartActivationListener(() => Avalonia.Threading.Dispatcher.UIThread.Post(window.ShowFromTray));
+
             using var iconStream = AssetLoader.Open(new Uri("avares://OpenClipboard.App/Assets/logo.png"));
             var icon = new TrayIcon
             {

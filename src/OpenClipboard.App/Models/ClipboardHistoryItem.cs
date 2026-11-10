@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Clipboard.Data.Enums;
 
 namespace OpenClipboard.App.Models;
@@ -24,6 +25,10 @@ public sealed record ClipboardHistoryItem
     public string ItemInfo { get; init; } = string.Empty;
 
     public string DisplayPreview { get; init; } = string.Empty;
+
+    public Bitmap? ImageBitmap { get; init; }
+
+    public bool HasImagePreview => ImageBitmap is not null;
 
     public IBrush TypeBrush => DataType switch
     {
@@ -54,6 +59,5 @@ public sealed record ClipboardHistoryItem
         {
             return "Files";
         }
-
     }
 }
