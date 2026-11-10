@@ -15,38 +15,65 @@ public sealed class GlobalHotkeyService : IDisposable
 
     public void Start(string activationHotkey, string quickCopyHotkey, Action activate, Action quickCopy)
     {
-        var activation = HotkeyBinding.Parse(activationHotkey);
-        HotkeyBinding? quickCopyBinding = string.IsNullOrWhiteSpace(quickCopyHotkey)
-            ? null
-            : HotkeyBinding.Parse(quickCopyHotkey);
+        HotkeyBinding activation;
+        try
+        {
+            activation = HotkeyBinding.Parse(activationHotkey);
+        }
+        catch (Exception exception)
+        {
+            ErrorOccurred?.Invoke(exception.Message);
+            return;
+        }
+
+        HotkeyBinding? quickCopyBinding = null;
+        if (!string.IsNullOrWhiteSpace(quickCopyHotkey))
+        {
+            try
+            {
+                quickCopyBinding = HotkeyBinding.Parse(quickCopyHotkey);
+            }
+            catch (Exception exception)
+            {
+                ErrorOccurred?.Invoke(exception.Message);
+            }
+        }
         if (quickCopyBinding is not null && activation == quickCopyBinding.Value)
         {
-            throw new ArgumentException("The activation and quick-copy shortcuts must be different.");
+            ErrorOccurred?.Invoke("The activation and quick-copy shortcuts must be different.");
+            quickCopyBinding = null;
         }
 
         Dispose();
 
-        _hook = new EventLoopGlobalHook();
-        _hook.KeyPressed += (_, args) =>
-        {
-            if (activation.Matches(args.Data.KeyCode, args.RawEvent.Mask))
-            {
-                InvokeDebounced(activate);
-            }
-            else if (quickCopyBinding?.Matches(args.Data.KeyCode, args.RawEvent.Mask) == true)
-            {
-                InvokeDebounced(quickCopy);
-            }
-        };
-
         try
         {
+            _hook = new EventLoopGlobalHook();
+            _hook.KeyPressed += (_, args) =>
+            {
+                try
+                {
+                    if (activation.Matches(args.Data.KeyCode, args.RawEvent.Mask))
+                    {
+                        InvokeDebounced(activate);
+                    }
+                    else if (quickCopyBinding?.Matches(args.Data.KeyCode, args.RawEvent.Mask) == true)
+                    {
+                        InvokeDebounced(quickCopy);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    ErrorOccurred?.Invoke(exception.Message);
+                }
+            };
+
             _ = ObserveAsync(_hook.RunAsync(GlobalHookType.Keyboard));
         }
         catch (Exception exception)
         {
             ErrorOccurred?.Invoke(exception.Message);
-            _hook.Dispose();
+            _hook?.Dispose();
             _hook = null;
         }
     }
@@ -86,8 +113,14 @@ public sealed class GlobalHotkeyService : IDisposable
     {
         public bool Matches(KeyCode key, EventMask modifiers)
         {
+            if (key != Key)
+            {
+                return false;
+            }
+
             const EventMask modifierMask = EventMask.Shift | EventMask.Ctrl | EventMask.Alt | EventMask.Meta;
-            return key == Key && (modifiers & modifierMask) == Modifiers;
+            var current = modifiers & modifierMask;
+            return (current & Modifiers) == Modifiers && (current & ~Modifiers) == 0;
         }
 
         public static HotkeyBinding Parse(string shortcut)

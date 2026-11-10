@@ -5,6 +5,7 @@
         x:Class="OpenClipboard.App.SettingsWindow"
         x:DataType="local:SettingsWindow"
         Title="Settings"
+        Icon="avares://OpenClipboard.App/Assets/logo.png"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         Width="400"
