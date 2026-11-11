@@ -34,6 +34,7 @@ public partial class MainWindow : Window
     private bool _isReadingClipboard;
     private bool _showFavorites;
     private bool _allowClose;
+    private DateTimeOffset _suppressDeactivateHideUntil;
 
     public ObservableCollection<ClipboardHistoryItem> History { get; } = new();
 
@@ -73,14 +74,20 @@ public partial class MainWindow : Window
         _clipboardTimer.Tick += ClipboardTimer_Tick;
         Opened += MainWindow_OnOpened;
         Opened += MainWindow_Opened;
-        Deactivated += (_, _) => Dispatcher.UIThread.Post(() =>
+        Deactivated += (_, _) => Dispatcher.UIThread.Post(async () =>
         {
+            await Task.Delay(120);
             if (!IsVisible || _allowClose)
             {
                 return;
             }
 
             if (OwnedWindows.Count > 0)
+            {
+                return;
+            }
+
+            if (DateTimeOffset.UtcNow < _suppressDeactivateHideUntil)
             {
                 return;
             }
@@ -510,8 +517,22 @@ public partial class MainWindow : Window
             HistoryList.SelectedItem = item;
             if (await CopyItemAsync(item))
             {
+                ShowCopySuccessOverlay();
                 Hide();
             }
+        }
+    }
+
+    private void ShowCopySuccessOverlay()
+    {
+        try
+        {
+            var overlay = new CopySuccessOverlay(_localization.Get("CopySuccessWindow_CopySuccess"));
+            overlay.Show();
+        }
+        catch
+        {
+            // Overlay is best-effort; copy already succeeded.
         }
     }
 
@@ -768,16 +789,33 @@ public partial class MainWindow : Window
 
     public void ShowFromTray()
     {
-        Show();
-        WindowState = WindowState.Normal;
+        _suppressDeactivateHideUntil = DateTimeOffset.UtcNow.AddMilliseconds(600);
+        if (!IsVisible)
+        {
+            Show();
+        }
+
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+        }
+
         Activate();
+        Topmost = true;
+        Focus();
     }
 
     private void ToggleFromHotkey()
     {
-        if (IsVisible)
+        if (IsVisible && IsActive)
         {
             Hide();
+        }
+        else if (IsVisible)
+        {
+            Activate();
+            Topmost = true;
+            Focus();
         }
         else
         {

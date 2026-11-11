@@ -17,7 +17,7 @@
         WindowStartupLocation="Manual"
         ShowInTaskbar="False">
   <Border x:Name="MainBackground" CornerRadius="12" ClipToBounds="True">
-    <Grid RowDefinitions="Auto,*,Auto" Margin="16,12" RowSpacing="8">
+    <Grid RowDefinitions="Auto,*" Margin="16,12" RowSpacing="8">
       <Grid>
         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
           <Button x:Name="SearchToggleButton" Content="⌕" Click="SearchToggle_OnClick" />
@@ -32,7 +32,13 @@
           <Button x:Name="FavoritesFilterButton" Click="FavoritesFilter_OnClick" />
         </StackPanel>
 
-        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="6">
+        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <TextBlock x:Name="StatusText"
+                     FontSize="11"
+                     Opacity="0.65"
+                     VerticalAlignment="Center"
+                     MaxWidth="360"
+                     TextTrimming="CharacterEllipsis" />
           <Button x:Name="MenuButton" Content="⋮" Click="Menu_OnClick" />
           <Popup x:Name="MenuPopup"
                  PlacementTarget="{Binding ElementName=MenuButton}"
@@ -213,8 +219,6 @@
                    Foreground="#66000000"
                    IsHitTestVisible="False" />
       </Grid>
-
-      <TextBlock x:Name="StatusText" Grid.Row="2" FontSize="11" Opacity="0.65" />
     </Grid>
   </Border>
 </Window>

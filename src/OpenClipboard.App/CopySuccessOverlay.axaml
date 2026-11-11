@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OpenClipboard.App.CopySuccessOverlay"
+        WindowDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Topmost="True"
+        IsHitTestVisible="False"
+        SizeToContent="WidthAndHeight">
+  <Border CornerRadius="20"
+          Background="#99000000"
+          Padding="50,26"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center">
+    <StackPanel Spacing="8" HorizontalAlignment="Center">
+      <Viewbox Width="100" Height="100" HorizontalAlignment="Center">
+        <Canvas Width="100" Height="100">
+          <Path Stroke="White"
+                StrokeThickness="8"
+                StrokeLineCap="Round"
+                StrokeJoin="Round"
+                Data="M88,39.9767923 L88,44.0245249 C87.9888584,63.5094554 75.1621297,80.6662412 56.4756396,86.1909034 C37.7891495,91.7155655 17.6943301,84.2920379 7.08843079,67.9460364 C-3.5174685,51.6000348 -2.10794646,30.225448 10.5526251,15.4135325 C23.2131966,0.601616982 44.1088596,-4.11918325 61.9080737,3.81118157 M88,8.82685021 L44.0001242,52.8679406 L30.8001615,39.6688126" />
+        </Canvas>
+      </Viewbox>
+      <TextBlock x:Name="MessageText"
+                 Foreground="White"
+                 FontSize="32"
+                 FontWeight="Medium"
+                 HorizontalAlignment="Center"
+                 Text="Copied" />
+    </StackPanel>
+  </Border>
+</Window>

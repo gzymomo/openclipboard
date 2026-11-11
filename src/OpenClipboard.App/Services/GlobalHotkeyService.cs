@@ -68,7 +68,7 @@ public sealed class GlobalHotkeyService : IDisposable
                 }
             };
 
-            _ = ObserveAsync(_hook.RunAsync(GlobalHookType.Keyboard));
+            _ = ObserveAsync(_hook.RunAsync());
         }
         catch (Exception exception)
         {
@@ -88,7 +88,14 @@ public sealed class GlobalHotkeyService : IDisposable
         }
 
         Interlocked.Exchange(ref _lastActivationMilliseconds, now);
-        action();
+        try
+        {
+            action();
+        }
+        catch (Exception exception)
+        {
+            ErrorOccurred?.Invoke(exception.Message);
+        }
     }
 
     private async Task ObserveAsync(Task runTask)
@@ -96,6 +103,8 @@ public sealed class GlobalHotkeyService : IDisposable
         try
         {
             await runTask;
+            // If the hook stops without throwing, report so users can see why hotkeys stopped working.
+            ErrorOccurred?.Invoke("Global hotkey listener stopped.");
         }
         catch (Exception exception)
         {
