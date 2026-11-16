@@ -9,6 +9,8 @@ namespace OpenClipboard.App.Services;
 public sealed class GlobalHotkeyService : IDisposable
 {
     private EventLoopGlobalHook? _hook;
+    private Task? _runTask;
+    private int _generation;
     private long _lastActivationMilliseconds;
 
     public event Action<string>? ErrorOccurred;
@@ -44,12 +46,14 @@ public sealed class GlobalHotkeyService : IDisposable
             quickCopyBinding = null;
         }
 
-        Dispose();
+        StopCurrentHook();
 
         try
         {
-            _hook = new EventLoopGlobalHook();
-            _hook.KeyPressed += (_, args) =>
+            var hook = new EventLoopGlobalHook();
+            _hook = hook;
+            var generation = ++_generation;
+            hook.KeyPressed += (_, args) =>
             {
                 try
                 {
@@ -68,13 +72,34 @@ public sealed class GlobalHotkeyService : IDisposable
                 }
             };
 
-            _ = ObserveAsync(_hook.RunAsync());
+            var runTask = hook.RunAsync();
+            _runTask = runTask;
+            _ = ObserveAsync(hook, generation, runTask);
         }
         catch (Exception exception)
         {
             ErrorOccurred?.Invoke(exception.Message);
             _hook?.Dispose();
             _hook = null;
+            _runTask = null;
+        }
+    }
+
+    private void StopCurrentHook()
+    {
+        var hook = _hook;
+        _hook = null;
+        _runTask = null;
+        if (hook is not null)
+        {
+            try
+            {
+                hook.Dispose();
+            }
+            catch
+            {
+                // Best effort; the hook is being replaced or the service is shutting down.
+            }
         }
     }
 
@@ -98,38 +123,91 @@ public sealed class GlobalHotkeyService : IDisposable
         }
     }
 
-    private async Task ObserveAsync(Task runTask)
+    private async Task ObserveAsync(EventLoopGlobalHook hook, int generation, Task runTask)
     {
         try
         {
             await runTask;
-            // If the hook stops without throwing, report so users can see why hotkeys stopped working.
-            ErrorOccurred?.Invoke("Global hotkey listener stopped.");
+            // Only report unexpected stops for the active hook. Disposing/restarting a hook stops it intentionally.
+            if (generation == _generation && ReferenceEquals(_hook, hook))
+            {
+                ErrorOccurred?.Invoke("Global hotkey listener stopped.");
+            }
         }
         catch (Exception exception)
         {
-            ErrorOccurred?.Invoke(exception.Message);
+            if (generation == _generation && ReferenceEquals(_hook, hook))
+            {
+                ErrorOccurred?.Invoke(exception.Message);
+            }
         }
     }
 
     public void Dispose()
     {
-        _hook?.Dispose();
-        _hook = null;
+        _generation++;
+        StopCurrentHook();
     }
 
-    private readonly record struct HotkeyBinding(KeyCode Key, EventMask Modifiers)
+    [Flags]
+    private enum ModifierKeys
     {
+        None = 0,
+        Shift = 1,
+        Ctrl = 2,
+        Alt = 4,
+        Meta = 8
+    }
+
+    private readonly record struct HotkeyBinding(KeyCode Key, ModifierKeys Modifiers)
+    {
+
         public bool Matches(KeyCode key, EventMask modifiers)
         {
-            if (key != Key)
+            return key == Key && Normalize(modifiers) == Modifiers;
+        }
+
+        private static ModifierKeys Normalize(EventMask modifiers)
+        {
+            var normalized = ModifierKeys.None;
+            var text = modifiers.ToString();
+
+            if (HasAny(modifiers, text, "Shift", EventMask.Shift)) normalized |= ModifierKeys.Shift;
+            if (HasAny(modifiers, text, "Ctrl", EventMask.Ctrl, "Control")) normalized |= ModifierKeys.Ctrl;
+            if (HasAny(modifiers, text, "Alt", EventMask.Alt)) normalized |= ModifierKeys.Alt;
+            if (HasAny(modifiers, text, "Meta", EventMask.Meta, "Win", "Cmd", "Command", "Super")) normalized |= ModifierKeys.Meta;
+
+            return normalized;
+        }
+
+        private static bool HasAny(EventMask modifiers, string text, string primaryName, EventMask primaryFlag, params string[] aliases)
+        {
+            try
             {
-                return false;
+                if ((modifiers & primaryFlag) == primaryFlag && primaryFlag != EventMask.None)
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+                // Fall back to name matching if enum flags behave unexpectedly.
             }
 
-            const EventMask modifierMask = EventMask.Shift | EventMask.Ctrl | EventMask.Alt | EventMask.Meta;
-            var current = modifiers & modifierMask;
-            return (current & Modifiers) == Modifiers && (current & ~Modifiers) == 0;
+            if (text.Contains(primaryName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            foreach (var alias in aliases)
+            {
+                if (text.Contains(alias, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static HotkeyBinding Parse(string shortcut)
@@ -140,15 +218,15 @@ public sealed class GlobalHotkeyService : IDisposable
                 throw new ArgumentException("A keyboard shortcut is required.", nameof(shortcut));
             }
 
-            var modifiers = EventMask.None;
+            var modifiers = ModifierKeys.None;
             for (var index = 0; index < parts.Length - 1; index++)
             {
                 modifiers |= parts[index].ToUpperInvariant() switch
                 {
-                    "CTRL" or "CONTROL" => EventMask.Ctrl,
-                    "SHIFT" => EventMask.Shift,
-                    "ALT" or "OPTION" => EventMask.Alt,
-                    "META" or "WIN" or "CMD" or "COMMAND" => EventMask.Meta,
+                    "CTRL" or "CONTROL" => ModifierKeys.Ctrl,
+                    "SHIFT" => ModifierKeys.Shift,
+                    "ALT" or "OPTION" => ModifierKeys.Alt,
+                    "META" or "WIN" or "CMD" or "COMMAND" => ModifierKeys.Meta,
                     _ => throw new ArgumentException($"Unsupported shortcut modifier '{parts[index]}'.", nameof(shortcut))
                 };
             }

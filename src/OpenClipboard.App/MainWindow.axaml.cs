@@ -58,8 +58,9 @@ public partial class MainWindow : Window
         Position = new Avalonia.PixelPoint(
             bounds.X,
             bounds.Y + bounds.Height - (int)Math.Round(Height * screen.Scaling));
-        Topmost = true;
     }
+
+    private bool _initialized;
 
     public MainWindow(ClipboardPreferences preferences, LocalizationService localization)
     {
@@ -73,7 +74,7 @@ public partial class MainWindow : Window
         _clipboardTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(750) };
         _clipboardTimer.Tick += ClipboardTimer_Tick;
         Opened += MainWindow_OnOpened;
-        Opened += MainWindow_Opened;
+        Opened += async (_, _) => await EnsureInitializedAsync();
         Deactivated += (_, _) => Dispatcher.UIThread.Post(async () =>
         {
             await Task.Delay(120);
@@ -116,11 +117,22 @@ public partial class MainWindow : Window
         _globalHotkey.ErrorOccurred += message => Dispatcher.UIThread.Post(() =>
             StatusText.Text = $"Global hotkey unavailable: {message}");
         UpdateStartupButton();
+
+        // Ensure history loading and global hotkeys are started even if the window is never shown
+        // (tray-first startup). Opened will also call this once the window becomes visible.
+        _ = Dispatcher.UIThread.InvokeAsync(async () => await EnsureInitializedAsync());
     }
 
-    private async void MainWindow_Opened(object? sender, EventArgs e)
+    private async Task EnsureInitializedAsync()
     {
-        if (Program.StartedAtLogin)
+        if (_initialized)
+        {
+            return;
+        }
+
+        _initialized = true;
+
+        if (IsVisible && Program.StartedAtLogin)
         {
             Hide();
         }
@@ -148,6 +160,7 @@ public partial class MainWindow : Window
         }
         catch (Exception exception)
         {
+            _initialized = false;
             StatusText.Text = $"Could not open clipboard history: {exception.Message}";
         }
     }
@@ -556,7 +569,8 @@ public partial class MainWindow : Window
             MaxWidth = 360,
             MaxHeight = 150,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            CanResize = false
+            CanResize = false,
+            ShowInTaskbar = false
         };
         var confirmButton = new Button { Content = _localization.Get("ConfirmWindow_OK") };
         var cancelButton = new Button { Content = _localization.Get("ConfirmWindow_Cancel") };
@@ -578,7 +592,14 @@ public partial class MainWindow : Window
                 }
             }
         };
-        return await dialog.ShowDialog<bool>(owner ?? this);
+        var dialogOwner = owner ?? this;
+        dialog.Opened += (_, _) =>
+        {
+            dialog.Topmost = true;
+            dialog.Activate();
+            dialog.Topmost = false;
+        };
+        return await dialog.ShowDialog<bool>(dialogOwner);
     }
 
     private async void Settings_OnClick(object? sender, RoutedEventArgs e)
@@ -800,9 +821,11 @@ public partial class MainWindow : Window
             WindowState = WindowState.Normal;
         }
 
-        Activate();
+        // Bring to front without leaving the window always-on-top (which can hide dialogs).
         Topmost = true;
+        Activate();
         Focus();
+        Topmost = false;
     }
 
     private void ToggleFromHotkey()
@@ -813,9 +836,10 @@ public partial class MainWindow : Window
         }
         else if (IsVisible)
         {
-            Activate();
             Topmost = true;
+            Activate();
             Focus();
+            Topmost = false;
         }
         else
         {
