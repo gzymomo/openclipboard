@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="using:OpenClipboard.App"
         xmlns:models="using:OpenClipboard.App.Models"
+        xmlns:md="https://github.com/whistyun/Markdown.Avalonia"
         x:Class="OpenClipboard.App.MainWindow"
         x:DataType="local:MainWindow"
         Title="OpenClipboard"
@@ -19,6 +20,12 @@
   <Border x:Name="MainBackground" CornerRadius="12" ClipToBounds="True">
     <Grid RowDefinitions="Auto,*" Margin="16,12" RowSpacing="8">
       <Grid>
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left" VerticalAlignment="Center">
+          <Button x:Name="LatestButton"
+                  Content="⇤"
+                  Click="Latest_OnClick" />
+        </StackPanel>
+
         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
           <Button x:Name="SearchToggleButton" Content="⌕" Click="SearchToggle_OnClick" />
           <Grid x:Name="SearchPanel" Width="320" ColumnDefinitions="*,Auto" IsVisible="False">
@@ -146,17 +153,36 @@
                         DoubleTapped="HistoryItem_OnDoubleTapped">
                   <Grid RowDefinitions="64,*,24">
                     <Border CornerRadius="12,12,0,0" Background="{Binding TypeBrush}">
-                      <Grid ColumnDefinitions="*,64">
+                      <Grid ColumnDefinitions="*,72">
                         <StackPanel Grid.Column="0" Margin="16,0" VerticalAlignment="Center" Spacing="2">
                           <TextBlock FontSize="20" FontWeight="Medium" Foreground="White" Text="{Binding TypeLabel}" />
                           <TextBlock FontSize="12" Foreground="#DDFFFFFF" Text="{Binding CreateTime, StringFormat='{}{0:g}'}" />
                         </StackPanel>
-                        <TextBlock Grid.Column="1"
+                        <Grid Grid.Column="1"
+                              Margin="0,4,8,4"
+                              HorizontalAlignment="Right"
+                              VerticalAlignment="Stretch">
+                          <Border Width="52"
+                                  Height="52"
+                                  CornerRadius="8"
+                                  ClipToBounds="True"
+                                  Background="#33FFFFFF"
+                                  HorizontalAlignment="Right"
+                                  VerticalAlignment="Center"
+                                  IsVisible="{Binding HasSourceIcon}">
+                            <Image Source="{Binding SourceIconBitmap}"
+                                   Margin="4"
+                                   Stretch="Uniform"
                                    HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   FontSize="24"
-                                   Foreground="White"
-                                   Text="{Binding FavoriteMarker}" />
+                                   VerticalAlignment="Center" />
+                          </Border>
+                          <TextBlock HorizontalAlignment="Right"
+                                     VerticalAlignment="Bottom"
+                                     Margin="0,0,2,0"
+                                     FontSize="16"
+                                     Foreground="White"
+                                     Text="{Binding FavoriteMarker}" />
+                        </Grid>
                       </Grid>
                     </Border>
                     <Border Grid.Row="1" Padding="16,12">
@@ -169,10 +195,43 @@
                                VerticalAlignment="Center" />
                         <TextBlock Text="{Binding DisplayPreview}"
                                    IsVisible="{Binding IsTextPreview}"
-                                   Foreground="Black"
+                                   Foreground="{Binding PreviewForeground}"
+                                   FontSize="{Binding PreviewFontSize}"
+                                   FontWeight="{Binding PreviewFontWeight}"
                                    TextWrapping="Wrap"
                                    TextTrimming="CharacterEllipsis"
                                    MaxHeight="190" />
+                        <Grid IsVisible="{Binding IsColor}"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center">
+                          <TextBlock Text="{Binding Data}"
+                                     Foreground="{Binding PreviewForeground}"
+                                     FontSize="{Binding PreviewFontSize}"
+                                     FontWeight="{Binding PreviewFontWeight}"
+                                     TextAlignment="Center"
+                                     TextWrapping="Wrap"
+                                     MaxWidth="240" />
+                        </Grid>
+                        <Border IsVisible="{Binding IsMarkdown}"
+                                MaxHeight="190"
+                                ClipToBounds="True"
+                                TextElement.Foreground="Black"
+                                TextElement.FontSize="11">
+                          <ThemeVariantScope RequestedThemeVariant="Light">
+                            <md:MarkdownScrollViewer Markdown="{Binding MarkdownContent}">
+                              <md:MarkdownScrollViewer.Styles>
+                                <Style Selector="TextBlock">
+                                  <Setter Property="Foreground" Value="Black" />
+                                  <Setter Property="TextWrapping" Value="Wrap" />
+                                </Style>
+                                <Style Selector="SelectableTextBlock">
+                                  <Setter Property="Foreground" Value="Black" />
+                                  <Setter Property="TextWrapping" Value="Wrap" />
+                                </Style>
+                              </md:MarkdownScrollViewer.Styles>
+                            </md:MarkdownScrollViewer>
+                          </ThemeVariantScope>
+                        </Border>
                         <StackPanel IsVisible="{Binding IsFile}"
                                     Spacing="8"
                                     HorizontalAlignment="Center"

@@ -94,8 +94,11 @@ public partial class SettingsWindow : Window
         HistoryModeLabel.Text = _localization.Get("SettingWindow_General_RecordCount");
         GlassOpacityLabel.Text = _localization.Get("SettingWindow_General_GlassOpacity");
         HotkeyHelpText.Text = _localization.Get("CrossPlatform_Hotkey_Help");
-        NoHistoryText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_None_Text");
+        OneDayText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_1_Text");
+        ThreeDaysText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_3_Text");
+        FiveDaysText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_5_Text");
         SevenDaysText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_7_Text");
+        FifteenDaysText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_15_Text");
         ThirtyDaysText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_30_Text");
         ForeverText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_Infinite_Text");
         ClearHistoryButton.Content = _localization.Get("SettingWindow_General_ClearHistory");
@@ -206,9 +209,12 @@ public partial class SettingsWindow : Window
 
         HistoryModeValueText.Text = _localization.Get((int)Math.Round(HistoryModeSlider.Value) switch
         {
-            0 => "SettingWindow_General_RecordCount_Slider_None_Text",
-            1 => "SettingWindow_General_RecordCount_Slider_7_Text",
-            2 => "SettingWindow_General_RecordCount_Slider_30_Text",
+            0 => "SettingWindow_General_RecordCount_Slider_1_Text",
+            1 => "SettingWindow_General_RecordCount_Slider_3_Text",
+            2 => "SettingWindow_General_RecordCount_Slider_5_Text",
+            3 => "SettingWindow_General_RecordCount_Slider_7_Text",
+            4 => "SettingWindow_General_RecordCount_Slider_15_Text",
+            5 => "SettingWindow_General_RecordCount_Slider_30_Text",
             _ => "SettingWindow_General_RecordCount_Slider_Infinite_Text"
         });
     }
@@ -248,7 +254,7 @@ public partial class SettingsWindow : Window
 
     private void Save_OnClick(object? sender, RoutedEventArgs e)
     {
-        var historyMode = (HistoryMode)Math.Clamp((int)Math.Round(HistoryModeSlider.Value), 0, 3);
+        var historyMode = (HistoryMode)Math.Clamp((int)Math.Round(HistoryModeSlider.Value), 0, 6);
         if (!string.IsNullOrWhiteSpace(QuickCopyHotkey)
             && string.Equals(QuickCopyHotkey, ActivationHotkey, StringComparison.OrdinalIgnoreCase))
         {

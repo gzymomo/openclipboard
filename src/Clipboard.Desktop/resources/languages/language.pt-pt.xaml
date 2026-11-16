@@ -45,4 +45,14 @@
   <sys:String x:Key="NotifyIcon_Show_Text">Exibição</sys:String>
   <sys:String x:Key="NotifyIcon_Setting_Text">Configuração</sys:String>
   <sys:String x:Key="NotifyIcon_Exit_Text">Cair fora</sys:String>
+  <sys:String x:Key="ClipboardDataType_Json">JSON</sys:String>
+  <sys:String x:Key="ClipboardDataType_Xml">XML</sys:String>
+  <sys:String x:Key="ClipboardDataType_Color">Cor</sys:String>
+  <sys:String x:Key="ClipboardDataType_Markdown">Markdown</sys:String>
+  <sys:String x:Key="ClipboardDataType_Url">URL</sys:String>
+  <sys:String x:Key="CrossPlatform_JumpToLatest">Ir para o mais recente</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_1_Text">1 dia</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_5_Text">5 dias</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_3_Text">3 dias</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_15_Text">15 dias</sys:String>
 </ResourceDictionary>

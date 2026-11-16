@@ -5,5 +5,10 @@ public enum ClipboardDataTypes
 	Unknown,
 	Text,
 	Image,
-	File
+	File,
+	Color,
+	Url,
+	Json,
+	Xml,
+	Markdown
 }

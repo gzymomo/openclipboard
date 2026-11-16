@@ -45,4 +45,14 @@
   <sys:String x:Key="NotifyIcon_Show_Text">แสดง</sys:String>
   <sys:String x:Key="NotifyIcon_Setting_Text">ติดตั้ง</sys:String>
   <sys:String x:Key="NotifyIcon_Exit_Text">ออกกลางคัน</sys:String>
+  <sys:String x:Key="ClipboardDataType_Json">JSON</sys:String>
+  <sys:String x:Key="ClipboardDataType_Xml">XML</sys:String>
+  <sys:String x:Key="ClipboardDataType_Color">สี</sys:String>
+  <sys:String x:Key="ClipboardDataType_Markdown">Markdown</sys:String>
+  <sys:String x:Key="ClipboardDataType_Url">URL</sys:String>
+  <sys:String x:Key="CrossPlatform_JumpToLatest">ไปยังรายการล่าสุด</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_1_Text">1 วัน</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_5_Text">5 days</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_3_Text">3 วัน</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_15_Text">15 วัน</sys:String>
 </ResourceDictionary>

@@ -20,6 +20,12 @@ public sealed record ClipboardHistoryItem
 
     public bool IsFavorite { get; init; }
 
+    public string? SourceAppName { get; init; }
+
+    public string? SourceAppId { get; init; }
+
+    public string? SourceIconPath { get; init; }
+
     public string TypeLabel { get; init; } = string.Empty;
 
     public string ItemInfo { get; init; } = string.Empty;
@@ -27,6 +33,10 @@ public sealed record ClipboardHistoryItem
     public string DisplayPreview { get; init; } = string.Empty;
 
     public Bitmap? ImageBitmap { get; init; }
+
+    public Bitmap? SourceIconBitmap { get; init; }
+
+    public bool HasSourceIcon => SourceIconBitmap is not null;
 
     public bool HasImagePreview => ImageBitmap is not null;
 
@@ -36,7 +46,26 @@ public sealed record ClipboardHistoryItem
 
     public bool IsFile => DataType == ClipboardDataTypes.File;
 
-    public bool IsTextPreview => DataType != ClipboardDataTypes.Image && DataType != ClipboardDataTypes.File;
+    public bool IsColor => DataType == ClipboardDataTypes.Color;
+
+    public bool IsUrl => DataType == ClipboardDataTypes.Url;
+
+    public bool IsJson => DataType == ClipboardDataTypes.Json;
+
+    public bool IsXml => DataType == ClipboardDataTypes.Xml;
+
+    public bool IsMarkdown => DataType == ClipboardDataTypes.Markdown;
+
+    public bool IsTextPreview => DataType != ClipboardDataTypes.Image
+        && DataType != ClipboardDataTypes.File
+        && DataType != ClipboardDataTypes.Color
+        && DataType != ClipboardDataTypes.Markdown;
+
+    public bool HasColorPreview => IsColor && TryParseColor(Data, out _);
+
+    public string MarkdownContent => Data;
+
+    public IBrush? ColorPreviewBrush => TryParseColor(Data, out var color) ? new SolidColorBrush(color) : null;
 
     public string FileDisplayName
     {
@@ -67,8 +96,24 @@ public sealed record ClipboardHistoryItem
         ClipboardDataTypes.Text => Brushes.DarkOrange,
         ClipboardDataTypes.Image => Brushes.RoyalBlue,
         ClipboardDataTypes.File => Brushes.Goldenrod,
+        ClipboardDataTypes.Color => Brushes.MediumSeaGreen,
+        ClipboardDataTypes.Url => Brushes.SteelBlue,
+        ClipboardDataTypes.Json => Brushes.SlateBlue,
+        ClipboardDataTypes.Xml => Brushes.Teal,
+        ClipboardDataTypes.Markdown => Brushes.DimGray,
         _ => Brushes.Gray
     };
+
+    public IBrush PreviewForeground => DataType switch
+    {
+        ClipboardDataTypes.Color => ColorPreviewBrush ?? Brushes.Black,
+        ClipboardDataTypes.Url => Brushes.DodgerBlue,
+        _ => Brushes.Black
+    };
+
+    public double PreviewFontSize => DataType == ClipboardDataTypes.Color ? 28 : 14;
+
+    public FontWeight PreviewFontWeight => DataType == ClipboardDataTypes.Color ? FontWeight.SemiBold : FontWeight.Normal;
 
     public string FavoriteMarker => IsFavorite ? "★" : string.Empty;
 
@@ -76,8 +121,12 @@ public sealed record ClipboardHistoryItem
     {
         ClipboardDataTypes.Image => "Image",
         ClipboardDataTypes.File => GetFilePreview(),
-        _ => Data.Replace("\r", " ").Replace("\n", " ")
+        ClipboardDataTypes.Json => TryFormatJson(Data) ?? NormalizePreview(Data),
+        ClipboardDataTypes.Xml => TryFormatXml(Data) ?? NormalizePreview(Data),
+        _ => NormalizePreview(Data)
     };
+
+    private static string NormalizePreview(string text) => text.Replace("\r", " ").Replace("\n", " ");
 
     private string GetFilePreview()
     {
@@ -107,6 +156,50 @@ public sealed record ClipboardHistoryItem
         catch (JsonException)
         {
             return Array.Empty<string>();
+        }
+    }
+
+    private static bool TryParseColor(string? value, out Color color)
+    {
+        color = default;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        try
+        {
+            return Color.TryParse(value.Trim(), out color);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static string? TryFormatJson(string text)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(text);
+            return JsonSerializer.Serialize(document.RootElement, new JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? TryFormatXml(string text)
+    {
+        try
+        {
+            var document = System.Xml.Linq.XDocument.Parse(text);
+            return document.ToString();
+        }
+        catch
+        {
+            return null;
         }
     }
 }

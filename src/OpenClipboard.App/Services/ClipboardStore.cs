@@ -37,24 +37,52 @@ public sealed class ClipboardStore : IDisposable
                 DataType INTEGER NOT NULL,
                 Data TEXT NOT NULL,
                 CreateTime TEXT NOT NULL,
-                IsFavorite INTEGER NOT NULL DEFAULT 0
+                IsFavorite INTEGER NOT NULL DEFAULT 0,
+                SourceAppName TEXT,
+                SourceAppId TEXT,
+                SourceIconPath TEXT
             );
             """;
         await command.ExecuteNonQueryAsync();
 
         var hasFavoriteColumn = false;
+        var hasSourceAppNameColumn = false;
+        var hasSourceAppIdColumn = false;
+        var hasSourceIconPathColumn = false;
         command.CommandText = "PRAGMA table_info(ClipboardEntries);";
         await using (var reader = await command.ExecuteReaderAsync())
         {
             while (await reader.ReadAsync())
             {
-                hasFavoriteColumn |= string.Equals(reader.GetString(1), "IsFavorite", StringComparison.OrdinalIgnoreCase);
+                var columnName = reader.GetString(1);
+                hasFavoriteColumn |= string.Equals(columnName, "IsFavorite", StringComparison.OrdinalIgnoreCase);
+                hasSourceAppNameColumn |= string.Equals(columnName, "SourceAppName", StringComparison.OrdinalIgnoreCase);
+                hasSourceAppIdColumn |= string.Equals(columnName, "SourceAppId", StringComparison.OrdinalIgnoreCase);
+                hasSourceIconPathColumn |= string.Equals(columnName, "SourceIconPath", StringComparison.OrdinalIgnoreCase);
             }
         }
 
         if (!hasFavoriteColumn)
         {
             command.CommandText = "ALTER TABLE ClipboardEntries ADD COLUMN IsFavorite INTEGER NOT NULL DEFAULT 0;";
+            await command.ExecuteNonQueryAsync();
+        }
+
+        if (!hasSourceAppNameColumn)
+        {
+            command.CommandText = "ALTER TABLE ClipboardEntries ADD COLUMN SourceAppName TEXT;";
+            await command.ExecuteNonQueryAsync();
+        }
+
+        if (!hasSourceAppIdColumn)
+        {
+            command.CommandText = "ALTER TABLE ClipboardEntries ADD COLUMN SourceAppId TEXT;";
+            await command.ExecuteNonQueryAsync();
+        }
+
+        if (!hasSourceIconPathColumn)
+        {
+            command.CommandText = "ALTER TABLE ClipboardEntries ADD COLUMN SourceIconPath TEXT;";
             await command.ExecuteNonQueryAsync();
         }
     }
@@ -65,14 +93,13 @@ public sealed class ClipboardStore : IDisposable
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, DataType, Data, CreateTime, IsFavorite
+            SELECT Id, DataType, Data, CreateTime, IsFavorite, SourceAppName, SourceAppId, SourceIconPath
             FROM ClipboardEntries
-            WHERE IsFavorite = 1 OR ($mode <> 0 AND ($cutoff IS NULL OR CreateTime >= $cutoff))
+            WHERE IsFavorite = 1 OR $cutoff IS NULL OR CreateTime >= $cutoff
             ORDER BY CreateTime DESC
             LIMIT $limit;
             """;
         command.Parameters.AddWithValue("$limit", limit);
-        command.Parameters.AddWithValue("$mode", (int)historyMode);
         command.Parameters.AddWithValue("$cutoff", GetCutoff(historyMode) is { } cutoff
             ? cutoff.ToString("O", CultureInfo.InvariantCulture)
             : DBNull.Value);
@@ -87,7 +114,10 @@ public sealed class ClipboardStore : IDisposable
                 DataType = (ClipboardDataTypes)reader.GetInt32(1),
                 Data = reader.GetString(2),
                 CreateTime = DateTime.Parse(reader.GetString(3), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind).ToLocalTime(),
-                IsFavorite = reader.GetBoolean(4)
+                IsFavorite = reader.GetBoolean(4),
+                SourceAppName = reader.IsDBNull(5) ? null : reader.GetString(5),
+                SourceAppId = reader.IsDBNull(6) ? null : reader.GetString(6),
+                SourceIconPath = reader.IsDBNull(7) ? null : reader.GetString(7)
             });
         }
 
@@ -105,14 +135,13 @@ public sealed class ClipboardStore : IDisposable
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         var cutoff = GetCutoff(historyMode);
-        command.CommandText = cutoff is null
-            ? "DELETE FROM ClipboardEntries WHERE IsFavorite = 0;"
-            : "DELETE FROM ClipboardEntries WHERE IsFavorite = 0 AND CreateTime < $cutoff;";
-        if (cutoff is not null)
+        if (cutoff is null)
         {
-            command.Parameters.AddWithValue("$cutoff", cutoff.Value.ToString("O", CultureInfo.InvariantCulture));
+            return;
         }
 
+        command.CommandText = "DELETE FROM ClipboardEntries WHERE IsFavorite = 0 AND CreateTime < $cutoff;";
+        command.Parameters.AddWithValue("$cutoff", cutoff.Value.ToString("O", CultureInfo.InvariantCulture));
         await command.ExecuteNonQueryAsync();
     }
 
@@ -122,13 +151,16 @@ public sealed class ClipboardStore : IDisposable
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO ClipboardEntries (Id, DataType, Data, CreateTime, IsFavorite)
-            VALUES ($id, $dataType, $data, $createTime, 0);
+            INSERT INTO ClipboardEntries (Id, DataType, Data, CreateTime, IsFavorite, SourceAppName, SourceAppId, SourceIconPath)
+            VALUES ($id, $dataType, $data, $createTime, 0, $sourceAppName, $sourceAppId, $sourceIconPath);
             """;
         command.Parameters.AddWithValue("$id", item.Id);
         command.Parameters.AddWithValue("$dataType", (int)item.DataType);
         command.Parameters.AddWithValue("$data", item.Data);
         command.Parameters.AddWithValue("$createTime", item.CreateTime.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
+        command.Parameters.AddWithValue("$sourceAppName", (object?)item.SourceAppName ?? DBNull.Value);
+        command.Parameters.AddWithValue("$sourceAppId", (object?)item.SourceAppId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$sourceIconPath", (object?)item.SourceIconPath ?? DBNull.Value);
         await command.ExecuteNonQueryAsync();
     }
 
@@ -194,10 +226,13 @@ public sealed class ClipboardStore : IDisposable
 
     private static DateTime? GetCutoff(HistoryMode historyMode) => historyMode switch
     {
-        HistoryMode.None => null,
+        HistoryMode._1 => DateTime.UtcNow.AddDays(-1),
+        HistoryMode._3 => DateTime.UtcNow.AddDays(-3),
+        HistoryMode._5 => DateTime.UtcNow.AddDays(-5),
         HistoryMode._7 => DateTime.UtcNow.AddDays(-7),
+        HistoryMode._15 => DateTime.UtcNow.AddDays(-15),
         HistoryMode._30 => DateTime.UtcNow.AddDays(-30),
-        HistoryMode.Forever => DateTime.MinValue,
+        HistoryMode.Forever => null,
         _ => throw new ArgumentOutOfRangeException(nameof(historyMode), historyMode, "Unknown history retention mode.")
     };
 }

@@ -16,6 +16,7 @@ using Avalonia.Threading;
 using Clipboard.Data.Enums;
 using OpenClipboard.App.Models;
 using OpenClipboard.App.Services;
+using OpenClipboard.App.Services.Source;
 
 namespace OpenClipboard.App;
 
@@ -24,6 +25,7 @@ public partial class MainWindow : Window
     private readonly ClipboardStore _store = new();
     private readonly StartupManager _startupManager = new();
     private readonly GlobalHotkeyService _globalHotkey = new();
+    private readonly ISourceAppProvider _sourceAppProvider = new SourceAppProvider();
     private readonly ClipboardPreferences _preferences;
     private readonly LocalizationService _localization;
     private readonly DispatcherTimer _clipboardTimer;
@@ -197,9 +199,17 @@ public partial class MainWindow : Window
                 return;
             }
 
-            if (_preferences.HistoryMode == HistoryMode.None)
+            // History is always recorded; retention is controlled by HistoryMode.
+
+            var source = await _sourceAppProvider.GetCurrentSourceAsync();
+            if (source is not null)
             {
-                return;
+                item = item with
+                {
+                    SourceAppName = source.AppName,
+                    SourceAppId = source.AppId,
+                    SourceIconPath = source.IconPath
+                };
             }
 
             await _store.AddAsync(item);
@@ -224,7 +234,7 @@ public partial class MainWindow : Window
         var text = await data.TryGetTextAsync();
         if (!string.IsNullOrEmpty(text))
         {
-            return new ClipboardHistoryItem { DataType = ClipboardDataTypes.Text, Data = text };
+            return new ClipboardHistoryItem { DataType = DetectTextDataType(text), Data = text };
         }
 
         using var bitmap = await data.TryGetBitmapAsync();
@@ -279,7 +289,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var textItems = selected.Where(item => item.DataType == ClipboardDataTypes.Text).ToArray();
+            var textItems = selected.Where(IsTextLikeDataType).ToArray();
             if (textItems.Length > 0)
             {
                 await CopyItemAsync(new ClipboardHistoryItem
@@ -320,6 +330,11 @@ public partial class MainWindow : Window
             switch (item.DataType)
             {
                 case ClipboardDataTypes.Text:
+                case ClipboardDataTypes.Color:
+                case ClipboardDataTypes.Url:
+                case ClipboardDataTypes.Json:
+                case ClipboardDataTypes.Xml:
+                case ClipboardDataTypes.Markdown:
                     var textTransfer = new DataTransfer();
                     textTransfer.Add(DataTransferItem.CreateText(item.Data));
                     await clipboard.SetDataAsync(textTransfer);
@@ -523,6 +538,16 @@ public partial class MainWindow : Window
 
     private void Menu_OnClick(object? sender, RoutedEventArgs e) => MenuPopup.IsOpen = !MenuPopup.IsOpen;
 
+    private void Latest_OnClick(object? sender, RoutedEventArgs e)
+    {
+        HistoryScroller.Offset = new Avalonia.Vector(0, HistoryScroller.Offset.Y);
+        if (VisibleHistory.Count > 0)
+        {
+            HistoryList.SelectedItem = VisibleHistory[0];
+            HistoryList.ScrollIntoView(VisibleHistory[0]);
+        }
+    }
+
     private async void HistoryItem_OnDoubleTapped(object? sender, TappedEventArgs e)
     {
         if (sender is Control { DataContext: ClipboardHistoryItem item })
@@ -668,6 +693,7 @@ public partial class MainWindow : Window
         HistoryFilterButton.Content = _localization.Get("ClipboardDataTag_History");
         FavoritesFilterButton.Content = _localization.Get("ClipboardDataTag_Favorite");
         SettingsButton.Content = _localization.Get("ClipboardData_MainWindowMenu_Setting");
+        ToolTip.SetTip(LatestButton, _localization.Get("CrossPlatform_JumpToLatest"));
         CopyMenuItem.Header = _localization.Get("History_Listbox_Copy");
         FavoriteMenuItem.Header = _localization.Get("CrossPlatform_Favorite");
         DeleteMenuItem.Header = _localization.Get("History_Listbox_Delete");
@@ -719,7 +745,7 @@ public partial class MainWindow : Window
             : _localization.Get($"ClipboardDataType_{item.DataType}");
         var itemInfo = item.DataType switch
         {
-            ClipboardDataTypes.Text => string.Format(
+            ClipboardDataTypes.Text or ClipboardDataTypes.Color or ClipboardDataTypes.Url or ClipboardDataTypes.Json or ClipboardDataTypes.Xml or ClipboardDataTypes.Markdown => string.Format(
                 CultureInfo.CurrentCulture,
                 _localization.Get("ClipboardDataType_Item_Info_Text"),
                 item.Data.Length),
@@ -730,9 +756,14 @@ public partial class MainWindow : Window
         var preview = item.DataType == ClipboardDataTypes.Image
             ? _localization.Get("ClipboardDataType_Image")
             : item.Preview;
-        var image = item.DataType == ClipboardDataTypes.Image ? TryCreateBitmap(item.Data) : item.ImageBitmap;
-        return item with { TypeLabel = typeLabel, ItemInfo = itemInfo, DisplayPreview = preview, ImageBitmap = image };
+        var image = item.DataType == ClipboardDataTypes.Image ? (item.ImageBitmap ?? TryCreateBitmap(item.Data)) : item.ImageBitmap;
+        var sourceIcon = item.SourceIconBitmap ?? TryLoadSourceIcon(item.SourceIconPath);
+        return item with { TypeLabel = typeLabel, ItemInfo = itemInfo, DisplayPreview = preview, ImageBitmap = image, SourceIconBitmap = sourceIcon };
     }
+
+    private static bool IsTextLikeDataType(ClipboardHistoryItem item) =>
+        item.DataType is ClipboardDataTypes.Text or ClipboardDataTypes.Color or ClipboardDataTypes.Url
+            or ClipboardDataTypes.Json or ClipboardDataTypes.Xml or ClipboardDataTypes.Markdown;
 
     private static Bitmap? TryCreateBitmap(string data)
     {
@@ -746,6 +777,128 @@ public partial class MainWindow : Window
         {
             return null;
         }
+    }
+
+    private static Bitmap? TryLoadSourceIcon(string? iconPath)
+    {
+        if (string.IsNullOrWhiteSpace(iconPath) || !File.Exists(iconPath))
+        {
+            return null;
+        }
+
+        try
+        {
+            return new Bitmap(iconPath);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static ClipboardDataTypes DetectTextDataType(string text)
+    {
+        var trimmed = text.Trim();
+        if (trimmed.Length == 0)
+        {
+            return ClipboardDataTypes.Text;
+        }
+
+        if (IsLikelyColor(trimmed))
+        {
+            return ClipboardDataTypes.Color;
+        }
+
+        if (Uri.TryCreate(trimmed, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+        {
+            return ClipboardDataTypes.Url;
+        }
+
+        if (LooksLikeJson(trimmed))
+        {
+            try
+            {
+                using var _ = JsonDocument.Parse(trimmed);
+                return ClipboardDataTypes.Json;
+            }
+            catch
+            {
+                // fall through
+            }
+        }
+
+        if (LooksLikeXml(trimmed))
+        {
+            try
+            {
+                _ = System.Xml.Linq.XDocument.Parse(trimmed);
+                return ClipboardDataTypes.Xml;
+            }
+            catch
+            {
+                // fall through
+            }
+        }
+
+        if (LooksLikeMarkdown(text))
+        {
+            return ClipboardDataTypes.Markdown;
+        }
+
+        return ClipboardDataTypes.Text;
+    }
+
+    private static bool IsLikelyColor(string text)
+    {
+        if (text.Length > 32)
+        {
+            return false;
+        }
+
+        if (text.StartsWith('#'))
+        {
+            return Color.TryParse(text, out _);
+        }
+
+        if (text.StartsWith("rgb(", StringComparison.OrdinalIgnoreCase)
+            || text.StartsWith("rgba(", StringComparison.OrdinalIgnoreCase)
+            || text.StartsWith("hsl(", StringComparison.OrdinalIgnoreCase)
+            || text.StartsWith("hsla(", StringComparison.OrdinalIgnoreCase))
+        {
+            return Color.TryParse(text, out _);
+        }
+
+        return false;
+    }
+
+    private static bool LooksLikeJson(string text) =>
+        (text.StartsWith('{') && text.EndsWith('}'))
+        || (text.StartsWith('[') && text.EndsWith(']'));
+
+    private static bool LooksLikeXml(string text) =>
+        text.StartsWith('<') && text.EndsWith('>') && text.Contains("</", StringComparison.Ordinal);
+
+    private static bool LooksLikeMarkdown(string text)
+    {
+        var lines = text.Replace("\r\n", "\n").Split('\n');
+        var score = 0;
+
+        foreach (var line in lines)
+        {
+            var trimmed = line.TrimStart();
+            if (trimmed.StartsWith("# ")) score += 2;
+            if (trimmed.StartsWith("## ")) score += 2;
+            if (trimmed.StartsWith("- ") || trimmed.StartsWith("* ") || trimmed.StartsWith("+ ")) score += 1;
+            if (System.Text.RegularExpressions.Regex.IsMatch(trimmed, @"^\d+\.\s")) score += 1;
+            if (trimmed.StartsWith("> ")) score += 1;
+            if (trimmed.StartsWith("```")) score += 2;
+        }
+
+        if (text.Contains("](", StringComparison.Ordinal)) score += 2;
+        if (text.Contains("**") || text.Contains("__") || text.Contains("`")) score += 1;
+
+        return score >= 2;
     }
 
     private static int GetFileCount(string data)

@@ -97,7 +97,7 @@ public sealed class ClipboardStoreTests : IDisposable
         await _store.SetFavoriteAsync(favoriteEntry.Id, true);
 
         Assert.Equal(2, (await _store.GetRecentAsync(HistoryMode._30)).Count);
-        Assert.Single(await _store.GetRecentAsync(HistoryMode.None));
+        Assert.Single(await _store.GetRecentAsync(HistoryMode._1));
 
         await _store.PruneExpiredAsync(HistoryMode.Forever);
         Assert.Equal(3, (await _store.GetRecentAsync(HistoryMode.Forever)).Count);

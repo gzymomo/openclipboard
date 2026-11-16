@@ -45,4 +45,14 @@
   <sys:String x:Key="NotifyIcon_Show_Text">显示</sys:String>
   <sys:String x:Key="NotifyIcon_Setting_Text">设置</sys:String>
   <sys:String x:Key="NotifyIcon_Exit_Text">退出</sys:String>
+  <sys:String x:Key="ClipboardDataType_Json">JSON</sys:String>
+  <sys:String x:Key="ClipboardDataType_Xml">XML</sys:String>
+  <sys:String x:Key="ClipboardDataType_Color">颜色</sys:String>
+  <sys:String x:Key="ClipboardDataType_Markdown">Markdown</sys:String>
+  <sys:String x:Key="ClipboardDataType_Url">链接</sys:String>
+  <sys:String x:Key="CrossPlatform_JumpToLatest">回到最新记录</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_1_Text">1天</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_5_Text">5天</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_3_Text">3天</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_15_Text">15天</sys:String>
 </ResourceDictionary>

@@ -45,4 +45,14 @@
   <sys:String x:Key="NotifyIcon_Show_Text">表示</sys:String>
   <sys:String x:Key="NotifyIcon_Setting_Text">セットアップ</sys:String>
   <sys:String x:Key="NotifyIcon_Exit_Text">脱落</sys:String>
+  <sys:String x:Key="ClipboardDataType_Json">JSON</sys:String>
+  <sys:String x:Key="ClipboardDataType_Xml">XML</sys:String>
+  <sys:String x:Key="ClipboardDataType_Color">色</sys:String>
+  <sys:String x:Key="ClipboardDataType_Markdown">Markdown</sys:String>
+  <sys:String x:Key="ClipboardDataType_Url">URL</sys:String>
+  <sys:String x:Key="CrossPlatform_JumpToLatest">最新へ移動</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_1_Text">1日</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_5_Text">5日</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_3_Text">3日</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_15_Text">15日</sys:String>
 </ResourceDictionary>

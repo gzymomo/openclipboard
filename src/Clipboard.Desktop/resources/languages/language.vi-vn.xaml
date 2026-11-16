@@ -45,4 +45,14 @@
   <sys:String x:Key="NotifyIcon_Show_Text">Trưng bày</sys:String>
   <sys:String x:Key="NotifyIcon_Setting_Text">Thiết lập</sys:String>
   <sys:String x:Key="NotifyIcon_Exit_Text">Rơi ra ngoài</sys:String>
+  <sys:String x:Key="ClipboardDataType_Json">JSON</sys:String>
+  <sys:String x:Key="ClipboardDataType_Xml">XML</sys:String>
+  <sys:String x:Key="ClipboardDataType_Color">Màu sắc</sys:String>
+  <sys:String x:Key="ClipboardDataType_Markdown">Markdown</sys:String>
+  <sys:String x:Key="ClipboardDataType_Url">URL</sys:String>
+  <sys:String x:Key="CrossPlatform_JumpToLatest">Chuyển đến mục mới nhất</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_1_Text">1 ngày</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_5_Text">5 ngày</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_3_Text">3 ngày</sys:String>
+  <sys:String x:Key="SettingWindow_General_RecordCount_Slider_15_Text">15 ngày</sys:String>
 </ResourceDictionary>

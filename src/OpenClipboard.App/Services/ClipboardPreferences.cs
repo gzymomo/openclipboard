@@ -32,14 +32,19 @@ public sealed class ClipboardPreferences
 
         if (File.Exists(_path))
         {
-            var stored = JsonSerializer.Deserialize<ClipboardPreferencesData>(File.ReadAllText(_path));
-            if (stored is not null)
+            try
             {
-                Language = stored.Language;
-                ActivationHotkey = stored.ActivationHotkey;
-                QuickCopyHotkey = stored.QuickCopyHotkey;
-                HistoryMode = Enum.IsDefined(stored.HistoryMode) ? stored.HistoryMode : HistoryMode._30;
-                GlassOpacity = Math.Clamp(stored.GlassOpacity, 0, 100);
+                using var document = JsonDocument.Parse(File.ReadAllText(_path));
+                var root = document.RootElement;
+                if (root.TryGetProperty("Language", out var language)) Language = language.GetString() ?? Language;
+                if (root.TryGetProperty("ActivationHotkey", out var activationHotkey)) ActivationHotkey = activationHotkey.GetString() ?? ActivationHotkey;
+                if (root.TryGetProperty("QuickCopyHotkey", out var quickCopyHotkey)) QuickCopyHotkey = quickCopyHotkey.GetString() ?? QuickCopyHotkey;
+                if (root.TryGetProperty("HistoryMode", out var historyMode)) HistoryMode = ParseHistoryMode(historyMode);
+                if (root.TryGetProperty("GlassOpacity", out var glassOpacity) && glassOpacity.TryGetInt32(out var opacity)) GlassOpacity = Math.Clamp(opacity, 0, 100);
+            }
+            catch
+            {
+                // Ignore malformed preferences and keep defaults.
             }
         }
         else
@@ -103,6 +108,46 @@ public sealed class ClipboardPreferences
         }
 
         return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+    }
+
+    private static HistoryMode ParseHistoryMode(JsonElement element)
+    {
+        if (element.ValueKind == JsonValueKind.String)
+        {
+            var value = element.GetString();
+            if (Enum.TryParse<HistoryMode>(value, ignoreCase: true, out var mode))
+            {
+                return mode;
+            }
+
+            // Legacy string names
+            return value switch
+            {
+                "None" => HistoryMode._1,
+                "_7" or "7" => HistoryMode._7,
+                "_30" or "30" => HistoryMode._30,
+                "Forever" => HistoryMode.Forever,
+                _ => HistoryMode._30
+            };
+        }
+
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetInt32(out var intValue))
+        {
+            // Legacy numeric mapping: 0=None, 1=7 days, 2=30 days, 3=Forever
+            return intValue switch
+            {
+                0 => HistoryMode._1,
+                1 => HistoryMode._7,
+                2 => HistoryMode._30,
+                3 => HistoryMode.Forever,
+                4 => HistoryMode._15,
+                5 => HistoryMode._30,
+                6 => HistoryMode.Forever,
+                _ => HistoryMode._30
+            };
+        }
+
+        return HistoryMode._30;
     }
 
     private sealed record ClipboardPreferencesData(
