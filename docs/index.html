@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenClipboard - 轻量剪贴板历史管理器</title>
+  <meta name="description" content="OpenClipboard 是一款轻量、开源的剪贴板历史管理器。全局热键从屏幕底部呼出全宽历史面板，横向卡片呈现文本/图片/文件历史，支持搜索、收藏、来源应用图标，提供 Windows 与跨平台（Windows/macOS/Linux）版本。" />
+  <meta name="theme-color" content="#0b1020" />
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="#top">
+        <img src="assets/logo.png" alt="OpenClipboard" width="28" height="28" />
+        <span>OpenClipboard</span>
+      </a>
+      <nav class="nav-links" aria-label="页面导航">
+        <a href="#features">功能</a>
+        <a href="#platforms">平台</a>
+        <a href="#start">快速开始</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="btn btn-ghost" href="https://github.com/gzymomo/openclipboard" target="_blank" rel="noopener">GitHub</a>
+        <a class="btn btn-primary" href="https://github.com/gzymomo/openclipboard/releases" target="_blank" rel="noopener">下载</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="container hero-copy">
+        <p class="eyebrow">Open Source Clipboard Manager</p>
+        <h1>你的剪贴板历史，<span class="accent">随取随用</span></h1>
+        <p class="lead">OpenClipboard 是一款轻量的剪贴板历史管理器。全局热键从桌面底部呼出全宽历史面板，横向卡片自动记录文本、图片与文件，支持搜索、收藏与来源应用图标，让每一次复制都可追溯、可复用。</p>
+        <div class="cta-row">
+          <a class="btn btn-primary btn-lg" href="https://github.com/gzymomo/openclipboard/releases" target="_blank" rel="noopener">获取最新版本</a>
+          <a class="btn btn-ghost btn-lg" href="https://github.com/gzymomo/openclipboard" target="_blank" rel="noopener">查看源码</a>
+        </div>
+        <ul class="hero-badges" aria-label="亮点">
+          <li>Windows / macOS / Linux</li>
+          <li>桌面底部呼出 · 全宽面板</li>
+          <li>本地 SQLite 存储</li>
+        </ul>
+      </div>
+
+      <div class="container hero-stage">
+        <div class="desktop-mock" role="img" aria-label="OpenClipboard 界面示意：主窗口停靠在桌面底部，宽度铺满屏幕，历史记录为横向卡片列表">
+          <div class="desktop-wall" aria-hidden="true">
+            <div class="ghost-window"></div>
+          </div>
+
+          <div class="app-bar">
+            <div class="bar-toolbar">
+              <span class="tool" title="跳转最新">⇤</span>
+              <span class="bar-center">
+                <span class="tool" title="搜索">⌕</span>
+                <span class="chip chip-active">历史</span>
+                <span class="chip">收藏</span>
+              </span>
+              <span class="bar-right">
+                <span class="bar-status">已保存 文本剪贴板内容。</span>
+                <span class="tool" title="菜单">⋮</span>
+              </span>
+            </div>
+
+            <div class="card-scroller">
+              <div class="card-row">
+                <article class="h-card">
+                  <div class="h-head t-text">
+                    <div class="h-head-text">
+                      <span class="h-type">文本</span>
+                      <span class="h-time">16:32</span>
+                    </div>
+                    <span class="h-star">★</span>
+                    <span class="h-src"><img src="assets/logo.png" alt="" /></span>
+                  </div>
+                  <div class="h-body">
+                    <p class="h-text">dotnet publish -c Release -r win-x64 --self-contained false</p>
+                  </div>
+                  <div class="h-foot"><span class="h-info">71 个字符</span></div>
+                </article>
+
+                <article class="h-card is-selected">
+                  <div class="h-head t-image">
+                    <div class="h-head-text">
+                      <span class="h-type">图片</span>
+                      <span class="h-time">16:30</span>
+                    </div>
+                    <span class="h-src"><span class="h-src-dot dot-blue"></span></span>
+                  </div>
+                  <div class="h-body">
+                    <div class="h-img"><span>图片预览</span></div>
+                  </div>
+                  <div class="h-foot"><span class="h-info">图片</span></div>
+                </article>
+
+                <article class="h-card">
+                  <div class="h-head t-file">
+                    <div class="h-head-text">
+                      <span class="h-type">文件</span>
+                      <span class="h-time">16:27</span>
+                    </div>
+                    <span class="h-src"><span class="h-src-dot dot-amber"></span></span>
+                  </div>
+                  <div class="h-body h-file">
+                    <img src="assets/file.png" alt="" />
+                    <span class="h-file-name">release-notes.md, screenshot.png</span>
+                    <span class="h-file-path">C:\Users\momo\Desktop\...</span>
+                  </div>
+                  <div class="h-foot"><span class="h-info">2 个文件</span></div>
+                </article>
+
+                <article class="h-card">
+                  <div class="h-head t-color">
+                    <div class="h-head-text">
+                      <span class="h-type">颜色</span>
+                      <span class="h-time">16:24</span>
+                    </div>
+                    <span class="h-src"><span class="h-src-dot dot-green"></span></span>
+                  </div>
+                  <div class="h-body">
+                    <div class="h-color" style="color:#3CB371">#3CB371</div>
+                  </div>
+                  <div class="h-foot"><span class="h-info">颜色</span></div>
+                </article>
+
+                <article class="h-card">
+                  <div class="h-head t-url">
+                    <div class="h-head-text">
+                      <span class="h-type">URL</span>
+                      <span class="h-time">16:21</span>
+                    </div>
+                    <span class="h-src"><span class="h-src-dot dot-steel"></span></span>
+                  </div>
+                  <div class="h-body">
+                    <p class="h-text h-url">https://github.com/gzymomo/openclipboard</p>
+                  </div>
+                  <div class="h-foot"><span class="h-info">41 个字符</span></div>
+                </article>
+              </div>
+              <span class="scrollbar-hint" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+        <p class="visual-note">示意图：跨平台版主界面 — 全局热键从桌面底部呼出全宽固定面板，历史记录为横向卡片列表；卡片头部按内容类型着色（文本/图片/文件/颜色/URL…），右上角显示来源应用图标，★ 为收藏标记，蓝框为选中态。</p>
+      </div>
+    </section>
+
+    <section id="features" class="section">
+      <div class="container">
+        <div class="section-head">
+          <p class="section-kicker">01 — 功能</p>
+          <h2>为高频复制粘贴而设计</h2>
+          <p>把系统剪贴板升级为可检索、可收藏、可回溯的历史面板，减少重复操作与信息丢失。</p>
+        </div>
+        <div class="grid features-grid">
+          <article class="feature">
+            <h3>多类型历史记录</h3>
+            <p>自动记录文本、图片和文件路径，以横向卡片列表按时间呈现，双击卡片即可复制回剪贴板。</p>
+          </article>
+          <article class="feature">
+            <h3>类型化卡片样式</h3>
+            <p>每条记录渲染为卡片：头部按类型着色并显示时间，正文按类型呈现文本/图片/文件/颜色等预览。</p>
+          </article>
+          <article class="feature">
+            <h3>底部全宽面板</h3>
+            <p>全局热键从桌面底部呼出铺满屏幕宽度的固定面板（无标题栏、不可调整大小），随时调用不打断工作流。</p>
+          </article>
+          <article class="feature">
+            <h3>来源应用识别</h3>
+            <p>卡片右上角显示来源应用图标：Windows 与 macOS 优先支持，Linux X11 尽力识别，Wayland 场景自动降级。</p>
+          </article>
+          <article class="feature">
+            <h3>搜索、收藏与保留策略</h3>
+            <p>快速筛选历史内容，★ 收藏常用片段；收藏项可在保留期限清理中保留，过期记录自动清理。</p>
+          </article>
+          <article class="feature">
+            <h3>本地存储与隐私</h3>
+            <p>数据保存在本地 SQLite 数据库，不依赖云端同步；支持多语言界面与透明度/毛玻璃效果（取决于系统能力）。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="platforms" class="section alt">
+      <div class="container">
+        <div class="section-head">
+          <p class="section-kicker">02 — 平台与版本</p>
+          <h2>Windows 原生版 + 跨平台版并行演进</h2>
+          <p>项目同时提供经典 WPF 版本与基于 Avalonia 的跨平台版本，覆盖不同使用场景。</p>
+        </div>
+        <div class="grid two-col">
+          <article class="panel">
+            <h3>跨平台版（OpenClipboard.App）</h3>
+            <ul class="check-list">
+              <li>.NET 10 + Avalonia，面向 Windows / macOS / Linux（x64 / ARM64）</li>
+              <li>文本 / 图片 / 文件历史，横向卡片列表与类型化卡片样式</li>
+              <li>来源应用名称与图标（按平台能力支持）</li>
+              <li>可配置热键、历史保留期限、透明度与界面语言</li>
+              <li>支持从旧版 Windows 数据库导入历史</li>
+            </ul>
+            <p class="muted small">数据目录：各平台应用数据目录下 <code>OpenClipboard/cross-platform.db</code></p>
+          </article>
+          <article class="panel">
+            <h3>Windows 经典版（WPF）</h3>
+            <ul class="check-list">
+              <li>WPF / .NET Framework 4.7.2，面向 Windows 10/11</li>
+              <li>成熟的托盘体验、热键呼出与 Acrylic/Frosted 效果</li>
+              <li>支持 x86 / x64 构建与安装包发布</li>
+              <li>数据本地存储：<code>%APPDATA%\OpenClipboard\database.db</code></li>
+            </ul>
+            <p class="muted small">适合希望在 Windows 上获得原生 WPF 体验的用户。</p>
+          </article>
+        </div>
+        <div class="download-strip">
+          <div>
+            <h3>下载与发布</h3>
+            <p class="muted">前往 GitHub Releases 获取对应平台的预编译包与安装程序。推送版本标签时将由 CI 自动构建发布产物。</p>
+          </div>
+          <a class="btn btn-primary" href="https://github.com/gzymomo/openclipboard/releases" target="_blank" rel="noopener">前往 Releases</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="start" class="section">
+      <div class="container">
+        <div class="section-head">
+          <p class="section-kicker">03 — 快速开始</p>
+          <h2>下载即用，或从源码构建</h2>
+        </div>
+        <div class="grid two-col">
+          <article class="panel code-panel">
+            <h3>运行跨平台版（开发/源码）</h3>
+            <p class="muted">需要 .NET SDK 10.0+</p>
+            <pre><code>dotnet test src/OpenClipboard.CrossPlatform.slnx -c Release
+dotnet build src/OpenClipboard.CrossPlatform.slnx -c Release
+dotnet run --project src/OpenClipboard.App/OpenClipboard.App.csproj</code></pre>
+          </article>
+          <article class="panel code-panel">
+            <h3>构建 Windows 经典版</h3>
+            <p class="muted">需要 .NET SDK 8.0+（目标 net472）</p>
+            <pre><code># 构建并打包（x86/x64）
+.\build.ps1
+
+# 生成安装包
+.\build-installer.ps1</code></pre>
+          </article>
+        </div>
+        <div class="tips">
+          <div class="tip"><strong>热键提示：</strong>跨平台版全局热键受系统权限与桌面环境限制；macOS 需辅助功能权限，Linux Wayland 可能受限，热键不可用时可通过托盘打开。</div>
+          <div class="tip"><strong>数据位置：</strong>WPF 版位于 <code>%APPDATA%\OpenClipboard\database.db</code>；跨平台版位于各平台应用数据目录下 <code>OpenClipboard/cross-platform.db</code>。</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="section alt">
+      <div class="container narrow">
+        <div class="section-head">
+          <p class="section-kicker">04 — FAQ</p>
+          <h2>常见问题</h2>
+        </div>
+        <div class="faq-list">
+          <details class="faq-item" open>
+            <summary>OpenClipboard 会上传我的剪贴板数据吗？</summary>
+            <p>不会。剪贴板历史默认保存在本地 SQLite 数据库中，不依赖云端服务。请在共享设备或敏感环境中结合自身需求使用清理与保留策略。</p>
+          </details>
+          <details class="faq-item">
+            <summary>为什么看不到来源应用图标？</summary>
+            <p>来源识别与图标提取依赖平台能力。Windows 与 macOS 优先支持；Linux 在 X11 环境下尽力匹配应用与图标，在通用 Wayland 场景会按安全模型限制自动降级（不显示来源信息），但不影响剪贴板记录功能。</p>
+          </details>
+          <details class="faq-item">
+            <summary>全局热键按了没反应怎么办？</summary>
+            <p>请检查是否与其他软件冲突，并确认系统权限（如 macOS 辅助功能权限）。在 Linux Wayland 等受限环境下，可通过托盘图标唤起窗口。</p>
+          </details>
+          <details class="faq-item">
+            <summary>如何从旧版 Windows 数据迁移？</summary>
+            <p>跨平台版本提供“Import old database...”导入能力，可将旧版 WPF 的 SQLite 历史数据导入到跨平台版数据库中（两者默认分开存储）。</p>
+          </details>
+          <details class="faq-item">
+            <summary>项目是什么许可证？</summary>
+            <p>OpenClipboard 基于 <a href="https://github.com/gzymomo/openclipboard/blob/master/LICENSE" target="_blank" rel="noopener">MIT License</a> 开源。项目包含对反编译产物整理重建的内容，仅用于学习、研究与互操作性目的，请在使用和分发前自行确认相关权利与合规要求。</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="assets/logo.png" alt="" width="24" height="24" />
+        <span>OpenClipboard</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/gzymomo/openclipboard" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/gzymomo/openclipboard/releases" target="_blank" rel="noopener">Releases</a>
+        <a href="https://github.com/gzymomo/openclipboard/issues" target="_blank" rel="noopener">Issues</a>
+      </div>
+      <p class="muted small">© OpenClipboard Contributors · MIT License</p>
+    </div>
+  </footer>
+</body>
+</html>
