@@ -1,165 +1,103 @@
 # OpenClipboard
 
-[![Build](https://github.com/gzymomo/openclipboard/actions/workflows/build.yml/badge.svg)](https://github.com/gzymomo/openclipboard/actions/workflows/build.yml)
+**你的剪贴板历史，随取随用。**
 
-一个轻量的 Windows 剪贴板历史管理器，使用 **WPF / .NET Framework 4.7.2** 编写。
+一款轻量、开源的剪贴板历史管理器。全局热键从桌面底部呼出全宽面板，横向卡片记录文本、图片、文件等内容，支持搜索、收藏、来源应用图标识别与本地隐私存储，让每一次复制都可追溯、可复用。
 
-> 本项目由反编译产物整理、重建而来，仅用于学习、研究与互操作性目的。
+[官网](https://www.openclipboard.cc.cd) · [下载最新版](https://github.com/gzymomo/openclipboard/releases) · [反馈建议](https://github.com/gzymomo/openclipboard/issues)
 
-## 功能
+[![Cross-platform build](https://github.com/gzymomo/openclipboard/actions/workflows/cross-platform.yml/badge.svg)](https://github.com/gzymomo/openclipboard/actions/workflows/cross-platform.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-- 剪贴板历史：文本、图片、文件
-- 历史记录列表、收藏、搜索、多选
-- 全局热键呼出（默认 `F2`，可在设置里修改）
-- 托盘图标与右键菜单
-- 开机自启
-- 多语言（简体中文、英、德、法、日、韩、俄、西、葡、泰、越）
-- 毛玻璃（Acrylic/Frosted）窗口效果，透明度可调
-- 清除历史（真正删除并 `VACUUM` 数据库）
-- 数据本地存储，SQLite
+---
 
-## 系统要求
+## 为什么选择 OpenClipboard
 
-- Windows 10 1607+ / Windows 11
-- .NET Framework 4.7.2+（Windows 10/11 已自带）
-- 毛玻璃效果需要 Windows 10 1803+；圆角需要 Windows 11
+- **随手唤起，不卡工作流**：全局热键（默认 `F2`）从桌面底部呼出固定全宽面板，不打断当前操作
+- **历史一目了然**：横向卡片列表按时间展示，双击即可复制回剪贴板
+- **内容类型更清晰**：文本、图片、文件、颜色、URL、JSON、XML、Markdown 等类型化卡片与预览（含 JSON/XML 高亮、Markdown 渲染）
+- **知道“从哪复制的”**：记录来源应用名称与图标（Windows/macOS 优先支持，Linux X11 尽力识别，Wayland 自动降级）
+- **本地优先，隐私可控**：数据存储在本地 SQLite，不依赖云同步，可配置保留期限、清理与收藏策略
+- **跨平台可用**：支持 Windows、macOS、Linux（x64 / ARM64）
 
-## 跨平台版本
+> 预览与功能演示：**https://www.openclipboard.cc.cd**
 
-跨平台入口位于 `src/OpenClipboard.App`，使用 .NET 10 和 Avalonia，可面向 Windows、Linux、macOS 构建，并支持 x64/ARM64 运行时标识。支持文本/图片/文件剪贴板历史、搜索、收藏、删除/清理、托盘、登录启动，以及从旧版 SQLite 数据库导入。推送 `v*` 发布标签时，GitHub Release 会附带 Windows、Linux、macOS 的 x64/ARM64 六种跨平台 ZIP 包。原 Windows/WPF 版本保持不变。
+![OpenClipboard 预览](docs/assets/demo.png)
 
-跨平台版设置中可更改 11 种界面语言、激活热键、快速复制热键、历史保留期限和透明度。快速复制默认禁用，启用后会把最近一条历史记录复制到系统剪贴板；激活热键默认为 `F2`。历史期限支持不保存、7 天、30 天和永久；收藏记录不会因期限清理而删除，过期记录会在启动、修改期限时及运行期间定期清理。
+## 核心功能
 
-版本号以发布标签为准：推送 `vMAJOR.MINOR.PATCH`（例如 `v1.2.3`）会将 `1.2.3` 写入程序集版本信息、WPF 设置窗口及跨平台窗口标题，并用于 Windows 发布包文件名；不符合该格式的 `v*` 标签会在发布构建中失败。
+- **多类型剪贴板历史**：自动记录文本、图片、文件（及颜色/URL/JSON/XML/Markdown 等识别类型）
+- **横向卡片面板**：桌面底部全宽、固定尺寸面板；类型着色卡片头、来源图标、收藏标记与内容预览
+- **搜索与收藏**：快速筛选历史，收藏常用条目（收藏项可不受过期清理影响）
+- **高效操作**：双击复制、多选与右键菜单（复制/收藏/删除）、一键跳转最新
+- **系统集成**：托盘驻留、全局热键、开机自启（按平台能力支持）
+- **个性化设置**：多语言界面、激活/快速复制热键、历史保留期限、透明度/毛玻璃效果、滚轮速度等
+- **数据管理**：本地 SQLite 存储、清空历史、支持从旧版 Windows 数据库导入
 
-窗口使用 Avalonia 的 Acrylic 透明级别提示和可调透明度；实际模糊、圆角样式取决于操作系统和桌面合成器，不支持 Acrylic 的环境会退化为普通透明背景。
+## 下载与运行
 
-需要 [.NET SDK 10.0+](https://dotnet.microsoft.com/download)：
+前往 [**GitHub Releases**](https://github.com/gzymomo/openclipboard/releases) 下载对应平台的预编译包（Windows / macOS / Linux，x64 / ARM64）。
+
+- **跨平台版（推荐，活跃维护）**：`OpenClipboard.App`（.NET 10 + Avalonia）
+  - 当前发布产物为 **框架依赖（framework-dependent）** 构建，运行前需安装 [.NET 10 Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
+- **Windows 经典版（WPF，维护较少）**：`Clipboard.Desktop`（.NET Framework 4.7.2）
+  - Windows 10/11 通常已自带所需 .NET Framework；旧系统可能需安装 [.NET Framework 4.7.2+](https://dotnet.microsoft.com/download/dotnet-framework)
+
+### 使用提示
+- 启动后默认驻留托盘，按 `F2`（可在设置中修改）呼出面板
+- 全局热键可用性受系统权限/桌面环境影响：macOS 需辅助功能权限；Linux Wayland 环境下热键或来源识别可能受限，仍可通过托盘使用
+- 跨平台版数据目录：各平台应用数据目录下 `OpenClipboard/cross-platform.db`（与旧版 WPF 数据库分开，可在设置/功能中导入旧库）
+
+## 从源码构建
+
+### 跨平台版（.NET 10）
 
 ```sh
-dotnet test src/OpenClipboard.CrossPlatform.slnx -c Release
 dotnet build src/OpenClipboard.CrossPlatform.slnx -c Release
 dotnet run --project src/OpenClipboard.App/OpenClipboard.App.csproj
 ```
 
-跨平台版本将数据保存在当前平台的应用数据目录下 `OpenClipboard/cross-platform.db`，与现有 Windows 版本的数据库分开；可通过“Import old database...”手动导入旧版数据库。
+发布示例（Windows x64，框架依赖）：
 
-> 全局热键受系统权限和桌面环境限制：macOS 需要授予辅助功能权限，Linux Wayland 环境可能需要额外权限。热键不可用时可通过托盘图标打开程序。
+```sh
+dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj -c Release -r win-x64 --self-contained false
+```
 
-## 构建
+> 如需用户无需预装运行时，可使用 `--self-contained true`（或评估 Native AOT）按目标平台单独发布，产物体积会相应增加。
 
-需要 [.NET SDK 8.0+](https://dotnet.microsoft.com/download)：
+### Windows 经典版（WPF）
 
 ```powershell
-.\build.ps1
-```
-
-输出：
-
-```
-默认同时构建 x86 和 x64：
-
-```
-dist\OpenClipboard-x86\              # 32 位，可直接运行
-dist\OpenClipboard-x64\              # 64 位，可直接运行
-dist\OpenClipboard-x86-<版本>.zip    # 32 位免安装包
-dist\OpenClipboard-x64-<版本>.zip    # 64 位免安装包
-```
-
-只构建其中一个架构：
-
-```powershell
-.\build.ps1 -Architecture x64
-```
-
-### 生成 EXE 安装包
-
-```powershell
-.\build-installer.ps1
-```
-
-输出：
-
-```
-dist\OpenClipboard-Setup-x86-<版本>.exe
-dist\OpenClipboard-Setup-x64-<版本>.exe
-```
-
-- 当前用户安装（`%LOCALAPPDATA%\Programs\OpenClipboard`），无需管理员权限
-- 首次运行会自动下载 NSIS 3.10 到 `%LOCALAPPDATA%\OpenClipboardBuild`
-- 安装包未签名，首次运行可能触发 SmartScreen 提示
-
-也可以直接构建解决方案：
-
-```powershell
-dotnet build src\OpenClipboard.sln -c Release
-```
-
-> 依赖通过 NuGet 还原，首次构建需要联网。
-
-### GitHub Actions
-
-仓库自带 CI（`.github/workflows/build.yml`）：
-
-- 每次 push / PR 自动在 `windows-latest` 上构建并打包
-- 产物（x86/x64 的 zip 与安装包，共 4 个）上传到该次 Actions 运行的 **Artifacts**
-- 推送 `v*` 标签（如 `v1.0.0`）会自动创建 GitHub Release 并附带全部 4 个包
-
-## 运行
-
-1. 运行 `dist\OpenClipboard-x64\Clipboard.Desktop.exe`（或 x86 目录）
-2. 程序启动后驻留托盘，主窗口默认隐藏
-3. 按热键（默认 `F2`）或点击托盘图标呼出
-4. 设置页可修改热键、语言、记录天数、毛玻璃不透明度
-
-数据位置：
-
-```
-%APPDATA%\OpenClipboard\database.db
+.\build.ps1                    # 构建并打包
+.\build-installer.ps1          # 生成安装包（NSIS）
 ```
 
 ## 项目结构
 
-```
+```text
 src/
-  Clipboard.Data/        # 数据模型与枚举（netstandard2.0 / net10.0）
-  Clipboard.Desktop/     # WPF 主程序（net472）
-  OpenClipboard.App/     # 跨平台 Avalonia 主程序（net10.0）
-  OpenClipboard.App.Tests/ # 跨平台数据存储测试
-  OpenClipboard.CrossPlatform.slnx # 跨平台解决方案
-  OpenClipboard.sln               # Windows/WPF 解决方案
-build.ps1                # 构建与打包脚本
-build-installer.ps1      # 生成 EXE 安装包
-installer/               # NSIS 安装包脚本
+  OpenClipboard.App/             # 跨平台 Avalonia 主程序（net10.0，推荐）
+  OpenClipboard.App.Tests/       # 跨平台测试
+  OpenClipboard.CrossPlatform.slnx
+  Clipboard.Desktop/             # Windows WPF 经典版（net472）
+  Clipboard.Data/                # 数据模型与枚举
+docs/                            # 官网/宣传页源码（GitHub Pages）
+.github/workflows/               # CI（版本 tag 或手动触发）
 ```
 
-## 已知限制
+## 隐私与说明
 
-- 各平台的全局热键可用性和 Acrylic/圆角视觉效果由系统权限及桌面合成器决定，无法保证与 Windows DWM 完全一致
-- 跨平台版数据库与 WPF 版分开保存，需手动导入旧版历史记录
+- 剪贴板历史默认仅保存在本地 SQLite 数据库，不上传云端
+- 请在共享设备或敏感环境中结合自身需求配置保留与清理策略
+- 来源应用识别、热键、透明效果等能力受操作系统权限与桌面环境限制，部分场景会自动降级
 
-## 第三方组件
+## 许可证与免责声明
 
-| 组件 | 版本 | 许可证 |
-|---|---|---|
-| HandyControl | 3.0 | MIT |
-| GalaSoft.MvvmLight | 5.4.1 | MIT |
-| Microsoft.EntityFrameworkCore | 3.1 | Apache-2.0 |
-| Newtonsoft.Json | 13.0.3 | MIT |
-| SQLitePCLRaw | 2.x | Apache-2.0 |
-| Microsoft.Data.Sqlite | 5.x（WPF）/ 10.0（跨平台） | MIT |
-| Microsoft.Extensions.* | 3.1 | MIT |
-| Avalonia | 12.1.5 | MIT |
-| SharpHook | 8.0.1 | MIT |
+- 本项目基于 [MIT License](LICENSE) 开源
+- 本项目由反编译产物整理、重建而来，仅用于学习、研究与互操作性目的；与任何原软件厂商无关，也不包含其商标或品牌信息
+- 请在使用、分发前自行确认你拥有相应权利并遵守当地法律；软件按“现状”提供，不附带任何明示或暗示担保
 
-各组件版权归其原作者所有，使用时请遵守对应许可证。
+---
 
-## 许可证
-
-本项目基于 [MIT License](LICENSE) 开源。
-
-## 免责声明
-
-- 本项目与任何原软件厂商无关，也不包含其商标或品牌信息
-- 代码来源于对已发布程序的反编译与整理，请在使用、分发前自行确认你拥有相应权利，并遵守当地法律
-- 软件按“现状”提供，不附带任何明示或暗示担保
+**官网：** https://www.openclipboard.cc.cd  
+**下载：** https://github.com/gzymomo/openclipboard/releases
