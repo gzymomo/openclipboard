@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleDisplayName</key>
+  <string>OpenClipboard</string>
+  <key>CFBundleExecutable</key>
+  <string>OpenClipboard</string>
+  <key>CFBundleIconFile</key>
+  <string>OpenClipboard</string>
+  <key>CFBundleIdentifier</key>
+  <string>com.openclipboard.app</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleName</key>
+  <string>OpenClipboard</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>__APP_VERSION__</string>
+  <key>CFBundleVersion</key>
+  <string>__APP_VERSION__</string>
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.utilities</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>12.0</string>
+  <key>NSAppleEventsUsageDescription</key>
+  <string>OpenClipboard 需要识别剪贴板内容的来源应用。</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+</dict>
+</plist>

@@ -39,13 +39,18 @@
 前往 [**GitHub Releases**](https://github.com/gzymomo/openclipboard/releases) 下载对应平台的预编译包（Windows / macOS / Linux，x64 / ARM64）。
 
 - **跨平台版（推荐，活跃维护）**：`OpenClipboard.App`（.NET 10 + Avalonia）
-  - 当前发布产物为 **框架依赖（framework-dependent）** 构建，运行前需安装 [.NET 10 Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
+  - **macOS**：发布为自包含的 `OpenClipboard.app`，**无需安装 .NET**；拖入「应用程序」即可
+  - **Windows / Linux**：当前仍为 **框架依赖（framework-dependent）** 构建，运行前需安装 [.NET 10 Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
 - **Windows 经典版（WPF，维护较少）**：`Clipboard.Desktop`（.NET Framework 4.7.2）
   - Windows 10/11 通常已自带所需 .NET Framework；旧系统可能需安装 [.NET Framework 4.7.2+](https://dotnet.microsoft.com/download/dotnet-framework)
 
 ### 使用提示
 - 启动后默认驻留托盘，按 `F2`（可在设置中修改）呼出面板
 - 全局热键可用性受系统权限/桌面环境影响：macOS 需辅助功能权限；Linux Wayland 环境下热键或来源识别可能受限，仍可通过托盘使用
+- macOS 包为 ad-hoc 签名、未公证，从浏览器下载后首次打开如提示「无法验证开发者」，执行一次：
+  ```sh
+  xattr -dr com.apple.quarantine /Applications/OpenClipboard.app
+  ```
 - 跨平台版数据目录：各平台应用数据目录下 `OpenClipboard/cross-platform.db`（与旧版 WPF 数据库分开，可在设置/功能中导入旧库）
 
 ## 从源码构建
@@ -64,6 +69,18 @@ dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj -c Release -r win-
 ```
 
 > 如需用户无需预装运行时，可使用 `--self-contained true`（或评估 Native AOT）按目标平台单独发布，产物体积会相应增加。
+
+macOS 使用独立的自包含打包流程，产物是可直接双击的 `OpenClipboard.app`：
+
+```sh
+dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj -c Release -r osx-x64 \
+  --self-contained true -p:AssemblyName=OpenClipboard
+installer/macos/package.sh \
+  src/OpenClipboard.App/bin/Release/net10.0/osx-x64/publish \
+  1.1.7 artifacts/OpenClipboard-osx-x64-1.1.7.zip
+```
+
+> `AssemblyName` 必须是 `OpenClipboard`：macOS 会把以 `.App` 结尾的可执行文件当成应用包，Gatekeeper 会直接结束进程。
 
 ### Windows 经典版（WPF）
 

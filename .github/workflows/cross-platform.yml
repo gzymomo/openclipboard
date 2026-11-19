@@ -24,10 +24,8 @@ jobs:
             rid: linux-x64
           - os: ubuntu-latest
             rid: linux-arm64
-          - os: macos-latest
-            rid: osx-x64
-          - os: macos-latest
-            rid: osx-arm64
+          # macOS is built separately in macos.yml: it ships a self-contained
+          # OpenClipboard.app and is validated on a native Intel runner.
 
     steps:
       - name: Checkout
@@ -120,7 +118,7 @@ jobs:
 
           $packages = @(Get-ChildItem -Path dist -Filter '*.zip' | ForEach-Object { $_.FullName })
           if ($packages.Count -ne 6) {
-            throw "Expected six cross-platform packages, found $($packages.Count)."
+            throw "Expected four cross-platform packages, found $($packages.Count)."
           }
           gh release upload $env:GITHUB_REF_NAME @packages --repo $env:GITHUB_REPOSITORY --clobber
           if ($LASTEXITCODE -ne 0) {

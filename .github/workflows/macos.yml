@@ -1,0 +1,132 @@
+name: macOS build
+
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.rid }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Native Intel runner so osx-x64 is actually exercised, not cross-compiled.
+          # If this label is unavailable on your plan, use macos-15 and keep the
+          # explicit --runtime osx-x64 publish (cross-compilation still works).
+          - os: macos-15-intel
+            rid: osx-x64
+          - os: macos-15
+            rid: osx-arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: src/OpenClipboard.App/OpenClipboard.App.csproj
+
+      - name: Resolve application version
+        id: app-version
+        shell: bash
+        run: |
+          version="1.0.0"
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            if [[ ! "${GITHUB_REF_NAME}" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+              echo "Release tag must use the vMAJOR.MINOR.PATCH format, got '${GITHUB_REF_NAME}'." >&2
+              exit 1
+            fi
+            version="${BASH_REMATCH[1]}"
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish self-contained app
+        shell: bash
+        run: |
+          dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj \
+            --configuration Release \
+            --runtime "${{ matrix.rid }}" \
+            --self-contained true \
+            -p:Version="${{ steps.app-version.outputs.version }}" \
+            -p:AssemblyName=OpenClipboard \
+            -p:DebugType=None \
+            -p:DebugSymbols=false
+
+      - name: Package OpenClipboard.app
+        shell: bash
+        run: |
+          chmod +x installer/macos/package.sh
+          installer/macos/package.sh \
+            "src/OpenClipboard.App/bin/Release/net10.0/${{ matrix.rid }}/publish" \
+            "${{ steps.app-version.outputs.version }}" \
+            "artifacts/OpenClipboard-${{ matrix.rid }}-${{ steps.app-version.outputs.version }}.zip"
+
+      - name: Verify bundle
+        shell: bash
+        run: |
+          unzip -q "artifacts/OpenClipboard-${{ matrix.rid }}-${{ steps.app-version.outputs.version }}.zip" -d verify
+          APP="verify/OpenClipboard.app"
+          test -x "$APP/Contents/MacOS/OpenClipboard"
+          test -f "$APP/Contents/Info.plist"
+          plutil -lint "$APP/Contents/Info.plist"
+          codesign --verify --deep --strict "$APP"
+          echo "executable: $(file "$APP/Contents/MacOS/OpenClipboard")"
+          echo "bundle:"
+          du -sh "$APP"
+
+      - name: Upload Actions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.rid }}
+          path: artifacts/*.zip
+          if-no-files-found: error
+
+  release:
+    name: Attach macOS packages to GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: macos-*
+          path: dist
+          merge-multiple: true
+
+      - name: Upload packages to GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          releaseReady=0
+          for attempt in $(seq 1 90); do
+            if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              releaseReady=1
+              break
+            fi
+            sleep 10
+          done
+          if [[ "$releaseReady" -ne 1 ]]; then
+            echo "GitHub Release '$GITHUB_REF_NAME' was not created." >&2
+            exit 1
+          fi
+
+          packages=(dist/*.zip)
+          if [[ "${#packages[@]}" -ne 2 ]]; then
+            echo "Expected two macOS packages, found ${#packages[@]}." >&2
+            exit 1
+          fi
+          gh release upload "$GITHUB_REF_NAME" "${packages[@]}" --repo "$GITHUB_REPOSITORY" --clobber
