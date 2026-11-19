@@ -57,7 +57,6 @@ jobs:
             --runtime "${{ matrix.rid }}" \
             --self-contained true \
             -p:Version="${{ steps.app-version.outputs.version }}" \
-            -p:AssemblyName=OpenClipboard \
             -p:DebugType=None \
             -p:DebugSymbols=false
 

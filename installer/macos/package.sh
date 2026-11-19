@@ -21,9 +21,8 @@ if [[ ! -d "$PUBLISH_DIR" ]]; then
   exit 1
 fi
 
-if [[ ! -f "$PUBLISH_DIR/$APP_NAME" ]]; then
-  echo "Expected executable '$APP_NAME' in $PUBLISH_DIR." >&2
-  echo "Publish with -p:AssemblyName=$APP_NAME; a name ending in .App is treated as a bundle by macOS and gets killed by Gatekeeper." >&2
+if [[ ! -f "$PUBLISH_DIR/OpenClipboard.App" && ! -f "$PUBLISH_DIR/$APP_NAME" ]]; then
+  echo "Expected executable 'OpenClipboard.App' or '$APP_NAME' in $PUBLISH_DIR." >&2
   exit 1
 fi
 
@@ -34,6 +33,14 @@ APP="$WORK_DIR/$APP_NAME.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 cp -R "$PUBLISH_DIR"/. "$APP/Contents/MacOS/"
+
+# The published apphost is OpenClipboard.App. Renaming it inside the bundle is
+# safe (the host keeps the embedded OpenClipboard.App.dll name) and avoids a
+# fatal Gatekeeper issue: macOS treats any executable ending in .App as an
+# application bundle and SIGKILLs it when no bundle structure/notarization exists.
+if [[ -f "$APP/Contents/MacOS/OpenClipboard.App" ]]; then
+  mv "$APP/Contents/MacOS/OpenClipboard.App" "$APP/Contents/MacOS/$APP_NAME"
+fi
 
 sed "s/__APP_VERSION__/$VERSION/g" "$ROOT/installer/macos/Info.plist" > "$APP/Contents/Info.plist"
 plutil -lint "$APP/Contents/Info.plist" >/dev/null

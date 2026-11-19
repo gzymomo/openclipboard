@@ -74,13 +74,15 @@ macOS 使用独立的自包含打包流程，产物是可直接双击的 `OpenCl
 
 ```sh
 dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj -c Release -r osx-x64 \
-  --self-contained true -p:AssemblyName=OpenClipboard
+  --self-contained true
 installer/macos/package.sh \
   src/OpenClipboard.App/bin/Release/net10.0/osx-x64/publish \
   1.1.7 artifacts/OpenClipboard-osx-x64-1.1.7.zip
 ```
 
-> `AssemblyName` 必须是 `OpenClipboard`：macOS 会把以 `.App` 结尾的可执行文件当成应用包，Gatekeeper 会直接结束进程。
+> 不要用 `-p:AssemblyName=OpenClipboard` 全局覆盖程序集名，它会被应用到所有 ProjectReference 并导致 `Ambiguous project name`。`package.sh` 只在 bundle 内把 apphost 重命名为 `OpenClipboard`，程序集名和 `avares://OpenClipboard.App/...` 资源 URI 保持不变。
+>
+> apphost 改名是安全的：宿主内部仍然查找 `OpenClipboard.App.dll`；但 macOS 会把以 `.App` 结尾的可执行文件当成应用包，Gatekeeper 会直接结束进程。
 
 ### Windows 经典版（WPF）
 
