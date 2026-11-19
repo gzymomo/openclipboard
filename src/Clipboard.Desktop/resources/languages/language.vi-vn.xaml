@@ -55,4 +55,8 @@
   <sys:String x:Key="SettingWindow_General_RecordCount_Slider_5_Text">5 ngày</sys:String>
   <sys:String x:Key="SettingWindow_General_RecordCount_Slider_3_Text">3 ngày</sys:String>
   <sys:String x:Key="SettingWindow_General_RecordCount_Slider_15_Text">15 ngày</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed">Tốc độ con lăn</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_Low">Chậm</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_Medium">Vừa</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_High">Nhanh</sys:String>
 </ResourceDictionary>

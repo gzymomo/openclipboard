@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e3c72"/>
+      <stop offset="45%" stop-color="#4facfe"/>
+      <stop offset="100%" stop-color="#c9e7ff"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff7c2"/>
+      <stop offset="100%" stop-color="#ffd36a"/>
+    </linearGradient>
+    <linearGradient id="m1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6b8fb3"/>
+      <stop offset="100%" stop-color="#2f4f6f"/>
+    </linearGradient>
+    <linearGradient id="m2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4f7c63"/>
+      <stop offset="100%" stop-color="#244636"/>
+    </linearGradient>
+    <linearGradient id="field" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7ec850"/>
+      <stop offset="100%" stop-color="#3f7d2a"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#sky)"/>
+  <circle cx="620" cy="120" r="54" fill="url(#sun)" opacity="0.95"/>
+  <circle cx="620" cy="120" r="80" fill="#fff3a6" opacity="0.18"/>
+  <g opacity="0.25" fill="#fff">
+    <ellipse cx="160" cy="110" rx="70" ry="28"/>
+    <ellipse cx="210" cy="105" rx="55" ry="24"/>
+    <ellipse cx="120" cy="118" rx="45" ry="20"/>
+    <ellipse cx="430" cy="80" rx="60" ry="22"/>
+    <ellipse cx="470" cy="75" rx="45" ry="18"/>
+  </g>
+  <path d="M0 320 L180 170 L320 260 L430 180 L620 320 Z" fill="url(#m1)"/>
+  <path d="M220 330 L420 150 L560 260 L800 160 L800 340 L220 340 Z" fill="url(#m2)" opacity="0.95"/>
+  <path d="M0 300 C120 280, 240 340, 360 310 C480 280, 620 350, 800 300 L800 500 L0 500 Z" fill="url(#field)"/>
+  <path d="M0 360 C140 340, 260 390, 420 360 C560 330, 680 390, 800 360 L800 500 L0 500 Z" fill="#2f6b1f" opacity="0.55"/>
+  <g fill="#ffffff" opacity="0.18">
+    <circle cx="90" cy="420" r="3"/><circle cx="140" cy="450" r="2.5"/><circle cx="210" cy="430" r="3"/>
+    <circle cx="300" cy="455" r="2.5"/><circle cx="380" cy="420" r="3"/><circle cx="470" cy="445" r="2.5"/>
+    <circle cx="560" cy="425" r="3"/><circle cx="650" cy="455" r="2.5"/><circle cx="730" cy="430" r="3"/>
+  </g>
+</svg>

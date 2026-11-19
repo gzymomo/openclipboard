@@ -69,9 +69,11 @@ public partial class SettingsWindow : Window
             : QuickCopyHotkey;
         HistoryModeSlider.Value = (int)preferences.HistoryMode;
         GlassOpacitySlider.Value = preferences.GlassOpacity;
+        ScrollWheelSpeedSlider.Value = ScrollSpeedToSlider(preferences.ScrollWheelSpeed);
         ApplyGlassOpacity();
         UpdateHistoryModeText();
         UpdateGlassOpacityText();
+        UpdateScrollWheelSpeedText();
     }
 
     private void LanguageBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -93,19 +95,14 @@ public partial class SettingsWindow : Window
         QuickCopyHotkeyLabel.Text = _localization.Get("SettingWindow_General_PasteHotKey");
         HistoryModeLabel.Text = _localization.Get("SettingWindow_General_RecordCount");
         GlassOpacityLabel.Text = _localization.Get("SettingWindow_General_GlassOpacity");
+        ScrollWheelSpeedLabel.Text = _localization.Get("SettingWindow_General_ScrollWheelSpeed");
         HotkeyHelpText.Text = _localization.Get("CrossPlatform_Hotkey_Help");
-        OneDayText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_1_Text");
-        ThreeDaysText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_3_Text");
-        FiveDaysText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_5_Text");
-        SevenDaysText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_7_Text");
-        FifteenDaysText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_15_Text");
-        ThirtyDaysText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_30_Text");
-        ForeverText.Text = _localization.Get("SettingWindow_General_RecordCount_Slider_Infinite_Text");
         ClearHistoryButton.Content = _localization.Get("SettingWindow_General_ClearHistory");
         CancelButton.Content = _localization.Get("ConfirmWindow_Cancel");
         SaveButton.Content = _localization.Get("CrossPlatform_Save");
         UpdateHistoryModeText();
         UpdateGlassOpacityText();
+        UpdateScrollWheelSpeedText();
         if (string.IsNullOrWhiteSpace(QuickCopyHotkey))
         {
             QuickCopyHotkeyBox.Text = _localization.Get("CrossPlatform_Disabled");
@@ -200,6 +197,9 @@ public partial class SettingsWindow : Window
         ApplyGlassOpacity();
     }
 
+    private void ScrollWheelSpeedSlider_OnValueChanged(object? sender, Avalonia.Controls.Primitives.RangeBaseValueChangedEventArgs e) =>
+        UpdateScrollWheelSpeedText();
+
     private void UpdateHistoryModeText()
     {
         if (HistoryModeValueText is null || HistoryModeSlider is null)
@@ -226,6 +226,35 @@ public partial class SettingsWindow : Window
             GlassOpacityValueText.Text = $"{(int)Math.Round(GlassOpacitySlider.Value)}%";
         }
     }
+
+    private void UpdateScrollWheelSpeedText()
+    {
+        if (ScrollWheelSpeedValueText is null || ScrollWheelSpeedSlider is null)
+        {
+            return;
+        }
+
+        ScrollWheelSpeedValueText.Text = _localization.Get((int)Math.Round(ScrollWheelSpeedSlider.Value) switch
+        {
+            <= 0 => "SettingWindow_General_ScrollWheelSpeed_Low",
+            1 => "SettingWindow_General_ScrollWheelSpeed_Medium",
+            _ => "SettingWindow_General_ScrollWheelSpeed_High"
+        });
+    }
+
+    private static int ScrollSpeedToSlider(int speed) => speed switch
+    {
+        <= 70 => 0,
+        <= 125 => 1,
+        _ => 2
+    };
+
+    private static int SliderToScrollSpeed(int sliderValue) => sliderValue switch
+    {
+        <= 0 => 40,
+        1 => 100,
+        _ => 150
+    };
 
     private void ApplyGlassOpacity()
     {
@@ -269,6 +298,7 @@ public partial class SettingsWindow : Window
             _preferences.QuickCopyHotkey = QuickCopyHotkey;
             _preferences.HistoryMode = historyMode;
             _preferences.GlassOpacity = (int)GlassOpacitySlider.Value;
+            _preferences.ScrollWheelSpeed = SliderToScrollSpeed((int)Math.Round(ScrollWheelSpeedSlider.Value));
             _preferences.Save();
             Saved = true;
             Close();

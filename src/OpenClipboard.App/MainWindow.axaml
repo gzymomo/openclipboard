@@ -3,6 +3,7 @@
         xmlns:local="using:OpenClipboard.App"
         xmlns:models="using:OpenClipboard.App.Models"
         xmlns:md="https://github.com/whistyun/Markdown.Avalonia"
+        xmlns:controls="using:OpenClipboard.App.Controls"
         x:Class="OpenClipboard.App.MainWindow"
         x:DataType="local:MainWindow"
         Title="OpenClipboard"
@@ -23,20 +24,21 @@
         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left" VerticalAlignment="Center">
           <Button x:Name="LatestButton"
                   Content="⇤"
+                  CornerRadius="8"
                   Click="Latest_OnClick" />
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
-          <Button x:Name="SearchToggleButton" Content="⌕" Click="SearchToggle_OnClick" />
+          <Button x:Name="SearchToggleButton" Content="⌕" CornerRadius="8" Click="SearchToggle_OnClick" />
           <Grid x:Name="SearchPanel" Width="320" ColumnDefinitions="*,Auto" IsVisible="False">
             <TextBox x:Name="SearchBox"
                      PlaceholderText="Search history"
                      TextChanged="SearchBox_OnTextChanged"
                      LostFocus="SearchBox_OnLostFocus" />
-            <Button Grid.Column="1" Content="×" Click="SearchClear_OnClick" />
+            <Button Grid.Column="1" Content="×" CornerRadius="8" Click="SearchClear_OnClick" />
           </Grid>
-          <Button x:Name="HistoryFilterButton" Click="HistoryFilter_OnClick" />
-          <Button x:Name="FavoritesFilterButton" Click="FavoritesFilter_OnClick" />
+          <Button x:Name="HistoryFilterButton" CornerRadius="8" Click="HistoryFilter_OnClick" />
+          <Button x:Name="FavoritesFilterButton" CornerRadius="8" Click="FavoritesFilter_OnClick" />
         </StackPanel>
 
         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
@@ -46,7 +48,7 @@
                      VerticalAlignment="Center"
                      MaxWidth="360"
                      TextTrimming="CharacterEllipsis" />
-          <Button x:Name="MenuButton" Content="⋮" Click="Menu_OnClick" />
+          <Button x:Name="MenuButton" Content="⋮" CornerRadius="8" Click="Menu_OnClick" />
           <Popup x:Name="MenuPopup"
                  PlacementTarget="{Binding ElementName=MenuButton}"
                  Placement="Bottom"
@@ -231,6 +233,30 @@
                               </md:MarkdownScrollViewer.Styles>
                             </md:MarkdownScrollViewer>
                           </ThemeVariantScope>
+                        </Border>
+                        <Border IsVisible="{Binding IsJson}"
+                                MaxHeight="190"
+                                ClipToBounds="True">
+                          <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                        VerticalScrollBarVisibility="Auto">
+                            <TextBlock controls:CodeHighlight.Language="Json"
+                                       controls:CodeHighlight.Text="{Binding DisplayPreview}"
+                                       FontFamily="Consolas,Menlo,Monaco,monospace"
+                                       FontSize="11"
+                                       TextWrapping="Wrap" />
+                          </ScrollViewer>
+                        </Border>
+                        <Border IsVisible="{Binding IsXml}"
+                                MaxHeight="190"
+                                ClipToBounds="True">
+                          <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                        VerticalScrollBarVisibility="Auto">
+                            <TextBlock controls:CodeHighlight.Language="Xml"
+                                       controls:CodeHighlight.Text="{Binding DisplayPreview}"
+                                       FontFamily="Consolas,Menlo,Monaco,monospace"
+                                       FontSize="11"
+                                       TextWrapping="Wrap" />
+                          </ScrollViewer>
                         </Border>
                         <StackPanel IsVisible="{Binding IsFile}"
                                     Spacing="8"

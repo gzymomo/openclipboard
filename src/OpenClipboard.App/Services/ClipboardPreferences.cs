@@ -21,6 +21,8 @@ public sealed class ClipboardPreferences
 
     public int GlassOpacity { get; set; } = 50;
 
+    public int ScrollWheelSpeed { get; set; } = 40;
+
     public ClipboardPreferences()
     {
         var applicationDataDirectory = GetApplicationDataDirectory();
@@ -41,6 +43,7 @@ public sealed class ClipboardPreferences
                 if (root.TryGetProperty("QuickCopyHotkey", out var quickCopyHotkey)) QuickCopyHotkey = quickCopyHotkey.GetString() ?? QuickCopyHotkey;
                 if (root.TryGetProperty("HistoryMode", out var historyMode)) HistoryMode = ParseHistoryMode(historyMode);
                 if (root.TryGetProperty("GlassOpacity", out var glassOpacity) && glassOpacity.TryGetInt32(out var opacity)) GlassOpacity = Math.Clamp(opacity, 0, 100);
+                if (root.TryGetProperty("ScrollWheelSpeed", out var scrollSpeed) && scrollSpeed.TryGetInt32(out var speed)) ScrollWheelSpeed = NormalizeScrollWheelSpeed(speed);
             }
             catch
             {
@@ -56,7 +59,7 @@ public sealed class ClipboardPreferences
     public void Save()
     {
         var temporaryPath = _path + ".tmp";
-        var data = new ClipboardPreferencesData(Language, ActivationHotkey, QuickCopyHotkey, HistoryMode, GlassOpacity);
+        var data = new ClipboardPreferencesData(Language, ActivationHotkey, QuickCopyHotkey, HistoryMode, GlassOpacity, ScrollWheelSpeed);
         File.WriteAllText(temporaryPath, JsonSerializer.Serialize(data, JsonOptions));
         File.Move(temporaryPath, _path, overwrite: true);
     }
@@ -110,6 +113,13 @@ public sealed class ClipboardPreferences
         return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
     }
 
+    private static int NormalizeScrollWheelSpeed(int value) => value switch
+    {
+        <= 70 => 40,
+        <= 125 => 100,
+        _ => 150
+    };
+
     private static HistoryMode ParseHistoryMode(JsonElement element)
     {
         if (element.ValueKind == JsonValueKind.String)
@@ -155,5 +165,6 @@ public sealed class ClipboardPreferences
         string ActivationHotkey,
         string QuickCopyHotkey,
         HistoryMode HistoryMode,
-        int GlassOpacity = 50);
+        int GlassOpacity = 50,
+        int ScrollWheelSpeed = 40);
 }

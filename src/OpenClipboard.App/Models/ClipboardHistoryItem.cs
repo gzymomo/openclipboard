@@ -59,7 +59,9 @@ public sealed record ClipboardHistoryItem
     public bool IsTextPreview => DataType != ClipboardDataTypes.Image
         && DataType != ClipboardDataTypes.File
         && DataType != ClipboardDataTypes.Color
-        && DataType != ClipboardDataTypes.Markdown;
+        && DataType != ClipboardDataTypes.Markdown
+        && DataType != ClipboardDataTypes.Json
+        && DataType != ClipboardDataTypes.Xml;
 
     public bool HasColorPreview => IsColor && TryParseColor(Data, out _);
 

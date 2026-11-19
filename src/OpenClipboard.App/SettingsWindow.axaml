@@ -9,73 +9,76 @@
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         Width="400"
-        Height="569"
+        Height="640"
         MinWidth="400"
-        MinHeight="540"
+        MinHeight="600"
         WindowStartupLocation="CenterOwner">
   <Border x:Name="MainBackground" CornerRadius="12" ClipToBounds="True">
-  <Grid RowDefinitions="*,Auto" Margin="24" RowSpacing="12">
-    <Grid ColumnDefinitions="*,240" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="12">
-      <TextBlock Grid.Row="0" VerticalAlignment="Center" x:Name="AutoRunLabel" />
-      <CheckBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" x:Name="AutoRunCheckBox" Click="AutoRunCheckBox_OnClick" />
+    <Grid RowDefinitions="*,Auto" Margin="24,20,24,20" RowSpacing="16">
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="16">
+          <Grid ColumnDefinitions="140,*" ColumnSpacing="16" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="14">
+            <TextBlock Grid.Row="0" Grid.Column="0" x:Name="AutoRunLabel" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <CheckBox Grid.Row="0" Grid.Column="1" x:Name="AutoRunCheckBox" VerticalAlignment="Center" Click="AutoRunCheckBox_OnClick" />
 
-      <TextBlock Grid.Row="1" VerticalAlignment="Center" x:Name="LanguageLabel" />
-      <ComboBox Grid.Row="1" Grid.Column="1" x:Name="LanguageBox" ItemsSource="{Binding Languages}" SelectionChanged="LanguageBox_OnSelectionChanged">
-        <ComboBox.ItemTemplate>
-          <DataTemplate x:DataType="services:LanguageOption">
-            <TextBlock Text="{Binding DisplayName}" />
-          </DataTemplate>
-        </ComboBox.ItemTemplate>
-      </ComboBox>
+            <TextBlock Grid.Row="1" Grid.Column="0" x:Name="LanguageLabel" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <ComboBox Grid.Row="1" Grid.Column="1" x:Name="LanguageBox" HorizontalAlignment="Stretch" ItemsSource="{Binding Languages}" SelectionChanged="LanguageBox_OnSelectionChanged">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="services:LanguageOption">
+                  <TextBlock Text="{Binding DisplayName}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
 
-      <TextBlock Grid.Row="2" VerticalAlignment="Center" x:Name="ActivationHotkeyLabel" />
-      <TextBox Grid.Row="2" Grid.Column="1" x:Name="ActivationHotkeyBox" IsReadOnly="True" KeyDown="ActivationHotkeyBox_OnKeyDown" />
+            <TextBlock Grid.Row="2" Grid.Column="0" x:Name="ActivationHotkeyLabel" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <TextBox Grid.Row="2" Grid.Column="1" x:Name="ActivationHotkeyBox" HorizontalAlignment="Stretch" IsReadOnly="True" KeyDown="ActivationHotkeyBox_OnKeyDown" />
 
-      <TextBlock Grid.Row="3" VerticalAlignment="Center" x:Name="QuickCopyHotkeyLabel" />
-      <StackPanel Grid.Row="3" Grid.Column="1" Spacing="4">
-        <TextBox x:Name="QuickCopyHotkeyBox" IsReadOnly="True" KeyDown="QuickCopyHotkeyBox_OnKeyDown" />
-        <TextBlock x:Name="HotkeyHelpText" FontSize="11" Opacity="0.7" TextWrapping="Wrap" />
-      </StackPanel>
+            <TextBlock Grid.Row="3" Grid.Column="0" x:Name="QuickCopyHotkeyLabel" VerticalAlignment="Top" Margin="0,6,0,0" TextWrapping="Wrap" />
+            <StackPanel Grid.Row="3" Grid.Column="1" Spacing="4">
+              <TextBox x:Name="QuickCopyHotkeyBox" HorizontalAlignment="Stretch" IsReadOnly="True" KeyDown="QuickCopyHotkeyBox_OnKeyDown" />
+              <TextBlock x:Name="HotkeyHelpText" FontSize="11" Opacity="0.7" TextWrapping="Wrap" />
+            </StackPanel>
 
-      <TextBlock Grid.Row="4" VerticalAlignment="Top" x:Name="HistoryModeLabel" />
-      <StackPanel Grid.Row="4" Grid.Column="1" Spacing="4">
-        <Slider x:Name="HistoryModeSlider"
-                Minimum="0"
-                Maximum="6"
-                TickFrequency="1"
-                IsSnapToTickEnabled="True"
-                ValueChanged="HistoryModeSlider_OnValueChanged" />
-        <TextBlock x:Name="HistoryModeValueText" FontSize="11" HorizontalAlignment="Right" />
-        <Grid ColumnDefinitions="*,*,*,*,*,*,*">
-          <TextBlock x:Name="OneDayText" Grid.Column="0" FontSize="10" HorizontalAlignment="Center" />
-          <TextBlock x:Name="ThreeDaysText" Grid.Column="1" FontSize="10" HorizontalAlignment="Center" />
-          <TextBlock x:Name="FiveDaysText" Grid.Column="2" FontSize="10" HorizontalAlignment="Center" />
-          <TextBlock x:Name="SevenDaysText" Grid.Column="3" FontSize="10" HorizontalAlignment="Center" />
-          <TextBlock x:Name="FifteenDaysText" Grid.Column="4" FontSize="10" HorizontalAlignment="Center" />
-          <TextBlock x:Name="ThirtyDaysText" Grid.Column="5" FontSize="10" HorizontalAlignment="Center" />
-          <TextBlock x:Name="ForeverText" Grid.Column="6" FontSize="10" HorizontalAlignment="Center" />
+            <TextBlock Grid.Row="4" Grid.Column="0" x:Name="HistoryModeLabel" VerticalAlignment="Top" Margin="0,6,0,0" TextWrapping="Wrap" />
+            <StackPanel Grid.Row="4" Grid.Column="1" Spacing="2">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Slider Grid.Column="0" x:Name="HistoryModeSlider" Minimum="0" Maximum="6" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="HistoryModeSlider_OnValueChanged" />
+                <TextBlock Grid.Column="1" x:Name="HistoryModeValueText" FontSize="11" MinWidth="34" TextAlignment="Right" VerticalAlignment="Center" />
+              </Grid>
+            </StackPanel>
+
+            <TextBlock Grid.Row="5" Grid.Column="0" x:Name="GlassOpacityLabel" VerticalAlignment="Top" Margin="0,6,0,0" TextWrapping="Wrap" />
+            <StackPanel Grid.Row="5" Grid.Column="1" Spacing="2">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Slider Grid.Column="0" x:Name="GlassOpacitySlider" Minimum="0" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="GlassOpacitySlider_OnValueChanged" />
+                <TextBlock Grid.Column="1" x:Name="GlassOpacityValueText" FontSize="11" MinWidth="34" TextAlignment="Right" VerticalAlignment="Center" />
+              </Grid>
+            </StackPanel>
+
+            <TextBlock Grid.Row="6" Grid.Column="0" x:Name="ScrollWheelSpeedLabel" VerticalAlignment="Top" Margin="0,6,0,0" TextWrapping="Wrap" />
+            <StackPanel Grid.Row="6" Grid.Column="1" Spacing="2">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Slider Grid.Column="0" x:Name="ScrollWheelSpeedSlider" Minimum="0" Maximum="2" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="ScrollWheelSpeedSlider_OnValueChanged" />
+                <TextBlock Grid.Column="1" x:Name="ScrollWheelSpeedValueText" FontSize="11" MinWidth="34" TextAlignment="Right" VerticalAlignment="Center" />
+              </Grid>
+            </StackPanel>
+          </Grid>
+
+          <Border Height="1" Background="#1A000000" Margin="0,2,0,0" />
+
+          <TextBlock x:Name="HotkeyStatusText" Foreground="Tomato" TextWrapping="Wrap" MinHeight="0" />
+        </StackPanel>
+      </ScrollViewer>
+
+      <Border Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="#1A000000" Padding="0,12,0,0">
+        <Grid ColumnDefinitions="Auto,* ,Auto">
+          <Button Grid.Column="0" x:Name="ClearHistoryButton" CornerRadius="8" Click="ClearHistory_OnClick" />
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+            <Button x:Name="CancelButton" CornerRadius="8" Click="Cancel_OnClick" />
+            <Button x:Name="SaveButton" CornerRadius="8" Click="Save_OnClick" />
+          </StackPanel>
         </Grid>
-      </StackPanel>
-
-      <TextBlock Grid.Row="5" VerticalAlignment="Top" x:Name="GlassOpacityLabel" />
-      <StackPanel Grid.Row="5" Grid.Column="1" Spacing="4">
-        <Slider x:Name="GlassOpacitySlider"
-                Minimum="0"
-                Maximum="100"
-                TickFrequency="5"
-                IsSnapToTickEnabled="True"
-                ValueChanged="GlassOpacitySlider_OnValueChanged" />
-        <TextBlock x:Name="GlassOpacityValueText" FontSize="11" HorizontalAlignment="Right" />
-      </StackPanel>
-
-      <TextBlock Grid.Row="6" Grid.ColumnSpan="2" x:Name="HotkeyStatusText" Foreground="Tomato" TextWrapping="Wrap" />
-      <Button Grid.Row="7" Grid.ColumnSpan="2" x:Name="ClearHistoryButton" HorizontalAlignment="Center" Click="ClearHistory_OnClick" />
+      </Border>
     </Grid>
-
-    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-      <Button x:Name="CancelButton" Click="Cancel_OnClick" />
-      <Button x:Name="SaveButton" Click="Save_OnClick" />
-    </StackPanel>
-  </Grid>
   </Border>
 </Window>

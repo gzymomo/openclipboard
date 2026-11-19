@@ -53,30 +53,34 @@
             <div class="ghost-window"></div>
           </div>
 
-          <div class="app-bar">
+          <div class="app-bar" id="demo-bar">
             <div class="bar-toolbar">
-              <span class="tool" title="跳转最新">⇤</span>
+              <button class="tool-btn" type="button" title="跳转最新" data-demo-latest>⇤</button>
               <span class="bar-center">
-                <span class="tool" title="搜索">⌕</span>
-                <span class="chip chip-active">历史</span>
-                <span class="chip">收藏</span>
+                <button class="tool-btn" type="button" title="搜索" data-demo-search-toggle aria-expanded="false">⌕</button>
+                <span class="search-panel" data-demo-search-panel aria-hidden="true">
+                  <input class="search-input" type="text" placeholder="搜索历史记录" data-demo-search-input />
+                  <button class="search-clear" type="button" title="清除" data-demo-search-clear>×</button>
+                </span>
+                <button class="tab-btn is-active" type="button" data-demo-tab="history">历史</button>
+                <button class="tab-btn" type="button" data-demo-tab="favorites">收藏</button>
               </span>
               <span class="bar-right">
-                <span class="bar-status">已保存 文本剪贴板内容。</span>
-                <span class="tool" title="菜单">⋮</span>
+                <span class="bar-status" data-demo-status>已保存 文本剪贴板内容。</span>
+                <button class="tool-btn" type="button" title="菜单">⋮</button>
               </span>
             </div>
 
             <div class="card-scroller">
-              <div class="card-row">
-                <article class="h-card">
+              <div class="card-row" data-demo-row tabindex="0" aria-label="剪贴板历史卡片列表，可横向滑动">
+                <article class="h-card" data-fav="1">
                   <div class="h-head t-text">
                     <div class="h-head-text">
                       <span class="h-type">文本</span>
                       <span class="h-time">16:32</span>
                     </div>
                     <span class="h-star">★</span>
-                    <span class="h-src"><img src="assets/logo.png" alt="" /></span>
+                    <span class="h-src" title="Visual Studio Code"><img src="https://www.google.com/s2/favicons?domain=code.visualstudio.com&amp;sz=64" alt="" /></span>
                   </div>
                   <div class="h-body">
                     <p class="h-text">dotnet publish -c Release -r win-x64 --self-contained false</p>
@@ -84,16 +88,16 @@
                   <div class="h-foot"><span class="h-info">71 个字符</span></div>
                 </article>
 
-                <article class="h-card is-selected">
+                <article class="h-card">
                   <div class="h-head t-image">
                     <div class="h-head-text">
                       <span class="h-type">图片</span>
                       <span class="h-time">16:30</span>
                     </div>
-                    <span class="h-src"><span class="h-src-dot dot-blue"></span></span>
+                    <span class="h-src" title="Google Chrome"><img src="https://www.google.com/s2/favicons?domain=google.com&amp;sz=64" alt="" /></span>
                   </div>
                   <div class="h-body">
-                    <div class="h-img"><span>图片预览</span></div>
+                    <img class="h-photo" src="assets/sample-image.svg" alt="示例图片" />
                   </div>
                   <div class="h-foot"><span class="h-info">图片</span></div>
                 </article>
@@ -104,7 +108,7 @@
                       <span class="h-type">文件</span>
                       <span class="h-time">16:27</span>
                     </div>
-                    <span class="h-src"><span class="h-src-dot dot-amber"></span></span>
+                    <span class="h-src" title="Finder"><img src="https://www.google.com/s2/favicons?domain=apple.com&amp;sz=64" alt="" /></span>
                   </div>
                   <div class="h-body h-file">
                     <img src="assets/file.png" alt="" />
@@ -114,13 +118,14 @@
                   <div class="h-foot"><span class="h-info">2 个文件</span></div>
                 </article>
 
-                <article class="h-card">
+                <article class="h-card" data-fav="1">
                   <div class="h-head t-color">
                     <div class="h-head-text">
                       <span class="h-type">颜色</span>
                       <span class="h-time">16:24</span>
                     </div>
-                    <span class="h-src"><span class="h-src-dot dot-green"></span></span>
+                    <span class="h-star">★</span>
+                    <span class="h-src" title="Figma"><img src="https://www.google.com/s2/favicons?domain=figma.com&amp;sz=64" alt="" /></span>
                   </div>
                   <div class="h-body">
                     <div class="h-color" style="color:#3CB371">#3CB371</div>
@@ -134,19 +139,49 @@
                       <span class="h-type">URL</span>
                       <span class="h-time">16:21</span>
                     </div>
-                    <span class="h-src"><span class="h-src-dot dot-steel"></span></span>
+                    <span class="h-src" title="Microsoft Edge"><img src="https://www.google.com/s2/favicons?domain=microsoft.com&amp;sz=64" alt="" /></span>
                   </div>
                   <div class="h-body">
                     <p class="h-text h-url">https://github.com/gzymomo/openclipboard</p>
                   </div>
                   <div class="h-foot"><span class="h-info">41 个字符</span></div>
                 </article>
+
+                <article class="h-card">
+                  <div class="h-head t-json">
+                    <div class="h-head-text">
+                      <span class="h-type">JSON</span>
+                      <span class="h-time">16:18</span>
+                    </div>
+                    <span class="h-src" title="Visual Studio Code"><img src="https://www.google.com/s2/favicons?domain=code.visualstudio.com&amp;sz=64" alt="" /></span>
+                  </div>
+                  <div class="h-body">
+                    <pre class="h-json" data-json='{"name":"OpenClipboard","version":"1.1.6","platforms":["Windows","macOS","Linux"],"favorite":true}'></pre>
+                  </div>
+                  <div class="h-foot"><span class="h-info">JSON</span></div>
+                </article>
+
+                <article class="h-card">
+                  <div class="h-head t-markdown">
+                    <div class="h-head-text">
+                      <span class="h-type">Markdown</span>
+                      <span class="h-time">16:12</span>
+                    </div>
+                    <span class="h-src" title="Notion"><img src="https://www.google.com/s2/favicons?domain=notion.so&amp;sz=64" alt="" /></span>
+                  </div>
+                  <div class="h-body">
+                    <div class="h-md" data-md="# Release Notes
+- **macOS/Linux** 来源图标支持
+- 宣传页示意图交互更新
+- 支持 `Markdown` 预览"></div>
+                  </div>
+                  <div class="h-foot"><span class="h-info">52 个字符</span></div>
+                </article>
               </div>
-              <span class="scrollbar-hint" aria-hidden="true"></span>
             </div>
           </div>
         </div>
-        <p class="visual-note">示意图：跨平台版主界面 — 全局热键从桌面底部呼出全宽固定面板，历史记录为横向卡片列表；卡片头部按内容类型着色（文本/图片/文件/颜色/URL…），右上角显示来源应用图标，★ 为收藏标记，蓝框为选中态。</p>
+        <p class="visual-note">示意图：跨平台版主界面 — 全局热键从桌面底部呼出全宽固定面板，历史记录为横向卡片列表。可左右滑动浏览、悬停/单击选择卡片、双击触发“已复制”反馈动效、点击“历史/收藏”切换、点击搜索展开搜索框；卡片头部按类型着色，右上角显示来源应用图标，★ 为收藏，蓝框为选中。</p>
       </div>
     </section>
 
@@ -303,5 +338,140 @@ dotnet run --project src/OpenClipboard.App/OpenClipboard.App.csproj</code></pre>
       <p class="muted small">© OpenClipboard Contributors · MIT License</p>
     </div>
   </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+  (() => {
+    // Render markdown previews
+    if (window.marked) {
+      document.querySelectorAll('[data-md]').forEach(el => {
+        const src = el.getAttribute('data-md') || '';
+        el.innerHTML = marked.parse(src, { breaks: true });
+      });
+    } else {
+      document.querySelectorAll('[data-md]').forEach(el => { el.textContent = el.getAttribute('data-md') || ''; });
+    }
+
+    // Render and highlight JSON previews
+    function escHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function highlightJson(text) {
+      const src = escHtml(text);
+      return src.replace(/("(\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*"(\s*:)?|\btrue\b|\bfalse\b|\bnull\b|-?\d+(?:\.\d+)?(?:[eE][+\-]?\d+)?|[{}\[\],:])/g, (m) => {
+        let cls = 'j-num';
+        if (/^"/.test(m)) cls = /:$/.test(m) ? 'j-key' : 'j-str';
+        else if (/true|false/.test(m)) cls = 'j-bool';
+        else if (/null/.test(m)) cls = 'j-null';
+        else if (/^[{}\[\],:]$/.test(m)) cls = 'j-punc';
+        return `<span class="${cls}">${m}</span>`;
+      });
+    }
+    document.querySelectorAll('[data-json]').forEach(el => {
+      const raw = el.getAttribute('data-json') || '';
+      try {
+        const formatted = JSON.stringify(JSON.parse(raw), null, 2);
+        el.innerHTML = highlightJson(formatted);
+      } catch {
+        el.textContent = raw;
+      }
+    });
+
+    const bar = document.getElementById('demo-bar');
+    if (!bar) return;
+    const searchToggle = bar.querySelector('[data-demo-search-toggle]');
+    const searchPanel = bar.querySelector('[data-demo-search-panel]');
+    const searchInput = bar.querySelector('[data-demo-search-input]');
+    const searchClear = bar.querySelector('[data-demo-search-clear]');
+    const tabs = [...bar.querySelectorAll('[data-demo-tab]')];
+    const row = bar.querySelector('[data-demo-row]');
+    const latestBtn = bar.querySelector('[data-demo-latest]');
+    const cards = () => [...row.querySelectorAll('.h-card')];
+
+    function openSearch(open) {
+      searchPanel.classList.toggle('is-open', open);
+      searchToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      searchPanel.setAttribute('aria-hidden', open ? 'false' : 'true');
+      if (open) searchInput.focus();
+      else { searchInput.value = ''; filterCards(); }
+    }
+
+    searchToggle.addEventListener('click', () => openSearch(!searchPanel.classList.contains('is-open')));
+    searchClear.addEventListener('click', () => { searchInput.value = ''; searchInput.focus(); filterCards(); });
+    searchInput.addEventListener('input', filterCards);
+    searchInput.addEventListener('blur', () => {
+      setTimeout(() => { if (!searchInput.value.trim() && document.activeElement !== searchClear) openSearch(false); }, 120);
+    });
+
+    tabs.forEach(btn => btn.addEventListener('click', () => {
+      tabs.forEach(b => b.classList.toggle('is-active', b === btn));
+      filterCards();
+    }));
+
+    function filterCards() {
+      const favOnly = bar.querySelector('[data-demo-tab="favorites"]').classList.contains('is-active');
+      const q = searchInput.value.trim().toLowerCase();
+      cards().forEach(card => {
+        const matchFav = !favOnly || card.dataset.fav === '1';
+        const matchQ = !q || card.innerText.toLowerCase().includes(q);
+        card.classList.toggle('is-hidden', !(matchFav && matchQ));
+      });
+    }
+
+    row.addEventListener('click', (e) => {
+      const card = e.target.closest('.h-card');
+      if (!card || card.classList.contains('is-hidden')) return;
+      const willSelect = !card.classList.contains('is-selected');
+      cards().forEach(c => c.classList.toggle('is-selected', willSelect && c === card));
+    });
+
+    latestBtn.addEventListener('click', () => {
+      row.scrollTo({ left: 0, behavior: 'smooth' });
+    });
+
+    // Drag to scroll horizontally
+    let down = false, startX = 0, startScroll = 0, dragged = false;
+    row.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      down = true; dragged = false; startX = e.clientX; startScroll = row.scrollLeft;
+      row.classList.add('is-dragging');
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!down) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 4) dragged = true;
+      row.scrollLeft = startScroll - dx;
+    });
+    window.addEventListener('pointerup', () => { down = false; row.classList.remove('is-dragging'); });
+    row.addEventListener('click', (e) => { if (dragged) { e.stopPropagation(); e.preventDefault(); } }, true);
+
+    // Double-click: simulate copy success feedback
+    row.addEventListener('dblclick', (e) => {
+      const card = e.target.closest('.h-card');
+      if (!card || card.classList.contains('is-hidden')) return;
+      cards().forEach(c => c.classList.toggle('is-selected', c === card));
+      card.classList.remove('copy-flash');
+      void card.offsetWidth;
+      card.classList.add('copy-flash');
+      const old = card.querySelector('.copy-toast');
+      if (old) old.remove();
+      const toast = document.createElement('div');
+      toast.className = 'copy-toast';
+      toast.textContent = '已复制';
+      card.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add('show'));
+      setTimeout(() => toast.classList.remove('show'), 900);
+      setTimeout(() => { toast.remove(); card.classList.remove('copy-flash'); }, 1200);
+    });
+
+    // Convert vertical wheel to horizontal scroll over the row
+    row.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        row.scrollLeft += e.deltaY * 3;
+        e.preventDefault();
+      }
+    }, { passive: false });
+  })();
+  </script>
 </body>
 </html>

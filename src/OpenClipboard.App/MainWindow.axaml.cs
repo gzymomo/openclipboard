@@ -577,7 +577,7 @@ public partial class MainWindow : Window
     private void HistoryList_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
     {
         HistoryScroller.Offset = new Avalonia.Vector(
-            Math.Max(0, HistoryScroller.Offset.X - e.Delta.Y * 40),
+            Math.Max(0, HistoryScroller.Offset.X - e.Delta.Y * _preferences.ScrollWheelSpeed),
             HistoryScroller.Offset.Y);
         e.Handled = true;
     }

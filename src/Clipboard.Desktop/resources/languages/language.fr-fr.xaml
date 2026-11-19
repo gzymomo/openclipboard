@@ -55,4 +55,8 @@
   <sys:String x:Key="SettingWindow_General_RecordCount_Slider_5_Text">5 jours</sys:String>
   <sys:String x:Key="SettingWindow_General_RecordCount_Slider_3_Text">3 jours</sys:String>
   <sys:String x:Key="SettingWindow_General_RecordCount_Slider_15_Text">15 jours</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed">Vitesse de la molette</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_Low">Lent</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_Medium">Moyen</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_High">Rapide</sys:String>
 </ResourceDictionary>

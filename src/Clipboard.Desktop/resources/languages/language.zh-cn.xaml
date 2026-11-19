@@ -55,4 +55,8 @@
   <sys:String x:Key="SettingWindow_General_RecordCount_Slider_5_Text">5天</sys:String>
   <sys:String x:Key="SettingWindow_General_RecordCount_Slider_3_Text">3天</sys:String>
   <sys:String x:Key="SettingWindow_General_RecordCount_Slider_15_Text">15天</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed">滚轮速度</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_Low">慢</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_Medium">中</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_High">快</sys:String>
 </ResourceDictionary>

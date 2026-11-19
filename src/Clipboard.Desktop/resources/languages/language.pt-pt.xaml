@@ -55,4 +55,8 @@
   <sys:String x:Key="SettingWindow_General_RecordCount_Slider_5_Text">5 dias</sys:String>
   <sys:String x:Key="SettingWindow_General_RecordCount_Slider_3_Text">3 dias</sys:String>
   <sys:String x:Key="SettingWindow_General_RecordCount_Slider_15_Text">15 dias</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed">Velocidade da roda</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_Low">Lenta</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_Medium">Média</sys:String>
+  <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_High">Rápida</sys:String>
 </ResourceDictionary>
