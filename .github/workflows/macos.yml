@@ -72,7 +72,9 @@ jobs:
       - name: Verify bundle
         shell: bash
         run: |
-          unzip -q "artifacts/OpenClipboard-${{ matrix.rid }}-${{ steps.app-version.outputs.version }}.zip" -d verify
+          # ditto (not unzip) preserves extended attributes and symlinks, including
+          # the detached signatures codesign writes for managed .dll files.
+          ditto -x -k "artifacts/OpenClipboard-${{ matrix.rid }}-${{ steps.app-version.outputs.version }}.zip" verify
           APP="verify/OpenClipboard.app"
           test -x "$APP/Contents/MacOS/OpenClipboard"
           test -f "$APP/Contents/Info.plist"
