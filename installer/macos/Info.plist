@@ -27,7 +27,9 @@
   <key>LSMinimumSystemVersion</key>
   <string>12.0</string>
   <key>NSAppleEventsUsageDescription</key>
-  <string>OpenClipboard 需要识别剪贴板内容的来源应用。</string>
+  <string>OpenClipboard needs to send Apple Events to identify the source application of copied content.</string>
+  <key>NSInputMonitoringUsageDescription</key>
+  <string>OpenClipboard needs to monitor keyboard input to respond to global shortcuts.</string>
   <key>NSHighResolutionCapable</key>
   <true/>
 </dict>
