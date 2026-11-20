@@ -1,4 +1,4 @@
-name: Cross-platform build
+name: Windows & Linux build
 
 on:
   push:

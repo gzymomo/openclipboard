@@ -8,7 +8,7 @@
 
 [官网](https://www.openclipboard.cc.cd) · [下载最新版](https://github.com/gzymomo/openclipboard/releases) · [反馈建议](https://github.com/gzymomo/openclipboard/issues)
 
-[![Cross-platform build](https://github.com/gzymomo/openclipboard/actions/workflows/cross-platform.yml/badge.svg)](https://github.com/gzymomo/openclipboard/actions/workflows/cross-platform.yml)
+[![Windows & Linux build](https://github.com/gzymomo/openclipboard/actions/workflows/win-linux.yml/badge.svg)](https://github.com/gzymomo/openclipboard/actions/workflows/win-linux.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
