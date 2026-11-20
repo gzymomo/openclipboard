@@ -3,18 +3,143 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>OpenClipboard - 轻量剪贴板历史管理器</title>
-  <meta name="description" content="OpenClipboard 是一款轻量、开源的剪贴板历史管理器。全局热键从屏幕底部呼出全宽历史面板，横向卡片呈现文本/图片/文件历史，支持搜索、收藏、来源应用图标，提供 Windows 与跨平台（Windows/macOS/Linux）版本。" />
+  <title>OpenClipboard - 轻量开源的跨平台剪贴板历史管理器</title>
+  <meta name="description" content="OpenClipboard 是一款轻量、开源的剪贴板历史管理器。全局热键从桌面底部呼出全宽历史面板，横向卡片呈现文本/图片/文件历史，支持搜索、收藏、来源应用图标与本地 SQLite 存储，支持 Windows、macOS 与 Linux。" />
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
   <meta name="theme-color" content="#0b1020" />
-  <link rel="icon" href="assets/logo.png" />
+  <meta name="application-name" content="OpenClipboard" />
+  <meta name="apple-mobile-web-app-title" content="OpenClipboard" />
+
+  <link rel="canonical" href="https://www.openclipboard.cc.cd/" />
+  <link rel="icon" href="/assets/logo.png" type="image/png" />
+  <link rel="apple-touch-icon" href="/assets/logo.png" />
+
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="dns-prefetch" href="//busuanzi.ibruce.info" />
+  <link rel="dns-prefetch" href="//www.google.com" />
   <link rel="stylesheet" href="assets/style.css" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:site_name" content="OpenClipboard" />
+  <meta property="og:title" content="OpenClipboard - 轻量开源的跨平台剪贴板历史管理器" />
+  <meta property="og:description" content="全局热键呼出全宽剪贴板历史面板，支持文本/图片/文件、搜索收藏、来源应用图标，本地 SQLite 存储，支持 Windows/macOS/Linux。" />
+  <meta property="og:url" content="https://www.openclipboard.cc.cd/" />
+  <meta property="og:image" content="https://www.openclipboard.cc.cd/assets/demo.png" />
+  <meta property="og:image:alt" content="OpenClipboard 剪贴板历史面板预览" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="OpenClipboard - 轻量开源的跨平台剪贴板历史管理器" />
+  <meta name="twitter:description" content="开源跨平台剪贴板历史管理器：全宽面板、横向卡片、搜索收藏、来源应用图标、本地存储。" />
+  <meta name="twitter:image" content="https://www.openclipboard.cc.cd/assets/demo.png" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://www.openclipboard.cc.cd/#website",
+        "name": "OpenClipboard",
+        "url": "https://www.openclipboard.cc.cd/",
+        "inLanguage": "zh-CN",
+        "description": "OpenClipboard 官方网站与产品介绍页",
+        "publisher": {
+          "@id": "https://www.openclipboard.cc.cd/#organization"
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://www.openclipboard.cc.cd/#organization",
+        "name": "OpenClipboard",
+        "url": "https://www.openclipboard.cc.cd/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://www.openclipboard.cc.cd/assets/logo.png"
+        },
+        "sameAs": [
+          "https://github.com/gzymomo/openclipboard"
+        ]
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://www.openclipboard.cc.cd/#software",
+        "name": "OpenClipboard",
+        "applicationCategory": "UtilitiesApplication",
+        "applicationSubCategory": "Clipboard Manager",
+        "operatingSystem": "Windows, macOS, Linux",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "轻量开源的跨平台剪贴板历史管理器，支持文本/图片/文件历史、搜索收藏、来源应用图标与本地 SQLite 存储。",
+        "url": "https://www.openclipboard.cc.cd/",
+        "downloadUrl": "https://github.com/gzymomo/openclipboard/releases",
+        "image": "https://www.openclipboard.cc.cd/assets/demo.png",
+        "screenshot": "https://www.openclipboard.cc.cd/assets/demo.png",
+        "license": "https://opensource.org/licenses/MIT",
+        "sameAs": [
+          "https://github.com/gzymomo/openclipboard"
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://www.openclipboard.cc.cd/#faqpage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "OpenClipboard 会上传我的剪贴板数据吗？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "不会。剪贴板历史默认保存在本地 SQLite 数据库中，不依赖云端服务。请在共享设备或敏感环境中结合自身需求使用清理与保留策略。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "为什么看不到来源应用图标？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "来源识别与图标提取依赖平台能力。Windows 与 macOS 优先支持；Linux 在 X11 环境下尽力匹配应用与图标，在通用 Wayland 场景会按安全模型限制自动降级（不显示来源信息），但不影响剪贴板记录功能。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "全局热键按了没反应怎么办？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "请检查是否与其他软件冲突，并确认系统权限（如 macOS 辅助功能权限）。在 Linux Wayland 等受限环境下，可通过托盘图标唤起窗口。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "如何从旧版 Windows 数据迁移？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "跨平台版本提供“Import old database...”导入能力，可将旧版 WPF 的 SQLite 历史数据导入到跨平台版数据库中（两者默认分开存储）。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "项目是什么许可证？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "OpenClipboard 基于 MIT License 开源（https://opensource.org/licenses/MIT）。项目包含对反编译产物整理重建的内容，仅用于学习、研究与互操作性目的，请在使用和分发前自行确认相关权利与合规要求。"
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <div class="bg-glow" aria-hidden="true"></div>
   <header class="site-header">
     <div class="container nav">
       <a class="brand" href="#top">
-        <img src="assets/logo.png" alt="OpenClipboard" width="28" height="28" />
+        <img src="assets/logo.png" alt="OpenClipboard" width="28" height="28" decoding="async" />
         <span>OpenClipboard</span>
       </a>
       <nav class="nav-links" aria-label="页面导航">
@@ -85,7 +210,7 @@
                       <span class="h-time">16:32</span>
                     </div>
                     <span class="h-star">★</span>
-                    <span class="h-src" title="Visual Studio Code"><img src="https://www.google.com/s2/favicons?domain=code.visualstudio.com&amp;sz=64" alt="" /></span>
+                    <span class="h-src" title="Visual Studio Code"><img src="https://www.google.com/s2/favicons?domain=code.visualstudio.com&amp;sz=64" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></span>
                   </div>
                   <div class="h-body">
                     <p class="h-text">dotnet publish -c Release -r win-x64 --self-contained false</p>
@@ -99,10 +224,10 @@
                       <span class="h-type">图片</span>
                       <span class="h-time">16:30</span>
                     </div>
-                    <span class="h-src" title="Google Chrome"><img src="https://www.google.com/s2/favicons?domain=google.com&amp;sz=64" alt="" /></span>
+                    <span class="h-src" title="Google Chrome"><img src="https://www.google.com/s2/favicons?domain=google.com&amp;sz=64" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></span>
                   </div>
                   <div class="h-body">
-                    <img class="h-photo" src="assets/sample-image.svg" alt="示例图片" />
+                    <img class="h-photo" src="assets/sample-image.svg" alt="示例图片" loading="lazy" decoding="async" />
                   </div>
                   <div class="h-foot"><span class="h-info">图片</span></div>
                 </article>
@@ -113,10 +238,10 @@
                       <span class="h-type">文件</span>
                       <span class="h-time">16:27</span>
                     </div>
-                    <span class="h-src" title="Finder"><img src="https://www.google.com/s2/favicons?domain=apple.com&amp;sz=64" alt="" /></span>
+                    <span class="h-src" title="Finder"><img src="https://www.google.com/s2/favicons?domain=apple.com&amp;sz=64" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></span>
                   </div>
                   <div class="h-body h-file">
-                    <img src="assets/file.png" alt="" />
+                    <img src="assets/file.png" alt="" loading="lazy" decoding="async" />
                     <span class="h-file-name">release-notes.md, screenshot.png</span>
                     <span class="h-file-path">C:\Users\momo\Desktop\...</span>
                   </div>
@@ -130,7 +255,7 @@
                       <span class="h-time">16:24</span>
                     </div>
                     <span class="h-star">★</span>
-                    <span class="h-src" title="Figma"><img src="https://www.google.com/s2/favicons?domain=figma.com&amp;sz=64" alt="" /></span>
+                    <span class="h-src" title="Figma"><img src="https://www.google.com/s2/favicons?domain=figma.com&amp;sz=64" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></span>
                   </div>
                   <div class="h-body">
                     <div class="h-color" style="color:#3CB371">#3CB371</div>
@@ -144,7 +269,7 @@
                       <span class="h-type">URL</span>
                       <span class="h-time">16:21</span>
                     </div>
-                    <span class="h-src" title="Microsoft Edge"><img src="https://www.google.com/s2/favicons?domain=microsoft.com&amp;sz=64" alt="" /></span>
+                    <span class="h-src" title="Microsoft Edge"><img src="https://www.google.com/s2/favicons?domain=microsoft.com&amp;sz=64" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></span>
                   </div>
                   <div class="h-body">
                     <p class="h-text h-url">https://github.com/gzymomo/openclipboard</p>
@@ -158,7 +283,7 @@
                       <span class="h-type">JSON</span>
                       <span class="h-time">16:18</span>
                     </div>
-                    <span class="h-src" title="Visual Studio Code"><img src="https://www.google.com/s2/favicons?domain=code.visualstudio.com&amp;sz=64" alt="" /></span>
+                    <span class="h-src" title="Visual Studio Code"><img src="https://www.google.com/s2/favicons?domain=code.visualstudio.com&amp;sz=64" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></span>
                   </div>
                   <div class="h-body">
                     <pre class="h-json" data-json='{"name":"OpenClipboard","version":"1.1.6","platforms":["Windows","macOS","Linux"],"favorite":true}'></pre>
@@ -172,7 +297,7 @@
                       <span class="h-type">Markdown</span>
                       <span class="h-time">16:12</span>
                     </div>
-                    <span class="h-src" title="Notion"><img src="https://www.google.com/s2/favicons?domain=notion.so&amp;sz=64" alt="" /></span>
+                    <span class="h-src" title="Notion"><img src="https://www.google.com/s2/favicons?domain=notion.so&amp;sz=64" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></span>
                   </div>
                   <div class="h-body">
                     <div class="h-md" data-md="# Release Notes
@@ -332,7 +457,7 @@ dotnet run --project src/OpenClipboard.App/OpenClipboard.App.csproj</code></pre>
   <footer class="site-footer">
     <div class="container footer-inner">
       <div class="footer-brand">
-        <img src="assets/logo.png" alt="" width="24" height="24" />
+        <img src="assets/logo.png" alt="" width="24" height="24" loading="lazy" decoding="async" />
         <span>OpenClipboard</span>
       </div>
       <div class="footer-links">
