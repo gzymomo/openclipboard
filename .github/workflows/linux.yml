@@ -75,8 +75,18 @@ jobs:
           PACKAGE_PATH: artifacts/openclipboard_${{ steps.app-version.outputs.version }}_${{ matrix.deb_arch }}.deb
         run: |
           # The Wayland global hook needs the udev rule and the setgid postinst.
-          dpkg-deb --fsys-tarfile "$PACKAGE_PATH" | tar -t | grep -q '/etc/udev/rules.d/99-openclipboard.rules'
-          dpkg-deb --ctrl-tarfile "$PACKAGE_PATH" | tar -t | grep -q '/postinst'
+          # Read the full listings into variables first: piping tar into `grep -q`
+          # closes the pipe early and makes tar fail with SIGPIPE under pipefail.
+          data_files="$(dpkg-deb --fsys-tarfile "$PACKAGE_PATH" | tar -t)"
+          control_files="$(dpkg-deb --ctrl-tarfile "$PACKAGE_PATH" | tar -t)"
+          if [[ "$data_files" != *"/etc/udev/rules.d/99-openclipboard.rules"* ]]; then
+            echo "Missing udev rule in $PACKAGE_PATH." >&2
+            exit 1
+          fi
+          if [[ "$control_files" != *"/postinst"* ]]; then
+            echo "Missing postinst in $PACKAGE_PATH." >&2
+            exit 1
+          fi
           echo "Hotkey permission setup verified in $PACKAGE_PATH."
 
       - name: Upload Actions artifact
