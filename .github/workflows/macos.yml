@@ -60,24 +60,28 @@ jobs:
             -p:DebugType=None \
             -p:DebugSymbols=false
 
-      - name: Package OpenClipboard.app
+      - name: Package OpenClipboard.dmg
         shell: bash
         run: |
           chmod +x installer/macos/package.sh
           installer/macos/package.sh \
             "src/OpenClipboard.App/bin/Release/net10.0/${{ matrix.rid }}/publish" \
             "${{ steps.app-version.outputs.version }}" \
-            "artifacts/OpenClipboard-${{ matrix.rid }}-${{ steps.app-version.outputs.version }}.zip"
+            "artifacts/OpenClipboard-${{ matrix.rid }}-${{ steps.app-version.outputs.version }}.dmg"
 
-      - name: Verify bundle
+      - name: Verify dmg and bundle
         shell: bash
+        env:
+          DMG: artifacts/OpenClipboard-${{ matrix.rid }}-${{ steps.app-version.outputs.version }}.dmg
         run: |
-          # ditto (not unzip) preserves extended attributes and symlinks, including
-          # the detached signatures codesign writes for managed .dll files.
-          ditto -x -k "artifacts/OpenClipboard-${{ matrix.rid }}-${{ steps.app-version.outputs.version }}.zip" verify
-          APP="verify/OpenClipboard.app"
+          hdiutil verify "$DMG"
+          MOUNT="$(mktemp -d)"
+          hdiutil attach "$DMG" -mountpoint "$MOUNT" -nobrowse -noautoopen
+          trap 'hdiutil detach "$MOUNT" >/dev/null 2>&1 || true' EXIT
+          APP="$MOUNT/OpenClipboard.app"
           test -x "$APP/Contents/MacOS/OpenClipboard"
           test -f "$APP/Contents/Info.plist"
+          test -L "$MOUNT/Applications"
           plutil -lint "$APP/Contents/Info.plist"
           codesign --verify --deep --strict "$APP"
           echo "executable: $(file "$APP/Contents/MacOS/OpenClipboard")"
@@ -88,7 +92,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: macos-${{ matrix.rid }}
-          path: artifacts/*.zip
+          path: artifacts/*.dmg
           if-no-files-found: error
 
   release:
@@ -125,9 +129,9 @@ jobs:
             exit 1
           fi
 
-          packages=(dist/*.zip)
+          packages=(dist/*.dmg)
           if [[ "${#packages[@]}" -ne 2 ]]; then
-            echo "Expected two macOS packages, found ${#packages[@]}." >&2
+            echo "Expected two macOS dmg packages, found ${#packages[@]}." >&2
             exit 1
           fi
           gh release upload "$GITHUB_REF_NAME" "${packages[@]}" --repo "$GITHUB_REPOSITORY" --clobber

@@ -45,7 +45,7 @@
 - **跨平台版（推荐，活跃维护）**：`OpenClipboard.App`（.NET 10 + Avalonia）
   - **Windows**：发布为自包含的 `.zip` 与 `.exe` 安装包（x64 / ARM64），**无需安装 .NET**；可免安装解压运行或使用安装程序安装
   - **Linux**：发布为自包含的 `.deb` 包（amd64 / arm64），**无需安装 .NET**；可通过 `dpkg` 安装
-  - **macOS**：发布为自包含的 `OpenClipboard.app`，**无需安装 .NET**；拖入「应用程序」即可
+  - **macOS**：发布为自包含的 `.dmg`（内含 `OpenClipboard.app`），**无需安装 .NET**；双击挂载后拖入「应用程序」即可
 - **Windows 经典版（WPF，维护较少）**：`Clipboard.Desktop`（.NET Framework 4.7.2）
   - Windows 10/11 通常已自带所需 .NET Framework；旧系统可能需安装 [.NET Framework 4.7.2+](https://dotnet.microsoft.com/download/dotnet-framework)
 
@@ -53,7 +53,7 @@
 - 启动后默认驻留托盘，按 `F2`（可在设置中修改）呼出面板
 - 全局热键可用性受系统权限/桌面环境影响：macOS 需辅助功能权限；Linux Wayland 下热键需要读取原始输入设备，`.deb` 安装时会自动创建 `openclipboard` 系统组并配置 udev 规则，使本应用可读取 `/dev/input/event*`（安装后需**重新登录一次**生效）。这意味着应用能读取全部键盘输入，请知悉；若介意，可改用托盘图标呼出。来源应用识别在 Wayland 下仍会降级
 - Linux 若使用免安装的 `.zip` 而非 `.deb`，Wayland 下没有上述授权，全局热键不可用（Xorg 会话不受影响），请通过托盘图标打开面板
-- macOS 包为 ad-hoc 签名、未公证，从浏览器下载后首次打开如提示「无法验证开发者」，执行一次：
+- macOS 包为 ad-hoc 签名、未公证；从 dmg 拖出应用后首次打开如提示「无法验证开发者」，执行一次：
   ```sh
   xattr -dr com.apple.quarantine /Applications/OpenClipboard.app
   ```
@@ -84,14 +84,14 @@ installer/linux/package-deb.sh \
   1.1.7 amd64 artifacts/openclipboard_1.1.7_amd64.deb
 ```
 
-macOS 使用独立的自包含打包流程，产物是可直接双击的 `OpenClipboard.app`：
+macOS 使用独立的自包含打包流程，产物是内含 `OpenClipboard.app` 的 `.dmg`：
 
 ```sh
 dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj -c Release -r osx-x64 \
   --self-contained true
 installer/macos/package.sh \
   src/OpenClipboard.App/bin/Release/net10.0/osx-x64/publish \
-  1.1.7 artifacts/OpenClipboard-osx-x64-1.1.7.zip
+  1.1.7 artifacts/OpenClipboard-osx-x64-1.1.7.dmg
 ```
 
 > 不要用 `-p:AssemblyName=OpenClipboard` 全局覆盖程序集名，它会被应用到所有 ProjectReference 并导致 `Ambiguous project name`。`package.sh` 只在 bundle 内把 apphost 重命名为 `OpenClipboard`，程序集名和 `avares://OpenClipboard.App/...` 资源 URI 保持不变。

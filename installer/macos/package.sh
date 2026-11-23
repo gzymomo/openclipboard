@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Build a distributable OpenClipboard.app from a macOS publish directory.
+# Build a distributable OpenClipboard.dmg from a macOS publish directory.
 #
 # Usage:
-#   installer/macos/package.sh <publish-dir> <version> <output-zip>
+#   installer/macos/package.sh <publish-dir> <version> <output-dmg>
 #
 # The publish must be self-contained and produced with
 # -p:AssemblyName=OpenClipboard (see .github/workflows/macos.yml).
 set -euo pipefail
 
-PUBLISH_DIR="${1:?usage: package.sh <publish-dir> <version> <output-zip>}"
-VERSION="${2:?usage: package.sh <publish-dir> <version> <output-zip>}"
-OUTPUT_ZIP="${3:?usage: package.sh <publish-dir> <version> <output-zip>}"
+PUBLISH_DIR="${1:?usage: package.sh <publish-dir> <version> <output-dmg>}"
+VERSION="${2:?usage: package.sh <publish-dir> <version> <output-dmg>}"
+OUTPUT_DMG="${3:?usage: package.sh <publish-dir> <version> <output-dmg>}"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 APP_NAME="OpenClipboard"
@@ -66,10 +66,17 @@ xattr -cr "$APP" 2>/dev/null || true
 codesign --force --deep --sign - "$APP"
 codesign --verify --deep --strict --verbose=2 "$APP"
 
-mkdir -p "$(dirname "$OUTPUT_ZIP")"
-rm -f "$OUTPUT_ZIP"
+# Stage the signed bundle with an Applications shortcut for drag-to-install.
+STAGE="$WORK_DIR/dmg-root"
+mkdir -p "$STAGE"
+# ditto preserves extended attributes and the codesign signature resources.
+ditto "$APP" "$STAGE/$APP_NAME.app"
+ln -s /Applications "$STAGE/Applications"
 
-# ditto (not zip/Compress-Archive) so executable bits, symlinks and xattrs survive.
-ditto -c -k --sequesterRsrc --keepParent "$APP" "$OUTPUT_ZIP"
+mkdir -p "$(dirname "$OUTPUT_DMG")"
+rm -f "$OUTPUT_DMG"
 
-echo "Created $OUTPUT_ZIP"
+# hdiutil ships with macOS; UDZO is a compressed, read-only disk image.
+hdiutil create -volname "$APP_NAME" -srcfolder "$STAGE" -ov -format UDZO "$OUTPUT_DMG"
+
+echo "Created $OUTPUT_DMG"

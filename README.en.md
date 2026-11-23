@@ -45,7 +45,7 @@ Download prebuilt packages for your platform (Windows / macOS / Linux, x64 / ARM
 - **Cross-platform edition (recommended, actively maintained)**: `OpenClipboard.App` (.NET 10 + Avalonia)
   - **Windows**: Distributed as self-contained `.zip` and `.exe` installer packages (x64 / ARM64) — **no .NET runtime installation required**; extract and run, or install with the setup wizard
   - **Linux**: Distributed as self-contained `.deb` packages (amd64 / arm64) — **no .NET runtime installation required**; install with `dpkg`
-  - **macOS**: Distributed as a self-contained `OpenClipboard.app` — **no .NET runtime installation required**; drag into Applications
+  - **macOS**: Distributed as a self-contained `.dmg` (containing `OpenClipboard.app`) — **no .NET runtime installation required**; double-click to mount, then drag into Applications
 - **Windows classic edition (WPF, less actively maintained)**: `Clipboard.Desktop` (.NET Framework 4.7.2)
   - Usually preinstalled on Windows 10/11; on older systems you may need to install [.NET Framework 4.7.2+](https://dotnet.microsoft.com/download/dotnet-framework)
 
@@ -54,7 +54,7 @@ Download prebuilt packages for your platform (Windows / macOS / Linux, x64 / ARM
 - After launch, OpenClipboard stays in the system tray by default. Press `F2` (customizable in settings) to open the panel.
 - Global hotkey availability depends on OS permissions and desktop environment: on macOS, grant the required privacy permissions (such as Input Monitoring and/or Accessibility) as needed. On Linux Wayland, the global hook needs raw input access: the `.deb` package creates a dedicated `openclipboard` system group and a udev rule that grants **only this app** read access to `/dev/input/event*` (**log out and back in once** after installing). This means the app can read all keyboard input — please be aware; the tray icon remains available if you prefer not to grant it. Source-app detection is still degraded on Wayland.
 - On Linux, the portable `.zip` build has no such grant, so global hotkeys do not work on Wayland sessions (Xorg is unaffected); use the tray icon to open the panel instead.
-- macOS packages are ad-hoc signed and not notarized. If macOS reports that the developer cannot be verified when opening a downloaded app, run:
+- macOS packages are ad-hoc signed and not notarized. After dragging the app out of the dmg, if macOS reports that the developer cannot be verified, run:
   ```sh
   xattr -dr com.apple.quarantine /Applications/OpenClipboard.app
   ```
@@ -85,14 +85,14 @@ installer/linux/package-deb.sh \
   1.1.7 amd64 artifacts/openclipboard_1.1.7_amd64.deb
 ```
 
-macOS uses a separate self-contained packaging flow that produces a launchable `OpenClipboard.app`:
+macOS uses a separate self-contained packaging flow that produces a `.dmg` containing a launchable `OpenClipboard.app`:
 
 ```sh
 dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj -c Release -r osx-x64 \
   --self-contained true
 installer/macos/package.sh \
   src/OpenClipboard.App/bin/Release/net10.0/osx-x64/publish \
-  1.1.7 artifacts/OpenClipboard-osx-x64-1.1.7.zip
+  1.1.7 artifacts/OpenClipboard-osx-x64-1.1.7.dmg
 ```
 
 > Do **not** override the assembly name globally with `-p:AssemblyName=OpenClipboard`, as it applies to all `ProjectReference`s and causes `Ambiguous project name`. `package.sh` only renames the apphost inside the bundle to `OpenClipboard`, while the assembly name and `avares://OpenClipboard.App/...` resource URIs remain unchanged.
