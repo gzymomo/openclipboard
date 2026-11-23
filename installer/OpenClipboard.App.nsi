@@ -41,7 +41,7 @@ Name "${APP_NAME}"
 OutFile "..\dist\OpenClipboard.App-Setup-${ARCH}-${VERSION}.exe"
 InstallDir "$LOCALAPPDATA\Programs\${APP_DIR}"
 InstallDirRegKey HKCU "Software\${APP_ID}" "InstallDir"
-RequestExecutionLevel user
+RequestExecutionLevel highest
 SetCompressor /SOLID lzma
 SetCompressorDictSize 64
 BrandingText "${APP_NAME}"
@@ -58,36 +58,67 @@ VIAddVersionKey "LegalCopyright" "MIT License"
 !define MUI_ICON "..\src\Clipboard.Desktop\app.ico"
 !define MUI_UNICON "..\src\Clipboard.Desktop\app.ico"
 !define MUI_FINISHPAGE_RUN "$INSTDIR\${APP_EXE}"
-!define MUI_FINISHPAGE_RUN_TEXT "运行 ${APP_NAME}"
+
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE VerifyInstallDir
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "..\LICENSE"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_INSTFILES
+
+!insertmacro MUI_LANGUAGE "SimpChinese"
+!insertmacro MUI_LANGUAGE "English"
+
+LangString FinishRunText ${LANG_SIMPCHINESE} "运行 ${APP_NAME}"
+LangString FinishRunText ${LANG_ENGLISH} "Run ${APP_NAME}"
+LangString SecDesktopName ${LANG_SIMPCHINESE} "桌面快捷方式"
+LangString SecDesktopName ${LANG_ENGLISH} "Desktop shortcut"
+LangString SecMainDesc ${LANG_SIMPCHINESE} "安装 ${APP_NAME} 主程序到当前用户目录。"
+LangString SecMainDesc ${LANG_ENGLISH} "Install ${APP_NAME} for the current user."
+LangString SecDesktopDesc ${LANG_SIMPCHINESE} "在桌面创建 ${APP_NAME} 快捷方式。"
+LangString SecDesktopDesc ${LANG_ENGLISH} "Create a desktop shortcut for ${APP_NAME}."
+LangString MsgArchX64 ${LANG_SIMPCHINESE} "此安装包需要 64 位 Windows。"
+LangString MsgArchX64 ${LANG_ENGLISH} "This installer requires 64-bit Windows."
+LangString MsgArchArm64 ${LANG_SIMPCHINESE} "此安装包需要 ARM64 Windows。"
+LangString MsgArchArm64 ${LANG_ENGLISH} "This installer requires ARM64 Windows."
+LangString MsgDirNotWritable ${LANG_SIMPCHINESE} "无法写入安装目录：$\r$\n$INSTDIR$\r$\n$\r$\n请选择当前用户有写入权限的目录，或以管理员身份运行安装程序。"
+LangString MsgDirNotWritable ${LANG_ENGLISH} "Cannot write to install directory:$\r$\n$INSTDIR$\r$\n$\r$\nPlease choose a directory you have write access to, or run the installer as administrator."
+
+!define MUI_FINISHPAGE_RUN_TEXT $(FinishRunText)
 !insertmacro MUI_PAGE_FINISH
 
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
-
-!insertmacro MUI_LANGUAGE "SimpChinese"
-!insertmacro MUI_LANGUAGE "English"
 
 Function .onInit
   !insertmacro MUI_LANGDLL_DISPLAY
 
   !if "${ARCH}" == "x64"
     ${IfNot} ${RunningX64}
-      MessageBox MB_ICONSTOP "此安装包需要 64 位 Windows。"
+      MessageBox MB_ICONSTOP $(MsgArchX64)
       Abort
     ${EndIf}
   !endif
   !if "${ARCH}" == "arm64"
     ${IfNot} ${IsNativeARM64}
-      MessageBox MB_ICONSTOP "此安装包需要 ARM64 Windows。"
+      MessageBox MB_ICONSTOP $(MsgArchArm64)
       Abort
     ${EndIf}
   !endif
+FunctionEnd
+
+Function VerifyInstallDir
+  CreateDirectory "$INSTDIR"
+  ClearErrors
+  FileOpen $0 "$INSTDIR\.oc_write_test" w
+  IfErrors write_failed
+    FileClose $0
+    Delete "$INSTDIR\.oc_write_test"
+    Return
+  write_failed:
+    MessageBox MB_ICONSTOP|MB_OK $(MsgDirNotWritable)
+    Abort
 FunctionEnd
 
 Section "${APP_NAME}" SecMain
@@ -117,13 +148,13 @@ Section "${APP_NAME}" SecMain
   WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "NoRepair" 1
 SectionEnd
 
-Section "桌面快捷方式" SecDesktop
+Section "$(SecDesktopName)" SecDesktop
   CreateShortCut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}"
 SectionEnd
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecMain} "安装 ${APP_NAME} 主程序到当前用户目录。"
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecDesktop} "在桌面创建 ${APP_NAME} 快捷方式。"
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecMain} $(SecMainDesc)
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecDesktop} $(SecDesktopDesc)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 Section "Uninstall"

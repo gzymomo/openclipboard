@@ -99,13 +99,18 @@ jobs:
           }
           Copy-Item $setup artifacts/
 
-      - name: Upload Actions artifact
+      - name: Upload zip artifact
         uses: actions/upload-artifact@v4
         with:
-          name: win-${{ matrix.rid }}
-          path: |
-            artifacts/*.zip
-            artifacts/*.exe
+          name: win-zip-${{ matrix.rid }}
+          path: artifacts/*.zip
+          if-no-files-found: error
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: win-exe-${{ matrix.rid }}
+          path: artifacts/*.exe
           if-no-files-found: error
 
   release:
