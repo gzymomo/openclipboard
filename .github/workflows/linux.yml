@@ -69,6 +69,16 @@ jobs:
             "${{ matrix.deb_arch }}" \
             "artifacts/openclipboard_${{ steps.app-version.outputs.version }}_${{ matrix.deb_arch }}.deb"
 
+      - name: Verify hotkey permission setup in .deb
+        shell: bash
+        env:
+          PACKAGE_PATH: artifacts/openclipboard_${{ steps.app-version.outputs.version }}_${{ matrix.deb_arch }}.deb
+        run: |
+          # The Wayland global hook needs the udev rule and the setgid postinst.
+          dpkg-deb --fsys-tarfile "$PACKAGE_PATH" | tar -t | grep -q '/etc/udev/rules.d/99-openclipboard.rules'
+          dpkg-deb --ctrl-tarfile "$PACKAGE_PATH" | tar -t | grep -q '/postinst'
+          echo "Hotkey permission setup verified in $PACKAGE_PATH."
+
       - name: Upload Actions artifact
         uses: actions/upload-artifact@v4
         with:

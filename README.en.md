@@ -52,7 +52,8 @@ Download prebuilt packages for your platform (Windows / macOS / Linux, x64 / ARM
 ### Usage Notes
 
 - After launch, OpenClipboard stays in the system tray by default. Press `F2` (customizable in settings) to open the panel.
-- Global hotkey availability depends on OS permissions and desktop environment: on macOS, grant the required privacy permissions (such as Input Monitoring and/or Accessibility) as needed; on Linux Wayland, hotkeys or source-app detection may be limited, but the tray icon still works.
+- Global hotkey availability depends on OS permissions and desktop environment: on macOS, grant the required privacy permissions (such as Input Monitoring and/or Accessibility) as needed. On Linux Wayland, the global hook needs raw input access: the `.deb` package creates a dedicated `openclipboard` system group and a udev rule that grants **only this app** read access to `/dev/input/event*` (**log out and back in once** after installing). This means the app can read all keyboard input — please be aware; the tray icon remains available if you prefer not to grant it. Source-app detection is still degraded on Wayland.
+- On Linux, the portable `.zip` build has no such grant, so global hotkeys do not work on Wayland sessions (Xorg is unaffected); use the tray icon to open the panel instead.
 - macOS packages are ad-hoc signed and not notarized. If macOS reports that the developer cannot be verified when opening a downloaded app, run:
   ```sh
   xattr -dr com.apple.quarantine /Applications/OpenClipboard.app
