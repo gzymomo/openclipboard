@@ -1,4 +1,4 @@
-name: Windows & Linux build
+name: Windows build
 
 on:
   push:
@@ -20,12 +20,6 @@ jobs:
             rid: win-x64
           - os: windows-latest
             rid: win-arm64
-          - os: ubuntu-latest
-            rid: linux-x64
-          - os: ubuntu-latest
-            rid: linux-arm64
-          # macOS is built separately in macos.yml: it ships a self-contained
-          # OpenClipboard.app and is validated on a native Intel runner.
 
     steps:
       - name: Checkout
@@ -61,7 +55,7 @@ jobs:
         shell: pwsh
         env:
           APP_VERSION: ${{ steps.app-version.outputs.version }}
-        run: dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained false "-p:Version=$env:APP_VERSION"
+        run: dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true "-p:Version=$env:APP_VERSION"
 
       - name: Package publish output
         shell: pwsh
@@ -75,15 +69,47 @@ jobs:
             throw "Package was not created: $env:PACKAGE_PATH"
           }
 
+      - name: Install NSIS
+        shell: pwsh
+        run: |
+          choco install nsis -y --no-progress
+          $nsisPath = "${env:ProgramFiles(x86)}\NSIS"
+          if (-not (Test-Path "$nsisPath\makensis.exe")) {
+            throw "makensis.exe not found at $nsisPath"
+          }
+          echo $nsisPath >> $env:GITHUB_PATH
+
+      - name: Build installer
+        shell: pwsh
+        env:
+          APP_VERSION: ${{ steps.app-version.outputs.version }}
+          PUBLISH_DIR: src/OpenClipboard.App/bin/Release/net10.0/${{ matrix.rid }}/publish
+        run: |
+          $arch = "${{ matrix.rid }}".Replace("win-", "")
+          $fileVersion = "$env:APP_VERSION.0"
+          $sourceDir = (Resolve-Path $env:PUBLISH_DIR).Path
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          makensis /DARCH=$arch /DVERSION=$env:APP_VERSION /DFILEVERSION=$fileVersion /DSOURCE_DIR=$sourceDir installer/OpenClipboard.App.nsi
+          if ($LASTEXITCODE -ne 0) {
+            throw "makensis failed with exit code $LASTEXITCODE"
+          }
+          $setup = "dist/OpenClipboard.App-Setup-$arch-$env:APP_VERSION.exe"
+          if (-not (Test-Path $setup)) {
+            throw "Installer was not created: $setup"
+          }
+          Copy-Item $setup artifacts/
+
       - name: Upload Actions artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cross-platform-${{ matrix.rid }}
-          path: artifacts/*.zip
+          name: win-${{ matrix.rid }}
+          path: |
+            artifacts/*.zip
+            artifacts/*.exe
           if-no-files-found: error
 
   release:
-    name: Attach packages to GitHub Release
+    name: Attach Windows packages to GitHub Release
     if: startsWith(github.ref, 'refs/tags/v')
     needs: publish
     runs-on: ubuntu-latest
@@ -91,10 +117,10 @@ jobs:
       contents: write
 
     steps:
-      - name: Download platform packages
+      - name: Download Windows packages
         uses: actions/download-artifact@v4
         with:
-          pattern: cross-platform-*
+          pattern: win-*
           path: dist
           merge-multiple: true
 
@@ -116,11 +142,14 @@ jobs:
             throw "GitHub Release '$env:GITHUB_REF_NAME' was not created."
           }
 
-          $packages = @(Get-ChildItem -Path dist -Filter '*.zip' | ForEach-Object { $_.FullName })
-          if ($packages.Count -ne 6) {
-            throw "Expected four cross-platform packages, found $($packages.Count)."
+          $packages = @(
+            Get-ChildItem -Path dist -Filter '*.zip' | ForEach-Object { $_.FullName }
+            Get-ChildItem -Path dist -Filter '*.exe' | ForEach-Object { $_.FullName }
+          )
+          if ($packages.Count -ne 4) {
+            throw "Expected four Windows packages (2 zip + 2 exe), found $($packages.Count)."
           }
           gh release upload $env:GITHUB_REF_NAME @packages --repo $env:GITHUB_REPOSITORY --clobber
           if ($LASTEXITCODE -ne 0) {
-            throw "Could not upload cross-platform packages to the GitHub Release."
+            throw "Could not upload Windows packages to the GitHub Release."
           }

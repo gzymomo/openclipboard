@@ -8,7 +8,9 @@
 
 [官网](https://www.openclipboard.cc.cd) · [下载最新版](https://github.com/gzymomo/openclipboard/releases) · [反馈建议](https://github.com/gzymomo/openclipboard/issues)
 
-[![Windows & Linux build](https://github.com/gzymomo/openclipboard/actions/workflows/win-linux.yml/badge.svg)](https://github.com/gzymomo/openclipboard/actions/workflows/win-linux.yml)
+[![Windows build](https://github.com/gzymomo/openclipboard/actions/workflows/win.yml/badge.svg)](https://github.com/gzymomo/openclipboard/actions/workflows/win.yml)
+[![Linux build](https://github.com/gzymomo/openclipboard/actions/workflows/linux.yml/badge.svg)](https://github.com/gzymomo/openclipboard/actions/workflows/linux.yml)
+[![macOS build](https://github.com/gzymomo/openclipboard/actions/workflows/macos.yml/badge.svg)](https://github.com/gzymomo/openclipboard/actions/workflows/macos.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
@@ -41,8 +43,9 @@
 前往 [**GitHub Releases**](https://github.com/gzymomo/openclipboard/releases) 下载对应平台的预编译包（Windows / macOS / Linux，x64 / ARM64）。
 
 - **跨平台版（推荐，活跃维护）**：`OpenClipboard.App`（.NET 10 + Avalonia）
+  - **Windows**：发布为自包含的 `.zip` 与 `.exe` 安装包（x64 / ARM64），**无需安装 .NET**；可免安装解压运行或使用安装程序安装
+  - **Linux**：发布为自包含的 `.deb` 包（amd64 / arm64），**无需安装 .NET**；可通过 `dpkg` 安装
   - **macOS**：发布为自包含的 `OpenClipboard.app`，**无需安装 .NET**；拖入「应用程序」即可
-  - **Windows / Linux**：当前仍为 **框架依赖（framework-dependent）** 构建，运行前需安装 [.NET 10 Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
 - **Windows 经典版（WPF，维护较少）**：`Clipboard.Desktop`（.NET Framework 4.7.2）
   - Windows 10/11 通常已自带所需 .NET Framework；旧系统可能需安装 [.NET Framework 4.7.2+](https://dotnet.microsoft.com/download/dotnet-framework)
 
@@ -64,13 +67,21 @@ dotnet build src/OpenClipboard.CrossPlatform.slnx -c Release
 dotnet run --project src/OpenClipboard.App/OpenClipboard.App.csproj
 ```
 
-发布示例（Windows x64，框架依赖）：
+发布示例（Windows x64，自包含）：
 
 ```sh
-dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj -c Release -r win-x64 --self-contained false
+dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj -c Release -r win-x64 --self-contained true
 ```
 
-> 如需用户无需预装运行时，可使用 `--self-contained true`（或评估 Native AOT）按目标平台单独发布，产物体积会相应增加。
+Linux 使用自包含发布并打包为 `.deb`（需 `dpkg-deb`）：
+
+```sh
+dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj -c Release -r linux-x64 --self-contained true
+chmod +x installer/linux/package-deb.sh
+installer/linux/package-deb.sh \
+  src/OpenClipboard.App/bin/Release/net10.0/linux-x64/publish \
+  1.1.7 amd64 artifacts/openclipboard_1.1.7_amd64.deb
+```
 
 macOS 使用独立的自包含打包流程，产物是可直接双击的 `OpenClipboard.app`：
 

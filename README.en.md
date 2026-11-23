@@ -8,7 +8,9 @@ OpenClipboard is a lightweight, open-source clipboard history manager. Summon a 
 
 [Website](https://www.openclipboard.cc.cd) · [Download](https://github.com/gzymomo/openclipboard/releases) · [Feedback](https://github.com/gzymomo/openclipboard/issues)
 
-[![Windows & Linux build](https://github.com/gzymomo/openclipboard/actions/workflows/win-linux.yml/badge.svg)](https://github.com/gzymomo/openclipboard/actions/workflows/win-linux.yml)
+[![Windows build](https://github.com/gzymomo/openclipboard/actions/workflows/win.yml/badge.svg)](https://github.com/gzymomo/openclipboard/actions/workflows/win.yml)
+[![Linux build](https://github.com/gzymomo/openclipboard/actions/workflows/linux.yml/badge.svg)](https://github.com/gzymomo/openclipboard/actions/workflows/linux.yml)
+[![macOS build](https://github.com/gzymomo/openclipboard/actions/workflows/macos.yml/badge.svg)](https://github.com/gzymomo/openclipboard/actions/workflows/macos.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
@@ -41,8 +43,9 @@ OpenClipboard is a lightweight, open-source clipboard history manager. Summon a 
 Download prebuilt packages for your platform (Windows / macOS / Linux, x64 / ARM64) from [**GitHub Releases**](https://github.com/gzymomo/openclipboard/releases).
 
 - **Cross-platform edition (recommended, actively maintained)**: `OpenClipboard.App` (.NET 10 + Avalonia)
-  - **macOS**: Distributed as a self-contained `OpenClipboard.app` — **no .NET runtime installation required**; just drag it into Applications
-  - **Windows / Linux**: Currently published as **framework-dependent** builds; install the [.NET 10 Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) before running
+  - **Windows**: Distributed as self-contained `.zip` and `.exe` installer packages (x64 / ARM64) — **no .NET runtime installation required**; extract and run, or install with the setup wizard
+  - **Linux**: Distributed as self-contained `.deb` packages (amd64 / arm64) — **no .NET runtime installation required**; install with `dpkg`
+  - **macOS**: Distributed as a self-contained `OpenClipboard.app` — **no .NET runtime installation required**; drag into Applications
 - **Windows classic edition (WPF, less actively maintained)**: `Clipboard.Desktop` (.NET Framework 4.7.2)
   - Usually preinstalled on Windows 10/11; on older systems you may need to install [.NET Framework 4.7.2+](https://dotnet.microsoft.com/download/dotnet-framework)
 
@@ -65,13 +68,21 @@ dotnet build src/OpenClipboard.CrossPlatform.slnx -c Release
 dotnet run --project src/OpenClipboard.App/OpenClipboard.App.csproj
 ```
 
-Publish example (Windows x64, framework-dependent):
+Publish example (Windows x64, self-contained):
 
 ```sh
-dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj -c Release -r win-x64 --self-contained false
+dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj -c Release -r win-x64 --self-contained true
 ```
 
-> If you want users to run the app without a preinstalled runtime, publish with `--self-contained true` (or evaluate Native AOT) per target platform. Package size will increase.
+Linux uses self-contained publish and packages a `.deb` (requires `dpkg-deb`):
+
+```sh
+dotnet publish src/OpenClipboard.App/OpenClipboard.App.csproj -c Release -r linux-x64 --self-contained true
+chmod +x installer/linux/package-deb.sh
+installer/linux/package-deb.sh \
+  src/OpenClipboard.App/bin/Release/net10.0/linux-x64/publish \
+  1.1.7 amd64 artifacts/openclipboard_1.1.7_amd64.deb
+```
 
 macOS uses a separate self-contained packaging flow that produces a launchable `OpenClipboard.app`:
 
