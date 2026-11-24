@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -37,6 +40,14 @@ public partial class MainWindow : Window
     private bool _showFavorites;
     private bool _allowClose;
     private DateTimeOffset _suppressDeactivateHideUntil;
+    private bool _isLoadingMoreHistory;
+    private bool _hasMoreHistory = true;
+    private DateTime? _historyCursorUtc;
+    private string? _historyCursorId;
+    private CancellationTokenSource? _searchCts;
+    private int _historyLoadVersion;
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, Bitmap> _sourceIconCache = new(StringComparer.OrdinalIgnoreCase);
+    private const int HistoryPageSize = 50;
 
     public ObservableCollection<ClipboardHistoryItem> History { get; } = new();
 
@@ -75,6 +86,7 @@ public partial class MainWindow : Window
         ApplyGlassOpacity();
         _clipboardTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(750) };
         _clipboardTimer.Tick += ClipboardTimer_Tick;
+        HistoryScroller.ScrollChanged += HistoryScroller_OnScrollChanged;
         Opened += MainWindow_OnOpened;
         Opened += async (_, _) => await EnsureInitializedAsync();
         Deactivated += (_, _) => Dispatcher.UIThread.Post(async () =>
@@ -144,10 +156,7 @@ public partial class MainWindow : Window
             await _store.InitializeAsync();
             await _store.PruneExpiredAsync(_preferences.HistoryMode);
             _lastHistoryCleanupDate = DateOnly.FromDateTime(DateTime.UtcNow);
-            foreach (var item in await _store.GetRecentAsync(_preferences.HistoryMode))
-            {
-                History.Add(LocalizeItem(item));
-            }
+            await ReloadHistoryAsync();
 
             if (History.Count > 0)
             {
@@ -155,7 +164,6 @@ public partial class MainWindow : Window
                 _lastClipboardData = History[0].Data;
             }
 
-            RefreshVisibleHistory();
             _clipboardTimer.Start();
             StartHotkeys();
             StatusText.Text = string.Empty;
@@ -215,8 +223,14 @@ public partial class MainWindow : Window
             await _store.AddAsync(item);
             _lastClipboardType = item.DataType;
             _lastClipboardData = item.Data;
-            History.Insert(0, LocalizeItem(item));
-            RefreshVisibleHistory();
+            var localized = LocalizeItem(item);
+            if (MatchesCurrentFilter(localized))
+            {
+                History.Insert(0, localized);
+                VisibleHistory.Insert(0, localized);
+                EmptyHistoryText.IsVisible = VisibleHistory.Count == 0;
+                QueueBitmapHydration(new[] { localized });
+            }
             StatusText.Text = $"Saved {item.DataType.ToString().ToLowerInvariant()} clipboard content.";
         }
         catch (Exception exception)
@@ -482,12 +496,35 @@ public partial class MainWindow : Window
     private async Task ClearHistoryAsync()
     {
         await _store.ClearAsync();
+        ResetHistoryPaging();
+        _hasMoreHistory = false;
+        _historyLoadVersion++;
         History.Clear();
         RefreshVisibleHistory();
         StatusText.Text = "Clipboard history cleared.";
     }
 
-    private void SearchBox_OnTextChanged(object? sender, TextChangedEventArgs e) => RefreshVisibleHistory();
+    private async void SearchBox_OnTextChanged(object? sender, TextChangedEventArgs e)
+    {
+        var cts = new CancellationTokenSource();
+        var previous = Interlocked.Exchange(ref _searchCts, cts);
+        previous?.Cancel();
+        previous?.Dispose();
+
+        try
+        {
+            await Task.Delay(250, cts.Token);
+            await ReloadHistoryAsync();
+        }
+        catch (OperationCanceledException)
+        {
+            // Debounced by a newer search change.
+        }
+        catch (Exception exception)
+        {
+            StatusText.Text = $"Could not search history: {exception.Message}";
+        }
+    }
 
     private void SearchToggle_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -516,18 +553,18 @@ public partial class MainWindow : Window
         SearchBox.Focus();
     }
 
-    private void HistoryFilter_OnClick(object? sender, RoutedEventArgs e)
+    private async void HistoryFilter_OnClick(object? sender, RoutedEventArgs e)
     {
         _showFavorites = false;
         RefreshFilterButtons();
-        RefreshVisibleHistory();
+        await ReloadHistoryAsync();
     }
 
-    private void FavoritesFilter_OnClick(object? sender, RoutedEventArgs e)
+    private async void FavoritesFilter_OnClick(object? sender, RoutedEventArgs e)
     {
         _showFavorites = true;
         RefreshFilterButtons();
-        RefreshVisibleHistory();
+        await ReloadHistoryAsync();
     }
 
     private void RefreshFilterButtons()
@@ -665,15 +702,145 @@ public partial class MainWindow : Window
             () => Dispatcher.UIThread.Post(CopyLatest));
     }
 
-    private async Task ReloadHistoryAsync()
+    private (string? searchText, bool favoritesOnly) GetHistoryQueryFilter()
     {
-        History.Clear();
-        foreach (var item in await _store.GetRecentAsync(_preferences.HistoryMode))
+        var search = SearchBox?.Text?.Trim();
+        return (string.IsNullOrWhiteSpace(search) ? null : search, _showFavorites);
+    }
+
+    private bool MatchesCurrentFilter(ClipboardHistoryItem item)
+    {
+        var (searchText, favoritesOnly) = GetHistoryQueryFilter();
+        if (favoritesOnly && !item.IsFavorite)
         {
-            History.Add(LocalizeItem(item));
+            return false;
         }
 
-        RefreshVisibleHistory();
+        if (!string.IsNullOrWhiteSpace(searchText)
+            && !item.Data.Contains(searchText, StringComparison.CurrentCultureIgnoreCase))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void ResetHistoryPaging()
+    {
+        _historyCursorUtc = null;
+        _historyCursorId = null;
+        _hasMoreHistory = true;
+    }
+
+    private async Task ReloadHistoryAsync()
+    {
+        var version = ++_historyLoadVersion;
+        var (searchText, favoritesOnly) = GetHistoryQueryFilter();
+        var items = await _store.GetRecentAsync(_preferences.HistoryMode, HistoryPageSize, null, null, searchText, favoritesOnly);
+        if (version != _historyLoadVersion)
+        {
+            return;
+        }
+
+        ResetHistoryPaging();
+        History.Clear();
+
+        var loaded = new List<ClipboardHistoryItem>(items.Count);
+        foreach (var item in items)
+        {
+            loaded.Add(LocalizeItem(item));
+        }
+
+        if (version != _historyLoadVersion)
+        {
+            return;
+        }
+
+        foreach (var item in loaded)
+        {
+            History.Add(item);
+        }
+
+        if (items.Count > 0)
+        {
+            var last = items[^1];
+            _historyCursorUtc = last.CreateTime.ToUniversalTime();
+            _historyCursorId = last.Id;
+        }
+        _hasMoreHistory = items.Count >= HistoryPageSize;
+
+        AppendVisibleItems(loaded, reset: true);
+        QueueBitmapHydration(loaded);
+    }
+
+    private async Task LoadMoreHistoryAsync()
+    {
+        if (_isLoadingMoreHistory || !_hasMoreHistory)
+        {
+            return;
+        }
+
+        var version = _historyLoadVersion;
+        var (searchText, favoritesOnly) = GetHistoryQueryFilter();
+        var cursorUtc = _historyCursorUtc;
+        var cursorId = _historyCursorId;
+        _isLoadingMoreHistory = true;
+        try
+        {
+            var items = await _store.GetRecentAsync(_preferences.HistoryMode, HistoryPageSize, cursorUtc, cursorId, searchText, favoritesOnly);
+            if (version != _historyLoadVersion)
+            {
+                return;
+            }
+
+            if (items.Count == 0)
+            {
+                _hasMoreHistory = false;
+                return;
+            }
+
+            var existingIds = History.Select(h => h.Id).ToHashSet(StringComparer.Ordinal);
+            var added = new List<ClipboardHistoryItem>();
+            foreach (var item in items)
+            {
+                if (existingIds.Add(item.Id))
+                {
+                    var localized = LocalizeItem(item);
+                    History.Add(localized);
+                    added.Add(localized);
+                }
+            }
+
+            var last = items[^1];
+            _historyCursorUtc = last.CreateTime.ToUniversalTime();
+            _historyCursorId = last.Id;
+            _hasMoreHistory = items.Count >= HistoryPageSize;
+
+            if (added.Count > 0)
+            {
+                AppendVisibleItems(added, reset: false);
+                QueueBitmapHydration(added);
+            }
+        }
+        finally
+        {
+            _isLoadingMoreHistory = false;
+        }
+    }
+
+    private void HistoryScroller_OnScrollChanged(object? sender, ScrollChangedEventArgs e)
+    {
+        if (!_hasMoreHistory || _isLoadingMoreHistory)
+        {
+            return;
+        }
+
+        var scrollViewer = HistoryScroller;
+        var remaining = scrollViewer.Extent.Width - (scrollViewer.Offset.X + scrollViewer.Viewport.Width);
+        if (remaining <= Math.Max(scrollViewer.Viewport.Width, 300))
+        {
+            _ = LoadMoreHistoryAsync();
+        }
     }
 
     private void CopyLatest()
@@ -723,19 +890,142 @@ public partial class MainWindow : Window
 
     private void RefreshVisibleHistory()
     {
-        var query = SearchBox?.Text?.Trim();
-        var matches = string.IsNullOrEmpty(query)
-            ? History
-            : new ObservableCollection<ClipboardHistoryItem>(History.Where(item =>
-                item.Data.Contains(query, StringComparison.CurrentCultureIgnoreCase)));
         VisibleHistory.Clear();
-        foreach (var item in matches.Where(item => !_showFavorites || item.IsFavorite))
+        foreach (var item in History)
         {
             VisibleHistory.Add(item);
         }
 
         EmptyHistoryText.Text = _localization.Get("ClipboardDataTag_History_Empty");
         EmptyHistoryText.IsVisible = VisibleHistory.Count == 0;
+    }
+
+    private void AppendVisibleItems(IReadOnlyList<ClipboardHistoryItem> items, bool reset)
+    {
+        if (reset)
+        {
+            VisibleHistory.Clear();
+        }
+
+        foreach (var item in items)
+        {
+            VisibleHistory.Add(item);
+        }
+
+        EmptyHistoryText.Text = _localization.Get("ClipboardDataTag_History_Empty");
+        EmptyHistoryText.IsVisible = VisibleHistory.Count == 0;
+    }
+
+    private void QueueBitmapHydration(IReadOnlyList<ClipboardHistoryItem> items)
+    {
+        foreach (var item in items)
+        {
+            if (item.DataType == ClipboardDataTypes.Image && item.ImageBitmap is null)
+            {
+                _ = HydrateImageAsync(item);
+            }
+
+            if (!string.IsNullOrWhiteSpace(item.SourceIconPath)
+                && item.SourceIconBitmap is null
+                && !_sourceIconCache.ContainsKey(item.SourceIconPath))
+            {
+                _ = HydrateSourceIconAsync(item.SourceIconPath!);
+            }
+        }
+    }
+
+    private async Task HydrateImageAsync(ClipboardHistoryItem item)
+    {
+        try
+        {
+            var bytes = await Task.Run(() => Convert.FromBase64String(item.Data));
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                using var stream = new MemoryStream(bytes);
+                var bitmap = new Bitmap(stream);
+                ReplaceHistoryBitmap(item.Id, image: bitmap);
+            });
+        }
+        catch
+        {
+            // Ignore invalid image payloads.
+        }
+    }
+
+    private async Task HydrateSourceIconAsync(string iconPath)
+    {
+        try
+        {
+            var bytes = await Task.Run(() => File.Exists(iconPath) ? File.ReadAllBytes(iconPath) : null);
+            if (bytes is null)
+            {
+                return;
+            }
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (_sourceIconCache.ContainsKey(iconPath))
+                {
+                    ApplySourceIconToHistory(iconPath, _sourceIconCache[iconPath]);
+                    return;
+                }
+
+                using var stream = new MemoryStream(bytes);
+                var bitmap = new Bitmap(stream);
+                if (_sourceIconCache.TryAdd(iconPath, bitmap))
+                {
+                    ApplySourceIconToHistory(iconPath, bitmap);
+                }
+                else
+                {
+                    bitmap.Dispose();
+                }
+            });
+        }
+        catch
+        {
+            // Ignore unreadable icon files.
+        }
+    }
+
+    private void ReplaceHistoryBitmap(string id, Bitmap image)
+    {
+        for (var i = 0; i < History.Count; i++)
+        {
+            if (History[i].Id == id && History[i].ImageBitmap is null)
+            {
+                History[i] = History[i] with { ImageBitmap = image };
+            }
+        }
+
+        for (var i = 0; i < VisibleHistory.Count; i++)
+        {
+            if (VisibleHistory[i].Id == id && VisibleHistory[i].ImageBitmap is null)
+            {
+                VisibleHistory[i] = VisibleHistory[i] with { ImageBitmap = image };
+            }
+        }
+    }
+
+    private void ApplySourceIconToHistory(string iconPath, Bitmap icon)
+    {
+        for (var i = 0; i < History.Count; i++)
+        {
+            if (string.Equals(History[i].SourceIconPath, iconPath, StringComparison.OrdinalIgnoreCase)
+                && History[i].SourceIconBitmap is null)
+            {
+                History[i] = History[i] with { SourceIconBitmap = icon };
+            }
+        }
+
+        for (var i = 0; i < VisibleHistory.Count; i++)
+        {
+            if (string.Equals(VisibleHistory[i].SourceIconPath, iconPath, StringComparison.OrdinalIgnoreCase)
+                && VisibleHistory[i].SourceIconBitmap is null)
+            {
+                VisibleHistory[i] = VisibleHistory[i] with { SourceIconBitmap = icon };
+            }
+        }
     }
 
     private ClipboardHistoryItem LocalizeItem(ClipboardHistoryItem item)
@@ -756,8 +1046,12 @@ public partial class MainWindow : Window
         var preview = item.DataType == ClipboardDataTypes.Image
             ? _localization.Get("ClipboardDataType_Image")
             : item.Preview;
-        var image = item.DataType == ClipboardDataTypes.Image ? (item.ImageBitmap ?? TryCreateBitmap(item.Data)) : item.ImageBitmap;
-        var sourceIcon = item.SourceIconBitmap ?? TryLoadSourceIcon(item.SourceIconPath);
+        var image = item.DataType == ClipboardDataTypes.Image ? item.ImageBitmap : null;
+        Bitmap? sourceIcon = item.SourceIconBitmap;
+        if (sourceIcon is null && !string.IsNullOrWhiteSpace(item.SourceIconPath))
+        {
+            _sourceIconCache.TryGetValue(item.SourceIconPath, out sourceIcon);
+        }
         return item with { TypeLabel = typeLabel, ItemInfo = itemInfo, DisplayPreview = preview, ImageBitmap = image, SourceIconBitmap = sourceIcon };
     }
 
@@ -915,11 +1209,42 @@ public partial class MainWindow : Window
 
     private void ReplaceItem(ClipboardHistoryItem original, ClipboardHistoryItem updated)
     {
-        var index = History.IndexOf(original);
-        if (index >= 0)
+        var index = -1;
+        for (var i = 0; i < History.Count; i++)
+        {
+            if (History[i].Id == original.Id)
+            {
+                index = i;
+                break;
+            }
+        }
+        if (index < 0)
+        {
+            return;
+        }
+
+        if (MatchesCurrentFilter(updated))
         {
             History[index] = updated;
-            RefreshVisibleHistory();
+            var visibleIndex = VisibleHistory.ToList().FindIndex(item => item.Id == original.Id);
+            if (visibleIndex >= 0)
+            {
+                VisibleHistory[visibleIndex] = updated;
+            }
+            else
+            {
+                RefreshVisibleHistory();
+            }
+        }
+        else
+        {
+            History.RemoveAt(index);
+            var visibleIndex = VisibleHistory.ToList().FindIndex(item => item.Id == original.Id);
+            if (visibleIndex >= 0)
+            {
+                VisibleHistory.RemoveAt(visibleIndex);
+            }
+            EmptyHistoryText.IsVisible = VisibleHistory.Count == 0;
         }
     }
 

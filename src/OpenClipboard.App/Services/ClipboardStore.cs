@@ -87,42 +87,81 @@ public sealed class ClipboardStore : IDisposable
         }
     }
 
-    public async Task<IReadOnlyList<ClipboardHistoryItem>> GetRecentAsync(HistoryMode historyMode, int limit = 500)
+    public async Task<IReadOnlyList<ClipboardHistoryItem>> GetRecentAsync(
+        HistoryMode historyMode,
+        int limit = 50,
+        DateTime? beforeCreateTimeUtc = null,
+        string? beforeId = null,
+        string? searchText = null,
+        bool favoritesOnly = false)
     {
         await using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = """
+
+        var where = new List<string>();
+        var cutoff = GetCutoff(historyMode);
+        if (cutoff is not null)
+        {
+            where.Add("(IsFavorite = 1 OR CreateTime >= $cutoff)");
+            command.Parameters.AddWithValue("$cutoff", cutoff.Value.ToString("O", CultureInfo.InvariantCulture));
+        }
+
+        if (favoritesOnly)
+        {
+            where.Add("IsFavorite = 1");
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            where.Add("Data LIKE $search ESCAPE '\\'");
+            command.Parameters.AddWithValue("$search", $"%{EscapeLike(searchText.Trim())}%");
+        }
+
+        if (beforeCreateTimeUtc is not null && !string.IsNullOrWhiteSpace(beforeId))
+        {
+            var before = beforeCreateTimeUtc.Value.ToString("O", CultureInfo.InvariantCulture);
+            where.Add("(CreateTime < $beforeCreateTime OR (CreateTime = $beforeCreateTime AND Id < $beforeId))");
+            command.Parameters.AddWithValue("$beforeCreateTime", before);
+            command.Parameters.AddWithValue("$beforeId", beforeId);
+        }
+
+        var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : string.Empty;
+        command.CommandText = $"""
             SELECT Id, DataType, Data, CreateTime, IsFavorite, SourceAppName, SourceAppId, SourceIconPath
             FROM ClipboardEntries
-            WHERE IsFavorite = 1 OR $cutoff IS NULL OR CreateTime >= $cutoff
-            ORDER BY CreateTime DESC
+            {whereClause}
+            ORDER BY CreateTime DESC, Id DESC
             LIMIT $limit;
             """;
         command.Parameters.AddWithValue("$limit", limit);
-        command.Parameters.AddWithValue("$cutoff", GetCutoff(historyMode) is { } cutoff
-            ? cutoff.ToString("O", CultureInfo.InvariantCulture)
-            : DBNull.Value);
 
         var entries = new List<ClipboardHistoryItem>();
         await using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            entries.Add(new ClipboardHistoryItem
-            {
-                Id = reader.GetString(0),
-                DataType = (ClipboardDataTypes)reader.GetInt32(1),
-                Data = reader.GetString(2),
-                CreateTime = DateTime.Parse(reader.GetString(3), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind).ToLocalTime(),
-                IsFavorite = reader.GetBoolean(4),
-                SourceAppName = reader.IsDBNull(5) ? null : reader.GetString(5),
-                SourceAppId = reader.IsDBNull(6) ? null : reader.GetString(6),
-                SourceIconPath = reader.IsDBNull(7) ? null : reader.GetString(7)
-            });
+            entries.Add(ReadItem(reader));
         }
 
         return entries;
     }
+
+    private static ClipboardHistoryItem ReadItem(SqliteDataReader reader) => new()
+    {
+        Id = reader.GetString(0),
+        DataType = (ClipboardDataTypes)reader.GetInt32(1),
+        Data = reader.GetString(2),
+        CreateTime = DateTime.Parse(reader.GetString(3), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind).ToLocalTime(),
+        IsFavorite = reader.GetBoolean(4),
+        SourceAppName = reader.IsDBNull(5) ? null : reader.GetString(5),
+        SourceAppId = reader.IsDBNull(6) ? null : reader.GetString(6),
+        SourceIconPath = reader.IsDBNull(7) ? null : reader.GetString(7)
+    };
+
+    private static string EscapeLike(string value) => value
+        .Replace("\\", "\\\\", StringComparison.Ordinal)
+        .Replace("%", "\\%", StringComparison.Ordinal)
+        .Replace("_", "\\_", StringComparison.Ordinal);
 
     public async Task PruneExpiredAsync(HistoryMode historyMode)
     {
