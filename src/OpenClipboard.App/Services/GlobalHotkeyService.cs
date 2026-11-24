@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpHook;
@@ -10,6 +12,8 @@ public sealed class GlobalHotkeyService : IDisposable
 {
     private EventLoopGlobalHook? _hook;
     private Task? _runTask;
+    private CancellationTokenSource? _permissionRetry;
+    private bool _accessibilityPromptShown;
     private int _generation;
     private long _lastActivationMilliseconds;
 
@@ -47,6 +51,20 @@ public sealed class GlobalHotkeyService : IDisposable
         }
 
         StopCurrentHook();
+        StartHook(activation, quickCopyBinding, activate, quickCopy);
+    }
+
+    private void StartHook(HotkeyBinding activation, HotkeyBinding? quickCopyBinding, Action activate, Action quickCopy)
+    {
+        // On macOS a global hook uses CGEventTap, which is silently blocked until
+        // the process is trusted as an accessibility client. Without this check
+        // the hook looks started but never receives any key event.
+        if (OperatingSystem.IsMacOS() && !MacAccessibility.IsTrusted())
+        {
+            ErrorOccurred?.Invoke("Global hotkeys need Accessibility permission: System Settings → Privacy & Security → Accessibility → enable OpenClipboard. Hotkeys will start automatically once granted.");
+            WatchForAccessibilityPermission(activation, quickCopyBinding, activate, quickCopy);
+            return;
+        }
 
         try
         {
@@ -85,8 +103,59 @@ public sealed class GlobalHotkeyService : IDisposable
         }
     }
 
+    private void WatchForAccessibilityPermission(HotkeyBinding activation, HotkeyBinding? quickCopyBinding, Action activate, Action quickCopy)
+    {
+        var cancellation = new CancellationTokenSource();
+        _permissionRetry = cancellation;
+
+        if (!_accessibilityPromptShown)
+        {
+            _accessibilityPromptShown = true;
+            try
+            {
+                Process.Start(new ProcessStartInfo(
+                    "open", "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
+                { UseShellExecute = false });
+            }
+            catch
+            {
+                // Opening Settings is a convenience; the message above still tells the user where to go.
+            }
+        }
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (!cancellation.IsCancellationRequested)
+                {
+                    await Task.Delay(2000, cancellation.Token);
+                    if (!MacAccessibility.IsTrusted())
+                    {
+                        continue;
+                    }
+
+                    if (!cancellation.IsCancellationRequested)
+                    {
+                        StartHook(activation, quickCopyBinding, activate, quickCopy);
+                    }
+                    return;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                ErrorOccurred?.Invoke(exception.Message);
+            }
+        }, cancellation.Token);
+    }
+
     private void StopCurrentHook()
     {
+        _permissionRetry?.Cancel();
+        _permissionRetry = null;
         var hook = _hook;
         _hook = null;
         _runTask = null;
@@ -147,6 +216,17 @@ public sealed class GlobalHotkeyService : IDisposable
     {
         _generation++;
         StopCurrentHook();
+    }
+
+    private static class MacAccessibility
+    {
+        private const string ApplicationServices =
+            "/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices";
+
+        [DllImport(ApplicationServices)]
+        private static extern bool AXIsProcessTrusted();
+
+        public static bool IsTrusted() => AXIsProcessTrusted();
     }
 
     [Flags]

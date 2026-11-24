@@ -76,7 +76,27 @@ ln -s /Applications "$STAGE/Applications"
 mkdir -p "$(dirname "$OUTPUT_DMG")"
 rm -f "$OUTPUT_DMG"
 
-# hdiutil ships with macOS; UDZO is a compressed, read-only disk image.
-hdiutil create -volname "$APP_NAME" -srcfolder "$STAGE" -ov -format UDZO "$OUTPUT_DMG"
+# hdiutil ships with macOS. Use an explicitly chosen filesystem: letting hdiutil
+# pick one produces different images on Intel and Apple Silicon runners.
+hdiutil create -volname "$APP_NAME" -srcfolder "$STAGE" -fs HFS+ -ov -format UDZO "$OUTPUT_DMG"
+
+test -f "$OUTPUT_DMG"
+
+# GitHub-hosted runners occasionally return EAGAIN from hdiutil right after a
+# large image is written. Retry briefly instead of failing the whole job.
+verifyOk=0
+for attempt in 1 2 3 4 5; do
+  if hdiutil verify "$OUTPUT_DMG" >/dev/null 2>&1; then
+    verifyOk=1
+    break
+  fi
+  sleep 2
+done
+if [[ "$verifyOk" -ne 1 ]]; then
+  echo "Could not verify created disk image: $OUTPUT_DMG" >&2
+  file "$OUTPUT_DMG" >&2 || true
+  ls -l "$OUTPUT_DMG" >&2 || true
+  exit 1
+fi
 
 echo "Created $OUTPUT_DMG"
