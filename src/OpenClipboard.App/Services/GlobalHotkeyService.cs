@@ -59,9 +59,9 @@ public sealed class GlobalHotkeyService : IDisposable
         // On macOS a global hook uses CGEventTap, which is silently blocked until
         // the process is trusted as an accessibility client. Without this check
         // the hook looks started but never receives any key event.
-        if (OperatingSystem.IsMacOS() && !MacAccessibility.IsTrusted())
+        if (OperatingSystem.IsMacOS() && !MacAccessibility.IsTrusted(prompt: true))
         {
-            ErrorOccurred?.Invoke("Global hotkeys need Accessibility permission: System Settings → Privacy & Security → Accessibility → enable OpenClipboard. Hotkeys will start automatically once granted.");
+            ErrorOccurred?.Invoke("Global hotkeys need Accessibility permission. Allow OpenClipboard in the system dialog, or enable it under System Settings → Privacy & Security → Accessibility. Hotkeys start automatically once granted.");
             WatchForAccessibilityPermission(activation, quickCopyBinding, activate, quickCopy);
             return;
         }
@@ -130,7 +130,7 @@ public sealed class GlobalHotkeyService : IDisposable
                 while (!cancellation.IsCancellationRequested)
                 {
                     await Task.Delay(2000, cancellation.Token);
-                    if (!MacAccessibility.IsTrusted())
+                    if (!MacAccessibility.IsTrusted(prompt: false))
                     {
                         continue;
                     }
@@ -220,13 +220,81 @@ public sealed class GlobalHotkeyService : IDisposable
 
     private static class MacAccessibility
     {
+        private const string CoreFoundation =
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation";
         private const string ApplicationServices =
             "/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices";
+        private const int KCfStringEncodingUtf8 = 0x08000100;
 
         [DllImport(ApplicationServices)]
         private static extern bool AXIsProcessTrusted();
 
-        public static bool IsTrusted() => AXIsProcessTrusted();
+        [DllImport(ApplicationServices)]
+        private static extern bool AXIsProcessTrustedWithOptions(IntPtr options);
+
+        [DllImport(CoreFoundation)]
+        private static extern IntPtr CFStringCreateWithCString(IntPtr allocator, string cString, int encoding);
+
+        [DllImport(CoreFoundation)]
+        private static extern IntPtr CFDictionaryCreate(
+            IntPtr allocator, IntPtr[] keys, IntPtr[] values, nint count,
+            IntPtr keyCallbacks, IntPtr valueCallbacks);
+
+        [DllImport(CoreFoundation)]
+        private static extern void CFRelease(IntPtr cf);
+
+        public static bool IsTrusted(bool prompt)
+        {
+            if (!prompt)
+            {
+                return AXIsProcessTrusted();
+            }
+
+            // AXIsProcessTrustedWithOptions prompts macOS to register this exact
+            // app (and shows the system dialog) instead of relying on a stale TCC
+            // entry that no longer matches an ad-hoc-signed build.
+            try
+            {
+                var coreFoundation = NativeLibrary.Load(CoreFoundation);
+                var keyCallbacks = NativeLibrary.GetExport(coreFoundation, "kCFTypeDictionaryKeyCallBacks");
+                var valueCallbacks = NativeLibrary.GetExport(coreFoundation, "kCFTypeDictionaryValueCallBacks");
+                var booleanTrue = Marshal.ReadIntPtr(NativeLibrary.GetExport(coreFoundation, "kCFBooleanTrue"));
+
+                var key = CFStringCreateWithCString(IntPtr.Zero, "AXTrustedCheckOptionPrompt", KCfStringEncodingUtf8);
+                if (key == IntPtr.Zero)
+                {
+                    return AXIsProcessTrusted();
+                }
+
+                try
+                {
+                    var options = CFDictionaryCreate(
+                        IntPtr.Zero, new[] { key }, new[] { booleanTrue }, 1, keyCallbacks, valueCallbacks);
+                    if (options == IntPtr.Zero)
+                    {
+                        return AXIsProcessTrusted();
+                    }
+
+                    try
+                    {
+                        return AXIsProcessTrustedWithOptions(options);
+                    }
+                    finally
+                    {
+                        CFRelease(options);
+                    }
+                }
+                finally
+                {
+                    CFRelease(key);
+                }
+            }
+            catch
+            {
+                // Older OS or a missing symbol: fall back to the non-prompting check.
+                return AXIsProcessTrusted();
+            }
+        }
     }
 
     [Flags]
