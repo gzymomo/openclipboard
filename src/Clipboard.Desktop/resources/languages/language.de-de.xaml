@@ -59,4 +59,5 @@
   <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_Low">Langsam</sys:String>
   <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_Medium">Mittel</sys:String>
   <sys:String x:Key="SettingWindow_General_ScrollWheelSpeed_High">Schnell</sys:String>
+  <sys:String x:Key="Settings_Tab_General">Allgemein</sys:String>
 </ResourceDictionary>

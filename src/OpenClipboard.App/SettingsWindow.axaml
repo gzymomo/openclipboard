@@ -8,76 +8,96 @@
         Icon="avares://OpenClipboard.App/Assets/logo.png"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
-        Width="400"
-        Height="640"
-        MinWidth="400"
-        MinHeight="600"
-        WindowStartupLocation="CenterOwner">
+        Width="560"
+        Height="620"
+        MinWidth="520"
+        MinHeight="560"
+        WindowStartupLocation="CenterScreen">
   <Border x:Name="MainBackground" CornerRadius="12" ClipToBounds="True">
-    <Grid RowDefinitions="*,Auto" Margin="24,20,24,20" RowSpacing="16">
-      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Spacing="16">
-          <Grid ColumnDefinitions="140,*" ColumnSpacing="16" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="14">
-            <TextBlock Grid.Row="0" Grid.Column="0" x:Name="AutoRunLabel" VerticalAlignment="Center" TextWrapping="Wrap" />
-            <CheckBox Grid.Row="0" Grid.Column="1" x:Name="AutoRunCheckBox" VerticalAlignment="Center" Click="AutoRunCheckBox_OnClick" />
+    <Grid RowDefinitions="*,Auto" Margin="20,16,20,16" RowSpacing="12">
+      <TabControl x:Name="SettingsTabs" TabStripPlacement="Left" Background="Transparent">
+        <TabControl.Styles>
+          <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="MinWidth" Value="88" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Margin" Value="0,2" />
+          </Style>
+          <Style Selector="TabItem:selected">
+            <Setter Property="Background" Value="#4030343C" />
+          </Style>
+        </TabControl.Styles>
+        <TabItem x:Name="GeneralTab">
+          <Border x:Name="ContentPanelBackground" Background="Transparent" BorderBrush="#33000000" BorderThickness="1" CornerRadius="10" Padding="12,10"
+                  TextElement.Foreground="White">
+            <ThemeVariantScope RequestedThemeVariant="Dark">
+              <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+              <StackPanel Margin="4,2,4,2">
+                <Grid ColumnDefinitions="160,*" ColumnSpacing="16" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="14">
+                  <TextBlock Grid.Row="0" Grid.Column="0" x:Name="AutoRunLabel" VerticalAlignment="Center" TextWrapping="Wrap" />
+                  <CheckBox Grid.Row="0" Grid.Column="1" x:Name="AutoRunCheckBox" VerticalAlignment="Center" Click="AutoRunCheckBox_OnClick" />
 
-            <TextBlock Grid.Row="1" Grid.Column="0" x:Name="LanguageLabel" VerticalAlignment="Center" TextWrapping="Wrap" />
-            <ComboBox Grid.Row="1" Grid.Column="1" x:Name="LanguageBox" HorizontalAlignment="Stretch" ItemsSource="{Binding Languages}" SelectionChanged="LanguageBox_OnSelectionChanged">
-              <ComboBox.ItemTemplate>
-                <DataTemplate x:DataType="services:LanguageOption">
-                  <TextBlock Text="{Binding DisplayName}" />
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
+                  <TextBlock Grid.Row="1" Grid.Column="0" x:Name="LanguageLabel" VerticalAlignment="Center" TextWrapping="Wrap" />
+                  <ComboBox Grid.Row="1" Grid.Column="1" x:Name="LanguageBox" HorizontalAlignment="Stretch" ItemsSource="{Binding Languages}" SelectionChanged="LanguageBox_OnSelectionChanged">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="services:LanguageOption">
+                        <TextBlock Text="{Binding DisplayName}" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
 
-            <TextBlock Grid.Row="2" Grid.Column="0" x:Name="ActivationHotkeyLabel" VerticalAlignment="Center" TextWrapping="Wrap" />
-            <TextBox Grid.Row="2" Grid.Column="1" x:Name="ActivationHotkeyBox" HorizontalAlignment="Stretch" IsReadOnly="True" KeyDown="ActivationHotkeyBox_OnKeyDown" />
+                  <TextBlock Grid.Row="2" Grid.Column="0" x:Name="ActivationHotkeyLabel" VerticalAlignment="Center" TextWrapping="Wrap" />
+                  <TextBox Grid.Row="2" Grid.Column="1" x:Name="ActivationHotkeyBox" HorizontalAlignment="Stretch" IsReadOnly="True" KeyDown="ActivationHotkeyBox_OnKeyDown" />
 
-            <TextBlock Grid.Row="3" Grid.Column="0" x:Name="QuickCopyHotkeyLabel" VerticalAlignment="Top" Margin="0,6,0,0" TextWrapping="Wrap" />
-            <StackPanel Grid.Row="3" Grid.Column="1" Spacing="4">
-              <TextBox x:Name="QuickCopyHotkeyBox" HorizontalAlignment="Stretch" IsReadOnly="True" KeyDown="QuickCopyHotkeyBox_OnKeyDown" />
-              <TextBlock x:Name="HotkeyHelpText" FontSize="11" Opacity="0.7" TextWrapping="Wrap" />
-            </StackPanel>
+                  <TextBlock Grid.Row="3" Grid.Column="0" x:Name="QuickCopyHotkeyLabel" VerticalAlignment="Top" Margin="0,6,0,0" TextWrapping="Wrap" />
+                  <StackPanel Grid.Row="3" Grid.Column="1" Spacing="4">
+                    <TextBox x:Name="QuickCopyHotkeyBox" HorizontalAlignment="Stretch" IsReadOnly="True" KeyDown="QuickCopyHotkeyBox_OnKeyDown" />
+                    <TextBlock x:Name="HotkeyHelpText" FontSize="11" Opacity="0.7" TextWrapping="Wrap" />
+                  </StackPanel>
 
-            <TextBlock Grid.Row="4" Grid.Column="0" x:Name="HistoryModeLabel" VerticalAlignment="Top" Margin="0,6,0,0" TextWrapping="Wrap" />
-            <StackPanel Grid.Row="4" Grid.Column="1" Spacing="2">
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <Slider Grid.Column="0" x:Name="HistoryModeSlider" Minimum="0" Maximum="6" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="HistoryModeSlider_OnValueChanged" />
-                <TextBlock Grid.Column="1" x:Name="HistoryModeValueText" FontSize="11" MinWidth="34" TextAlignment="Right" VerticalAlignment="Center" />
-              </Grid>
-            </StackPanel>
+                  <TextBlock Grid.Row="4" Grid.Column="0" x:Name="HistoryModeLabel" VerticalAlignment="Top" Margin="0,6,0,0" TextWrapping="Wrap" />
+                  <StackPanel Grid.Row="4" Grid.Column="1" Spacing="2">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                      <Slider Grid.Column="0" x:Name="HistoryModeSlider" Minimum="0" Maximum="6" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="HistoryModeSlider_OnValueChanged" />
+                      <TextBlock Grid.Column="1" x:Name="HistoryModeValueText" FontSize="11" MinWidth="34" TextAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
+                  </StackPanel>
 
-            <TextBlock Grid.Row="5" Grid.Column="0" x:Name="GlassOpacityLabel" VerticalAlignment="Top" Margin="0,6,0,0" TextWrapping="Wrap" />
-            <StackPanel Grid.Row="5" Grid.Column="1" Spacing="2">
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <Slider Grid.Column="0" x:Name="GlassOpacitySlider" Minimum="0" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="GlassOpacitySlider_OnValueChanged" />
-                <TextBlock Grid.Column="1" x:Name="GlassOpacityValueText" FontSize="11" MinWidth="34" TextAlignment="Right" VerticalAlignment="Center" />
-              </Grid>
-            </StackPanel>
+                  <TextBlock Grid.Row="5" Grid.Column="0" x:Name="GlassOpacityLabel" VerticalAlignment="Top" Margin="0,6,0,0" TextWrapping="Wrap" />
+                  <StackPanel Grid.Row="5" Grid.Column="1" Spacing="2">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                      <Slider Grid.Column="0" x:Name="GlassOpacitySlider" Minimum="0" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="GlassOpacitySlider_OnValueChanged" />
+                      <TextBlock Grid.Column="1" x:Name="GlassOpacityValueText" FontSize="11" MinWidth="34" TextAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
+                  </StackPanel>
 
-            <TextBlock Grid.Row="6" Grid.Column="0" x:Name="ScrollWheelSpeedLabel" VerticalAlignment="Top" Margin="0,6,0,0" TextWrapping="Wrap" />
-            <StackPanel Grid.Row="6" Grid.Column="1" Spacing="2">
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <Slider Grid.Column="0" x:Name="ScrollWheelSpeedSlider" Minimum="0" Maximum="2" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="ScrollWheelSpeedSlider_OnValueChanged" />
-                <TextBlock Grid.Column="1" x:Name="ScrollWheelSpeedValueText" FontSize="11" MinWidth="34" TextAlignment="Right" VerticalAlignment="Center" />
-              </Grid>
+                  <TextBlock Grid.Row="6" Grid.Column="0" x:Name="ScrollWheelSpeedLabel" VerticalAlignment="Top" Margin="0,6,0,0" TextWrapping="Wrap" />
+                  <StackPanel Grid.Row="6" Grid.Column="1" Spacing="2">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                      <Slider Grid.Column="0" x:Name="ScrollWheelSpeedSlider" Minimum="0" Maximum="2" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="ScrollWheelSpeedSlider_OnValueChanged" />
+                      <TextBlock Grid.Column="1" x:Name="ScrollWheelSpeedValueText" FontSize="11" MinWidth="34" TextAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
+                  </StackPanel>
+                </Grid>
+              </StackPanel>
+              </ScrollViewer>
+            </ThemeVariantScope>
+          </Border>
+        </TabItem>
+      </TabControl>
+
+      <Border Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="#1A000000" Padding="0,10,0,0">
+        <StackPanel Spacing="8">
+          <TextBlock x:Name="HotkeyStatusText" Foreground="Tomato" TextWrapping="Wrap" />
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <Button Grid.Column="0" x:Name="ClearHistoryButton" CornerRadius="8" Click="ClearHistory_OnClick" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+              <Button x:Name="CancelButton" CornerRadius="8" Click="Cancel_OnClick" />
+              <Button x:Name="SaveButton" CornerRadius="8" Click="Save_OnClick" />
             </StackPanel>
           </Grid>
-
-          <Border Height="1" Background="#1A000000" Margin="0,2,0,0" />
-
-          <TextBlock x:Name="HotkeyStatusText" Foreground="Tomato" TextWrapping="Wrap" MinHeight="0" />
         </StackPanel>
-      </ScrollViewer>
-
-      <Border Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="#1A000000" Padding="0,12,0,0">
-        <Grid ColumnDefinitions="Auto,* ,Auto">
-          <Button Grid.Column="0" x:Name="ClearHistoryButton" CornerRadius="8" Click="ClearHistory_OnClick" />
-          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-            <Button x:Name="CancelButton" CornerRadius="8" Click="Cancel_OnClick" />
-            <Button x:Name="SaveButton" CornerRadius="8" Click="Save_OnClick" />
-          </StackPanel>
-        </Grid>
       </Border>
     </Grid>
   </Border>

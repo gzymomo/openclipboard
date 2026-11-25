@@ -65,12 +65,17 @@ public partial class MainWindow : Window
             return;
         }
 
-        var bounds = screen.Bounds;
-        Width = Math.Max(MinWidth, bounds.Width / screen.Scaling);
+        var area = screen.WorkingArea;
+        if (area.Width <= 0 || area.Height <= 0)
+        {
+            area = screen.Bounds;
+        }
+
+        Width = Math.Max(MinWidth, area.Width / screen.Scaling);
         Height = 400;
         Position = new Avalonia.PixelPoint(
-            bounds.X,
-            bounds.Y + bounds.Height - (int)Math.Round(Height * screen.Scaling));
+            area.X,
+            area.Y + area.Height - (int)Math.Round(Height * screen.Scaling));
     }
 
     private bool _initialized;
@@ -664,12 +669,32 @@ public partial class MainWindow : Window
         return await dialog.ShowDialog<bool>(dialogOwner);
     }
 
-    private async void Settings_OnClick(object? sender, RoutedEventArgs e)
+    private SettingsWindow? _settingsWindow;
+
+    public void OpenSettings()
     {
-        MenuPopup.IsOpen = false;
-        var dialog = new SettingsWindow(_preferences, _localization, _startupManager, ClearHistoryFromSettingsAsync);
-        await dialog.ShowDialog(this);
-        if (!dialog.Saved)
+        if (_settingsWindow is { IsVisible: true } existing)
+        {
+            existing.Topmost = true;
+            existing.Activate();
+            existing.Topmost = false;
+            return;
+        }
+
+        var dialog = new SettingsWindow(
+            _preferences, _localization, _startupManager,
+            ClearHistoryFromSettingsAsync,
+            OnSettingsClosed);
+        _settingsWindow = dialog;
+        dialog.Show();
+        dialog.Topmost = true;
+        dialog.Activate();
+        dialog.Topmost = false;
+    }
+
+    private async void OnSettingsClosed(bool saved)
+    {
+        if (!saved)
         {
             _localization.SetLanguage(_preferences.Language);
             ApplyLocalization();
@@ -859,7 +884,6 @@ public partial class MainWindow : Window
         SearchBox.PlaceholderText = _localization.Get("ClipboardDataSearchText_PlaceHolder");
         HistoryFilterButton.Content = _localization.Get("ClipboardDataTag_History");
         FavoritesFilterButton.Content = _localization.Get("ClipboardDataTag_Favorite");
-        SettingsButton.Content = _localization.Get("ClipboardData_MainWindowMenu_Setting");
         ToolTip.SetTip(LatestButton, _localization.Get("CrossPlatform_JumpToLatest"));
         CopyMenuItem.Header = _localization.Get("History_Listbox_Copy");
         FavoriteMenuItem.Header = _localization.Get("CrossPlatform_Favorite");

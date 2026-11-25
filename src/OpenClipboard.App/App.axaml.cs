@@ -19,6 +19,7 @@ public partial class App : Application
     public LocalizationService Localization { get; private set; } = null!;
 
     private NativeMenuItem? _openItem;
+    private NativeMenuItem? _settingsItem;
     private NativeMenuItem? _quitItem;
 
     public override void Initialize()
@@ -39,6 +40,8 @@ public partial class App : Application
 
             _openItem = new NativeMenuItem();
             _openItem.Click += (_, _) => window.ShowFromTray();
+            _settingsItem = new NativeMenuItem();
+            _settingsItem.Click += (_, _) => window.OpenSettings();
             _quitItem = new NativeMenuItem();
             _quitItem.Click += (_, _) =>
             {
@@ -47,6 +50,7 @@ public partial class App : Application
             };
             var menu = new NativeMenu();
             menu.Items.Add(_openItem);
+            menu.Items.Add(_settingsItem);
             menu.Items.Add(_quitItem);
             ApplyLocalization();
 
@@ -77,6 +81,11 @@ public partial class App : Application
         if (_openItem is not null)
         {
             _openItem.Header = Localization.Get("CrossPlatform_OpenApp");
+        }
+
+        if (_settingsItem is not null)
+        {
+            _settingsItem.Header = Localization.Get("ClipboardData_MainWindowMenu_Setting");
         }
 
         if (_quitItem is not null)

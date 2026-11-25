@@ -14,7 +14,7 @@ OUTPUT_DMG="${3:?usage: package.sh <publish-dir> <version> <output-dmg>}"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 APP_NAME="OpenClipboard"
-ICON_SOURCE="$ROOT/src/Clipboard.Desktop/resources/images/logo.png"
+ICON_SOURCE="$ROOT/src/OpenClipboard.App/Assets/logo.png"
 
 if [[ ! -d "$PUBLISH_DIR" ]]; then
   echo "Publish directory not found: $PUBLISH_DIR" >&2

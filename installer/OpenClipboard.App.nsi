@@ -55,8 +55,8 @@ VIAddVersionKey "ProductVersion" "${VERSION}"
 VIAddVersionKey "LegalCopyright" "MIT License"
 
 !define MUI_ABORTWARNING
-!define MUI_ICON "..\src\Clipboard.Desktop\app.ico"
-!define MUI_UNICON "..\src\Clipboard.Desktop\app.ico"
+!define MUI_ICON "..\src\OpenClipboard.App\Assets\app.ico"
+!define MUI_UNICON "..\src\OpenClipboard.App\Assets\app.ico"
 !define MUI_FINISHPAGE_RUN "$INSTDIR\${APP_EXE}"
 
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE VerifyInstallDir

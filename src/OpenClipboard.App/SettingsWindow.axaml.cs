@@ -17,6 +17,7 @@ public partial class SettingsWindow : Window
     private readonly LocalizationService _localization;
     private readonly StartupManager _startupManager;
     private readonly Func<Window, Task> _clearHistory;
+    private readonly Action<bool> _onClosed;
     private bool _autoRunEnabled;
 
     public bool Saved { get; private set; }
@@ -39,12 +40,14 @@ public partial class SettingsWindow : Window
         ClipboardPreferences preferences,
         LocalizationService localization,
         StartupManager? startupManager = null,
-        Func<Window, Task>? clearHistory = null)
+        Func<Window, Task>? clearHistory = null,
+        Action<bool>? onClosed = null)
     {
         _preferences = preferences;
         _localization = localization;
         _startupManager = startupManager ?? new StartupManager();
         _clearHistory = clearHistory ?? (_ => Task.CompletedTask);
+        _onClosed = onClosed ?? (_ => { });
         ActivationHotkey = preferences.ActivationHotkey;
         QuickCopyHotkey = preferences.QuickCopyHotkey;
 
@@ -88,6 +91,7 @@ public partial class SettingsWindow : Window
     private void RefreshLabels()
     {
         Title = _localization.Get("ClipboardData_MainWindowMenu_Setting");
+        GeneralTab.Header = _localization.Get("Settings_Tab_General");
         AutoRunLabel.Text = _localization.Get("SettingWindow_General_AutoRun");
         AutoRunCheckBox.Content = _localization.Get("SettingWindow_General_AutoRun_Content");
         LanguageLabel.Text = _localization.Get("SettingWindow_General_Language");
@@ -264,8 +268,16 @@ public partial class SettingsWindow : Window
         }
 
         var opacity = GlassOpacitySlider?.Value ?? _preferences.GlassOpacity;
-        var alpha = (byte)Math.Round(opacity * 255 / 100d);
-        MainBackground.Background = new SolidColorBrush(Color.FromArgb(alpha, 32, 36, 44));
+        var windowAlpha = (byte)Math.Round(opacity * 255 / 100d);
+        MainBackground.Background = new SolidColorBrush(Color.FromArgb(windowAlpha, 32, 36, 44));
+
+        // 内容面板沿用窗口的同色系（#20242C 提亮为 #30343C），
+        // alpha 随窗口透明度动态变化且始终更高，靠"更实 + 略亮"形成对比，不引入白色。
+        var panelAlpha = (byte)Math.Clamp(windowAlpha + 90, 160, 245);
+        if (ContentPanelBackground is not null)
+        {
+            ContentPanelBackground.Background = new SolidColorBrush(Color.FromArgb(panelAlpha, 48, 52, 60));
+        }
     }
 
     private async void ClearHistory_OnClick(object? sender, RoutedEventArgs e)
@@ -301,6 +313,7 @@ public partial class SettingsWindow : Window
             _preferences.ScrollWheelSpeed = SliderToScrollSpeed((int)Math.Round(ScrollWheelSpeedSlider.Value));
             _preferences.Save();
             Saved = true;
+            _onClosed(true);
             Close();
         }
         catch (Exception exception)
@@ -310,4 +323,13 @@ public partial class SettingsWindow : Window
     }
 
     private void Cancel_OnClick(object? sender, RoutedEventArgs e) => Close();
+
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        if (!Saved)
+        {
+            _onClosed(false);
+        }
+        base.OnClosing(e);
+    }
 }

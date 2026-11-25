@@ -43,11 +43,16 @@ public partial class CopySuccessOverlay : Window
         Measure(new Avalonia.Size(double.PositiveInfinity, double.PositiveInfinity));
         var size = DesiredSize;
         var scaling = screen.Scaling;
-        var bounds = screen.Bounds;
+        var area = screen.WorkingArea;
+        if (area.Width <= 0 || area.Height <= 0)
+        {
+            area = screen.Bounds;
+        }
+
         var pixelWidth = (int)Math.Round(size.Width * scaling);
         var pixelHeight = (int)Math.Round(size.Height * scaling);
         Position = new Avalonia.PixelPoint(
-            bounds.X + (bounds.Width - pixelWidth) / 2,
-            bounds.Y + (bounds.Height - pixelHeight) / 2);
+            area.X + (area.Width - pixelWidth) / 2,
+            area.Y + (area.Height - pixelHeight) / 2);
     }
 }
