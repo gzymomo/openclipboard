@@ -74,7 +74,23 @@ jobs:
         env:
           DMG: artifacts/OpenClipboard-${{ matrix.rid }}-${{ steps.app-version.outputs.version }}.dmg
         run: |
-          hdiutil verify "$DMG"
+          # hdiutil can return EAGAIN on freshly written images; retry briefly.
+          # Use an absolute path so relative-path quirks cannot mask the real error.
+          DMG="$(cd "$(dirname "$DMG")" && pwd)/$(basename "$DMG")"
+          verified=0
+          for attempt in $(seq 1 5); do
+            if hdiutil verify "$DMG"; then
+              verified=1
+              break
+            fi
+            sleep 2
+          done
+          if [[ "$verified" -ne 1 ]]; then
+            file "$DMG"
+            ls -l "$DMG"
+            exit 1
+          fi
+
           MOUNT="$(mktemp -d)"
           hdiutil attach "$DMG" -mountpoint "$MOUNT" -nobrowse -noautoopen
           trap 'hdiutil detach "$MOUNT" >/dev/null 2>&1 || true' EXIT

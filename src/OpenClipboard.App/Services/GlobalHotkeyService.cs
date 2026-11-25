@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpHook;
@@ -10,6 +12,8 @@ public sealed class GlobalHotkeyService : IDisposable
 {
     private EventLoopGlobalHook? _hook;
     private Task? _runTask;
+    private CancellationTokenSource? _permissionRetry;
+    private bool _accessibilityPromptShown;
     private int _generation;
     private long _lastActivationMilliseconds;
 
@@ -47,6 +51,20 @@ public sealed class GlobalHotkeyService : IDisposable
         }
 
         StopCurrentHook();
+        StartHook(activation, quickCopyBinding, activate, quickCopy);
+    }
+
+    private void StartHook(HotkeyBinding activation, HotkeyBinding? quickCopyBinding, Action activate, Action quickCopy)
+    {
+        // On macOS a global hook uses CGEventTap, which is silently blocked until
+        // the process is trusted as an accessibility client. Without this check
+        // the hook looks started but never receives any key event.
+        if (OperatingSystem.IsMacOS() && !MacAccessibility.IsTrusted(prompt: true))
+        {
+            ErrorOccurred?.Invoke("Global hotkeys need Accessibility permission. Allow OpenClipboard in the system dialog, or enable it under System Settings → Privacy & Security → Accessibility. Hotkeys start automatically once granted.");
+            WatchForAccessibilityPermission(activation, quickCopyBinding, activate, quickCopy);
+            return;
+        }
 
         try
         {
@@ -85,8 +103,59 @@ public sealed class GlobalHotkeyService : IDisposable
         }
     }
 
+    private void WatchForAccessibilityPermission(HotkeyBinding activation, HotkeyBinding? quickCopyBinding, Action activate, Action quickCopy)
+    {
+        var cancellation = new CancellationTokenSource();
+        _permissionRetry = cancellation;
+
+        if (!_accessibilityPromptShown)
+        {
+            _accessibilityPromptShown = true;
+            try
+            {
+                Process.Start(new ProcessStartInfo(
+                    "open", "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
+                { UseShellExecute = false });
+            }
+            catch
+            {
+                // Opening Settings is a convenience; the message above still tells the user where to go.
+            }
+        }
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (!cancellation.IsCancellationRequested)
+                {
+                    await Task.Delay(2000, cancellation.Token);
+                    if (!MacAccessibility.IsTrusted(prompt: false))
+                    {
+                        continue;
+                    }
+
+                    if (!cancellation.IsCancellationRequested)
+                    {
+                        StartHook(activation, quickCopyBinding, activate, quickCopy);
+                    }
+                    return;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                ErrorOccurred?.Invoke(exception.Message);
+            }
+        }, cancellation.Token);
+    }
+
     private void StopCurrentHook()
     {
+        _permissionRetry?.Cancel();
+        _permissionRetry = null;
         var hook = _hook;
         _hook = null;
         _runTask = null;
@@ -147,6 +216,85 @@ public sealed class GlobalHotkeyService : IDisposable
     {
         _generation++;
         StopCurrentHook();
+    }
+
+    private static class MacAccessibility
+    {
+        private const string CoreFoundation =
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation";
+        private const string ApplicationServices =
+            "/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices";
+        private const int KCfStringEncodingUtf8 = 0x08000100;
+
+        [DllImport(ApplicationServices)]
+        private static extern bool AXIsProcessTrusted();
+
+        [DllImport(ApplicationServices)]
+        private static extern bool AXIsProcessTrustedWithOptions(IntPtr options);
+
+        [DllImport(CoreFoundation)]
+        private static extern IntPtr CFStringCreateWithCString(IntPtr allocator, string cString, int encoding);
+
+        [DllImport(CoreFoundation)]
+        private static extern IntPtr CFDictionaryCreate(
+            IntPtr allocator, IntPtr[] keys, IntPtr[] values, nint count,
+            IntPtr keyCallbacks, IntPtr valueCallbacks);
+
+        [DllImport(CoreFoundation)]
+        private static extern void CFRelease(IntPtr cf);
+
+        public static bool IsTrusted(bool prompt)
+        {
+            if (!prompt)
+            {
+                return AXIsProcessTrusted();
+            }
+
+            // AXIsProcessTrustedWithOptions prompts macOS to register this exact
+            // app (and shows the system dialog) instead of relying on a stale TCC
+            // entry that no longer matches an ad-hoc-signed build.
+            try
+            {
+                var coreFoundation = NativeLibrary.Load(CoreFoundation);
+                var keyCallbacks = NativeLibrary.GetExport(coreFoundation, "kCFTypeDictionaryKeyCallBacks");
+                var valueCallbacks = NativeLibrary.GetExport(coreFoundation, "kCFTypeDictionaryValueCallBacks");
+                var booleanTrue = Marshal.ReadIntPtr(NativeLibrary.GetExport(coreFoundation, "kCFBooleanTrue"));
+
+                var key = CFStringCreateWithCString(IntPtr.Zero, "AXTrustedCheckOptionPrompt", KCfStringEncodingUtf8);
+                if (key == IntPtr.Zero)
+                {
+                    return AXIsProcessTrusted();
+                }
+
+                try
+                {
+                    var options = CFDictionaryCreate(
+                        IntPtr.Zero, new[] { key }, new[] { booleanTrue }, 1, keyCallbacks, valueCallbacks);
+                    if (options == IntPtr.Zero)
+                    {
+                        return AXIsProcessTrusted();
+                    }
+
+                    try
+                    {
+                        return AXIsProcessTrustedWithOptions(options);
+                    }
+                    finally
+                    {
+                        CFRelease(options);
+                    }
+                }
+                finally
+                {
+                    CFRelease(key);
+                }
+            }
+            catch
+            {
+                // Older OS or a missing symbol: fall back to the non-prompting check.
+                return AXIsProcessTrusted();
+            }
+        }
     }
 
     [Flags]
