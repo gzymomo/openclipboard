@@ -21,13 +21,6 @@
   <Border x:Name="MainBackground" CornerRadius="12" ClipToBounds="True">
     <Grid RowDefinitions="Auto,*" Margin="16,12" RowSpacing="8">
       <Grid>
-        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left" VerticalAlignment="Center">
-          <Button x:Name="LatestButton"
-                  Content="⇤"
-                  CornerRadius="8"
-                  Click="Latest_OnClick" />
-        </StackPanel>
-
         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
           <Button x:Name="SearchToggleButton" Content="⌕" CornerRadius="8" Click="SearchToggle_OnClick" />
           <Grid x:Name="SearchPanel" Width="320" ColumnDefinitions="*,Auto" IsVisible="False">
@@ -37,6 +30,10 @@
                      LostFocus="SearchBox_OnLostFocus" />
             <Button Grid.Column="1" Content="×" CornerRadius="8" Click="SearchClear_OnClick" />
           </Grid>
+          <Button x:Name="LatestButton"
+                  Content="⇤"
+                  CornerRadius="8"
+                  Click="Latest_OnClick" />
           <Button x:Name="HistoryFilterButton" CornerRadius="8" Click="HistoryFilter_OnClick" />
           <Button x:Name="FavoritesFilterButton" CornerRadius="8" Click="FavoritesFilter_OnClick" />
         </StackPanel>

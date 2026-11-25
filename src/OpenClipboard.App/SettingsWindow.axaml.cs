@@ -268,8 +268,16 @@ public partial class SettingsWindow : Window
         }
 
         var opacity = GlassOpacitySlider?.Value ?? _preferences.GlassOpacity;
-        var alpha = (byte)Math.Round(opacity * 255 / 100d);
-        MainBackground.Background = new SolidColorBrush(Color.FromArgb(alpha, 32, 36, 44));
+        var windowAlpha = (byte)Math.Round(opacity * 255 / 100d);
+        MainBackground.Background = new SolidColorBrush(Color.FromArgb(windowAlpha, 32, 36, 44));
+
+        // 内容面板沿用窗口的同色系（#20242C 提亮为 #30343C），
+        // alpha 随窗口透明度动态变化且始终更高，靠"更实 + 略亮"形成对比，不引入白色。
+        var panelAlpha = (byte)Math.Clamp(windowAlpha + 90, 160, 245);
+        if (ContentPanelBackground is not null)
+        {
+            ContentPanelBackground.Background = new SolidColorBrush(Color.FromArgb(panelAlpha, 48, 52, 60));
+        }
     }
 
     private async void ClearHistory_OnClick(object? sender, RoutedEventArgs e)

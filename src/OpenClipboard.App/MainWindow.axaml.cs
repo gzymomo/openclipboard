@@ -65,12 +65,17 @@ public partial class MainWindow : Window
             return;
         }
 
-        var bounds = screen.Bounds;
-        Width = Math.Max(MinWidth, bounds.Width / screen.Scaling);
+        var area = screen.WorkingArea;
+        if (area.Width <= 0 || area.Height <= 0)
+        {
+            area = screen.Bounds;
+        }
+
+        Width = Math.Max(MinWidth, area.Width / screen.Scaling);
         Height = 400;
         Position = new Avalonia.PixelPoint(
-            bounds.X,
-            bounds.Y + bounds.Height - (int)Math.Round(Height * screen.Scaling));
+            area.X,
+            area.Y + area.Height - (int)Math.Round(Height * screen.Scaling));
     }
 
     private bool _initialized;
