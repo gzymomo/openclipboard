@@ -55,7 +55,6 @@
                  IsLightDismissEnabled="True">
             <Border x:Name="MenuPopupBorder" Padding="6" CornerRadius="8" Background="#F420242C">
               <StackPanel Spacing="2">
-                <Button x:Name="SettingsButton" Click="Settings_OnClick" />
                 <Button x:Name="StartupButton" Click="Startup_OnClick" />
                 <Button x:Name="ClearButton" Click="Clear_OnClick" />
                 <Button x:Name="QuitButton" Click="Quit_OnClick" />

@@ -17,6 +17,7 @@ public partial class SettingsWindow : Window
     private readonly LocalizationService _localization;
     private readonly StartupManager _startupManager;
     private readonly Func<Window, Task> _clearHistory;
+    private readonly Action<bool> _onClosed;
     private bool _autoRunEnabled;
 
     public bool Saved { get; private set; }
@@ -39,12 +40,14 @@ public partial class SettingsWindow : Window
         ClipboardPreferences preferences,
         LocalizationService localization,
         StartupManager? startupManager = null,
-        Func<Window, Task>? clearHistory = null)
+        Func<Window, Task>? clearHistory = null,
+        Action<bool>? onClosed = null)
     {
         _preferences = preferences;
         _localization = localization;
         _startupManager = startupManager ?? new StartupManager();
         _clearHistory = clearHistory ?? (_ => Task.CompletedTask);
+        _onClosed = onClosed ?? (_ => { });
         ActivationHotkey = preferences.ActivationHotkey;
         QuickCopyHotkey = preferences.QuickCopyHotkey;
 
@@ -301,6 +304,7 @@ public partial class SettingsWindow : Window
             _preferences.ScrollWheelSpeed = SliderToScrollSpeed((int)Math.Round(ScrollWheelSpeedSlider.Value));
             _preferences.Save();
             Saved = true;
+            _onClosed(true);
             Close();
         }
         catch (Exception exception)
@@ -310,4 +314,13 @@ public partial class SettingsWindow : Window
     }
 
     private void Cancel_OnClick(object? sender, RoutedEventArgs e) => Close();
+
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        if (!Saved)
+        {
+            _onClosed(false);
+        }
+        base.OnClosing(e);
+    }
 }
