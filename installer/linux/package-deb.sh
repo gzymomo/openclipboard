@@ -20,7 +20,7 @@ INSTALL_DIR="/opt/openclipboard"
 # A dedicated group (not the user's "input" group) limits this privilege to
 # OpenClipboard alone; postinst sets the apphost setgid to that group.
 HOTKEY_GROUP="openclipboard"
-ICON_SOURCE="$ROOT/src/Clipboard.Desktop/resources/images/logo.png"
+ICON_SOURCE="$ROOT/src/OpenClipboard.App/Assets/logo.png"
 
 case "$ARCH" in
   amd64|arm64) ;;
