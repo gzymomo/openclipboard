@@ -91,6 +91,7 @@ public partial class SettingsWindow : Window
     private void RefreshLabels()
     {
         Title = _localization.Get("ClipboardData_MainWindowMenu_Setting");
+        GeneralTab.Header = _localization.Get("Settings_Tab_General");
         AutoRunLabel.Text = _localization.Get("SettingWindow_General_AutoRun");
         AutoRunCheckBox.Content = _localization.Get("SettingWindow_General_AutoRun_Content");
         LanguageLabel.Text = _localization.Get("SettingWindow_General_Language");
